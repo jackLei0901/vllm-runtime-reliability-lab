@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Reframe the product around health-green loss of progress and cross-producer
+  evidence correlation rather than generic data collection.
+- Document the planned identity, clock, closed-manifest and process/progress
+  semantic-join boundaries without claiming them as current alpha features.
+- Add a PyTorch Flight Recorder before/after case and an explicit
+  unlinked-versus-linked value test with transfer limitations.
 - Add a detailed Chinese guide covering usage, evidence boundaries, validation,
   current product readiness, and the path from public alpha to production preview.
 - Add a Chinese architecture/design document and a gated product roadmap.

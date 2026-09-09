@@ -7,13 +7,21 @@
 
 - [`DESIGN.zh-CN.md`](DESIGN.zh-CN.md)：详细方案设计与产品候选架构；
 - [`PRODUCT_ROADMAP.zh-CN.md`](PRODUCT_ROADMAP.zh-CN.md)：阶段计划和验收条件；
+- [`PRIOR_ART_AND_VALUE.zh-CN.md`](PRIOR_ART_AND_VALUE.zh-CN.md)：关联证据的公开先例、实际收益和适用边界；
 - [`REQUIREMENTS.md`](REQUIREMENTS.md)：当前英文需求基线；
 - [`TEST_PLAN.md`](TEST_PLAN.md)：当前英文测试计划。
 
 ## 1. 这个项目解决什么问题
 
-vLLM 服务发生故障时，最终日志通常能说明进程在哪里停止，却不一定保留
-故障前一段时间内的运行状态，例如：
+当前最值得解决的不是“缺少更多日志”，而是两类健康语义失真：
+
+- EngineCore 已经死亡，但 serving process 以 0 退出，`Restart=on-failure`
+  不会重启（[vLLM #48966](https://github.com/vllm-project/vllm/issues/48966)）；
+- 请求不再产生输出，但进程和 `/health` 仍然存活，编排系统不会摘除实例
+  （[vLLM #52319](https://github.com/vllm-project/vllm/issues/52319)）。
+
+最终日志通常只能说明进程在哪里停止，却不一定保留故障前一段时间内的
+运行轨迹，例如：
 
 - KV cache 使用率是否持续升高；
 - 等待请求是否开始堆积；
@@ -21,12 +29,47 @@ vLLM 服务发生故障时，最终日志通常能说明进程在哪里停止，
 - `/health` 从成功变成失败的时间；
 - 被观察进程和 GPU 显存状态如何变化。
 
-本项目提供一个运行在 vLLM 之外的轻量 recorder。它按不同周期采集允许
+本项目提供一个运行在 vLLM 部署环境、但位于 vLLM 进程之外的轻量 recorder。
+它按不同周期采集允许
 公开的聚合信号，将最近 N 个样本保存在固定大小的内存队列中，并在观察到
 进程退出、健康检查丢失、KV 压力或抢占突增时写出一个有大小上限的事件文件。
 
-它的目标不是自动判断根因，而是为故障分析保留一段可信、有限且可分享的
-时间线。
+它的目标不是自动判断根因，而是把故障检测、证据保留和证据边界变成可执行、
+可验证的契约。后续版本还要解决单份 artifact 无法回答的问题：哪个 rank
+首先出现分歧、哪些 producer 缺失，以及 `/health=200` 时服务是否已经失去进展。
+
+项目的验收标准不是“是否采到了数据”，而是证据能否补上实际运维缺口：
+
+| 运维缺口 | 产品输出 | 应支持的动作 |
+| --- | --- | --- |
+| `/health=200`，但已有请求停止推进 | 带支撑证据的、有界 `suspected_no_progress` 状态变化 | 进入排查、摘流或重启流程，而不是让静默故障继续保持健康 |
+| 单个 rank 卡住或消失，其他进程只有局部状态 | 经校验的 producer 集合、缺失 peer、状态分歧和顺序边界 | 不依赖故障时 collective，缩小第一个应排查的故障域 |
+| 多份文件无法证明属于同一次事故 | 关闭的 manifest、身份、clock 和内容 hash | 在诊断前拒绝混入其他运行或被篡改的证据 |
+
+当前 Alpha 提供的是有界本地证据这一基础能力。表中的 no-progress 和多 producer
+输出属于 v0.2 验收目标，不是当前已经交付的功能。
+
+### 1.1 为什么不直接使用 Prometheus
+
+Prometheus 和 OpenTelemetry 适合持续监控，本项目不替代它们。当前 recorder
+交付的是一个本地、触发时冻结、有大小上限且可以离线校验和分享的故障窗口，
+自动对齐少量 service、process 和 GPU 观察。
+
+如果现有监控系统已经可靠保留了同等分辨率的数据，并能在故障时自动形成
+可分享证据，那么本项目可能没有增量价值。后续必须通过 Prometheus 对照和
+unlinked-versus-linked 消融证明价值，不能把它作为前提。
+
+### 1.2 当前 Alpha 与后续目标
+
+当前 Alpha 只完成单目标外部时间线和 bounded artifact。它尚未实现：
+
+- health-green no-progress 检测；
+- API server、EngineCore 和 worker/rank 自动发现；
+- 多 producer correlation manifest；
+- 跨 rank semantic join；
+- 自动摘流、重启或根因分类。
+
+这些是 v0.2 及后续版本的目标，不能作为当前发布能力宣传。
 
 ## 2. 当前完成度
 
@@ -278,16 +321,19 @@ vllm-dfx --help
 
 1. **建立开销基线**：交错执行 recorder disabled/enabled 两组相同负载，报告
    吞吐、TTFT、TPOT、端到端延迟、recorder CPU/RSS 和采集器耗时。
-2. **补齐单卡故障状态**：真实制造 KV pressure 与抢占，验证计数器和历史顺序。
-3. **补齐分布式拓扑**：至少覆盖 TP=2 worker loss，再明确 DP supervisor、
-   NCCL hang 和 rank 聚合哪些属于当前产品边界。
-4. **建立版本矩阵**：覆盖多个 vLLM release、GPU 架构和指标命名差异。
-5. **完成长稳**：运行 24 小时及更长的采集，检查 RSS、CPU、文件轮转、
+2. **验证 no-progress 边界**：先用 fake server 区分 idle、长 prefill、正常排队、
+   持续进展和 health-green stall，再进行单卡 `SIGSTOP/SIGCONT` 实验。
+3. **建立关联契约**：加入 job-scoped `run_id`、producer identity、clock declaration、
+   artifact hash 和 closed manifest，并完成 unlinked-versus-linked 消融。
+4. **补齐分布式拓扑**：至少覆盖 TP=2 worker loss/stall，输出第一个外部可观察
+   divergence，同时明确不能由外部证明的 CUDA/NCCL 根因。
+5. **建立版本矩阵**：覆盖多个 vLLM release、GPU 架构和指标命名差异。
+6. **完成长稳**：运行 24 小时及更长的采集，检查 RSS、CPU、文件轮转、
    crash-loop 和服务非干扰。
-6. **补部署能力**：提供 systemd、Docker/Kubernetes 示例、健康状态和配置校验。
-7. **收集真实采用证据**：记录 artifact 是否改变了首个故障域判断、下一步动作、
+7. **补部署能力**：提供 systemd、Docker/Kubernetes 示例、健康状态和配置校验。
+8. **收集真实采用证据**：记录 linked evidence 是否改变了首个故障域判断、下一步动作、
    复现需求或 GPU 小时，而不是只统计生成文件数。
-8. **再决定上游形态**：如果外部边界已经足够，就继续独立维护；如果真实案例
+9. **再决定上游形态**：如果外部边界已经足够，就继续独立维护；如果真实案例
    反复需要 EngineCore 内部上下文，再用证据支持上游 in-process recorder。
 
 满足前五项后，可以称为 production-preview；只有兼容、部署、长稳、安全响应
@@ -311,9 +357,9 @@ EngineCore 内部的 `incident-snapshot-v1`。二者不能互相冒充：
 ## 14. 当前结论
 
 这个项目已经是一个公开、可安装、可验证的 Alpha 产品原型。它最成熟的部分
-是证据边界、隐私约束、有限资源使用和可复现测试；最欠缺的部分是分布式验证、
-性能开销、长稳和真实采用。
+是证据边界、隐私约束、有限资源使用和可复现测试；最欠缺的部分是
+health-green no-progress、跨 producer 关联、分布式验证、性能开销、长稳和真实采用。
 
 因此现阶段最有价值的工作不是继续扩展 schema，而是让更多真实运行环境使用
-它，并用可重复实验回答两个问题：它会不会影响服务，以及它是否真的减少了
-故障定位成本。
+它，并用可重复实验回答三个问题：它会不会影响服务、相比现有监控是否保留了
+额外证据、linked evidence 是否真的改变了下一步诊断动作。

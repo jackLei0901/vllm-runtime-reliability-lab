@@ -5,28 +5,74 @@
 
 [![CI](https://github.com/jackLei0901/vllm-runtime-reliability-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/jackLei0901/vllm-runtime-reliability-lab/actions/workflows/ci.yml)
 
-An opt-in, external flight recorder and fault-injection lab for investigating
-vLLM runtime failures. It keeps a bounded history of low-cardinality health,
-process, GPU and selected vLLM metrics, then writes a small incident artifact
-when an externally observable condition is met.
+An opt-in, out-of-process reliability evidence and validation lab for vLLM. The
+current alpha freezes a bounded, privacy-safe runtime history when an externally
+observable condition is met. The next product step is to correlate independent
+process/rank evidence and detect health-green loss of progress without relying
+on a failure-time collective.
 
 This is an **alpha research tool**, not a production monitor and not a root-cause
 classifier. An external observer can preserve chronology, but it cannot infer an
 internal EngineCore exception kind or execution stage. The artifact records both
 as `unknown` by construction.
 
-## Why this exists
+## The operational problem
 
-A final traceback explains where a process stopped. It often does not preserve
-the bounded runtime history needed to answer whether KV pressure, waiting work,
-preemption or process loss preceded the failure. This project makes that evidence
-reproducible while testing a deliberately narrow privacy and resource contract.
+Two failure modes expose gaps in ordinary serving health checks:
+
+- an EngineCore can die while the serving process exits successfully, defeating
+  `Restart=on-failure` ([vLLM #48966](https://github.com/vllm-project/vllm/issues/48966));
+- requests can stop producing output while the process and `/health` remain
+  alive ([vLLM #52319](https://github.com/vllm-project/vllm/issues/52319)).
+
+A final traceback is useful for a point failure, but it does not preserve the
+trajectory before the failure. A single-rank record also cannot define a
+missing peer, a cross-rank state mismatch or the first observed divergence.
+Those are relationship facts created only by joining independently produced
+evidence.
+
+This project aims to make those failure and evidence contracts executable:
+detect an externally visible loss, preserve a bounded local window, state what
+is still unknown, and test whether linked evidence changes the next diagnostic
+action. It does not promise automatic root-cause analysis.
+
+The product test is not “did it collect data?” It is whether the evidence closes
+an operational gap:
+
+| Operational gap | Product output | Decision it should support |
+| --- | --- | --- |
+| `/health=200` while admitted work stops progressing | bounded `suspected_no_progress` transition with its supporting observations | investigate, drain or restart instead of leaving a silent outage healthy |
+| one rank stalls or disappears while peers expose only local state | verified producer set, missing-peer/state divergence and ordering limits | identify the first useful fault domain without a failure-time collective |
+| several files exist but cannot be trusted as one incident | closed manifest, identities, clocks and content hashes | reject mixed or tampered evidence before diagnosis |
+
+The current alpha supplies the bounded local evidence primitive. The table's
+no-progress and multi-producer outputs are planned v0.2 gates, not shipped
+features.
+
+### This is not another Prometheus
+
+Prometheus and OpenTelemetry remain the right systems for continuous telemetry.
+This project targets a different output: one small, local, trigger-time incident
+window that correlates selected service, process and GPU observations and can be
+validated and shared offline. A future correlation manifest will reference
+existing producer artifacts rather than introduce a telemetry database, query
+engine or retention service.
+
+If a deployment already retains equivalent high-resolution data and can package
+it reliably at failure time, this recorder may add no value. The planned
+Prometheus baseline and unlinked-versus-linked ablation are explicit product
+gates, not assumptions.
 
 The design was informed by the investigation behind
 [vLLM #48966](https://github.com/vllm-project/vllm/issues/48966),
 [PR #52178](https://github.com/vllm-project/vllm/pull/52178), and the
 [runtime incident snapshot RFC](https://github.com/vllm-project/vllm/issues/54229).
 It remains independent of vLLM and does not modify EngineCore.
+
+The closest published precedent is PyTorch Flight Recorder: per-rank buffers are
+aligned offline to expose collective mismatches that no single rank can define.
+Its documented before/after, limitations and transfer boundary are summarized in
+[`PRIOR_ART_AND_VALUE.md`](PRIOR_ART_AND_VALUE.md).
 
 ## What the alpha provides
 
@@ -41,6 +87,10 @@ It remains independent of vLLM and does not modify EngineCore.
 - 256 KiB artifact cap, four-file rotation and POSIX mode `0600`;
 - fail-open writer behavior: artifact failure does not signal the observed service;
 - Markdown summaries and explicit signal-injection helpers.
+
+The alpha does **not** yet provide a no-progress detector, process/rank discovery,
+a cross-producer join or a correlation manifest. Those are v0.2 targets and must
+not be inferred from the current feature list.
 
 ## Five-minute CPU-only demo
 
@@ -187,6 +237,8 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 - [`PRODUCT_ROADMAP.zh-CN.md`](PRODUCT_ROADMAP.zh-CN.md): productization stages and gates.
 - [`REQUIREMENTS.md`](REQUIREMENTS.md): scope and acceptance criteria.
 - [`DESIGN.md`](DESIGN.md): trust boundary and component design.
+- [`PRIOR_ART_AND_VALUE.md`](PRIOR_ART_AND_VALUE.md): linked-evidence precedent,
+  demonstrated value and transfer limits.
 - [`TEST_PLAN.md`](TEST_PLAN.md): CPU and GPU validation matrix.
 - [`SECURITY.md`](SECURITY.md): privacy assumptions and reporting guidance.
 - [`CHANGELOG.md`](CHANGELOG.md): release history.
@@ -195,8 +247,9 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 `v0.1.0-alpha.3` validates the external artifact contract, CPU/local-service
 behavior, and retains the bounded RTX 4090 fault matrix from alpha.2. Paired
-overhead, fresh KV-pressure, multi-GPU, long-duration, and production-utility
-gates remain open. Treat this release as an evaluation build.
+overhead, fresh KV-pressure, health-green no-progress, cross-rank correlation,
+multi-GPU, long-duration, and production-utility gates remain open. Treat this
+release as an evaluation build.
 
 ## License
 

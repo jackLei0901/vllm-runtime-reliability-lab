@@ -2,8 +2,9 @@
 
 ## 1. 设计目标
 
-本项目希望在不修改 vLLM 的前提下，保存故障发生前的一段有限运行历史，供
-人工排障、故障复现和后续自动化评估使用。
+本项目希望在不修改 vLLM 的前提下，保存故障发生前的一段有限运行历史，并
+逐步解决两个单一数据源无法回答的问题：服务是否在 `/health=200` 时失去推理
+进展，以及多个 process/rank 中谁最先出现外部可观察的分歧。
 
 设计优先级依次是：
 
@@ -12,7 +13,9 @@
 3. 默认不采集 prompt、token 和高基数字段；
 4. 内存、磁盘和采集开销有明确上限；
 5. 结果可通过 schema、测试和复现实验检查；
-6. 保留升级到 EngineCore 内部 recorder 的清晰边界。
+6. 保留升级到 EngineCore 内部 recorder 的清晰边界；
+7. 关联现有证据生产者，而不是建设新的通用 telemetry 数据平台；
+8. 只有 semantic join 产生的新事实才计为关联价值，文件打包本身不计。
 
 ## 2. 系统边界
 
@@ -54,6 +57,30 @@ HTTP、显式 PID 和 GPU 聚合状态。
 
 因此，外部 artifact 的 `internal_kind` 和 `internal_stage` 被 schema 固定为
 `unknown`。这不是功能缺失的临时占位，而是当前证据边界的契约。
+
+### 2.3 当前架构与 v0.2 目标
+
+当前 Alpha 是单目标 recorder，只能生成一条外部时间线。v0.2 计划增加：
+
+```text
+独立 producer artifacts
+        │ run identity / producer identity / clock / hash
+        v
+closed correlation manifest
+        │ topology + time alignment
+        v
+vLLM process/progress semantic join
+        │
+        v
+first observed divergence + 明确的 unknown
+```
+
+这不是中央数据底座：不负责遥测数据的长期接入、存储、SQL 查询、多租户权限
+和保留周期。Prometheus/OpenTelemetry 继续承担持续 telemetry，本项目只负责
+在事故边界冻结、校验和关联经过允许的证据。
+
+v0.2 也不是当前能力。no-progress、process/rank 发现、manifest 和 semantic join
+都必须完成实现和验证后才能进入发布声明。
 
 ## 3. 组件设计
 
@@ -147,6 +174,23 @@ incident ID 使用进程启动时生成的随机 HMAC key，只用于同一次 r
 这是隐私与关联能力之间的主动选择。未来如果需要稳定的 fleet signature，必须
 设计独立、显式授权的身份机制，不能悄悄放宽 v1 的隐私约束。
 
+未来跨 producer 关联不能复用当前 incident ID，需要拆分：
+
+- `run_id`：故障前由 operator 提供或随机生成，所有 producer 共享；
+- `producer_id`：标识一次具体的 process 实例及其 role/rank；
+- `artifact_id`：由 artifact 内容 hash 确定；
+- `incident_id`：由 bundle coordinator 在触发后分配，不要求卡死的 producer 回写。
+
+这样可以避免故障发生后再要求 ranks 协商 ID，也不会把跨重启稳定身份偷偷加入
+当前 v1 隐私契约。
+
+### 3.8 Clock declaration
+
+每个 producer 必须声明 clock type、clock domain 和已知同步误差。同一主机的
+单调时钟只有在平台契约支持时才能直接对齐；不同主机的 monotonic clock 默认
+不可比较。同步误差未知时，joiner 只能报告时间窗口可能重叠，不能声称两个事件
+相差了精确的毫秒数。
+
 ## 4. 数据契约
 
 公开契约名称为 `external-runtime-observation-v1`。核心原则：
@@ -215,10 +259,13 @@ incident ID 使用进程启动时生成的随机 HMAC key，只用于同一次 r
 `tests/cases.json` 将 FR/SR 需求映射到具体测试方法，CI 会检查映射双向完整且
 测试方法确实存在。GPU 结果另附环境、基线 commit、排除试次和未覆盖边界。
 
+跨 rank 关联的公开先例、能够证明的收益以及不能直接迁移到推理服务的结论，
+见 [`PRIOR_ART_AND_VALUE.zh-CN.md`](PRIOR_ART_AND_VALUE.zh-CN.md)。
+
 ## 8. 产品候选架构
 
-如果外部 Alpha 的开销和采用验证通过，下一阶段建议保持采集进程独立，并增加
-部署与自观测能力：
+如果外部 Alpha 的开销验证通过，下一阶段保持采集进程独立，先增加 progress
+和 correlation 能力，再增加部署与自观测能力：
 
 ```text
 vLLM pod/process                  recorder sidecar/service
@@ -233,6 +280,11 @@ vLLM pod/process                  recorder sidecar/service
 
 产品候选版本需要增加：
 
+- 区分 idle、长 prefill、正常排队与 `suspected_no_progress`；
+- API server、EngineCore、worker/rank 的显式 producer model；
+- closed correlation manifest、artifact hash 和 per-source clock declaration；
+- 至少一个 vLLM process/progress semantic joiner；
+- 使用相同原始数据的 unlinked-versus-linked 消融；
 - 配置文件及严格校验；
 - recorder 自身 `/health` 与低基数 metrics；
 - systemd、Docker sidecar、Kubernetes 示例；
@@ -256,6 +308,11 @@ EngineCore producer  -> InternalObservation -> incident snapshot v1
 内部实现必须使用单独版本的契约，不能把外部 v1 的 `unknown` 字段重新解释为
 内部事实。
 
+外部 observer 与内部 recorder 是互补 producer，而不是前者必然被后者替代。
+外部层在内部线程无法响应或进程已经死亡时仍可保留服务、进程和 GPU 边界状态；
+内部层提供异常类型、执行阶段和 scheduler iteration 等外部无法获得的语义。
+二者通过 manifest 离线关联，不在故障路径中执行新的 collective。
+
 ## 10. 关键设计决策总结
 
 - 独立进程优先，先验证需求和采用，再讨论上游所有权；
@@ -264,5 +321,6 @@ EngineCore producer  -> InternalObservation -> incident snapshot v1
 - 明确未知优先于不可靠的自动根因分类；
 - writer fail-open 优先于“保证每次都写成功”；
 - 真实实验、无效试次和局限说明必须一起发布；
+- 关联契约优先于通用数据平台，semantic join 优先于文件聚合；
+- first observed divergence 优先于没有证据支撑的 root-cause 标签；
 - 自动修复暂不进入 v1，先证明证据和分类可靠。
-

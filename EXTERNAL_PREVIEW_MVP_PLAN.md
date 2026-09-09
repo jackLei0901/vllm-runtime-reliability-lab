@@ -3,14 +3,23 @@
 > Status on 2026-09-09: M0 and M1 are complete in `v0.1.0-alpha.3`, and M2
 > has been reconciled against the published evidence. M3 is partial: the fresh
 > single-GPU fatal, writer-failure, and disabled controls are complete; fresh
-> KV-pressure/preemption and multi-GPU observer coverage remain open.
+> KV-pressure/preemption and multi-GPU observer coverage remain open. The CPU
+> paired-overhead harness exists, but GPU overhead and adoption evidence remain
+> open. The no-progress and correlation work below is a post-alpha direction,
+> not an alpha feature.
 
 ## Outcome
 
 Build a standalone, opt-in recorder that produces real, bounded external
 incident artifacts without modifying vLLM. Its purpose is to validate capture,
-privacy, persistence, overhead and adoption workflow before asking vLLM to make
-EngineCore own an in-process recorder.
+privacy, persistence, overhead and adoption workflow, then grow into an external
+reliability evidence plane for health-green loss of progress and cross-process
+correlation.
+
+The external observer is not a disposable precursor to an in-process recorder.
+It remains useful when an internal thread is stalled or a process has died.
+EngineCore, PyTorch/NCCL Flight Recorder and supervisor evidence are independent
+producers that may later be linked offline through a closed manifest.
 
 The external preview does **not** claim to know an internal EngineCore fatal kind
 or stage. The September 1 boundary experiment showed that an outside observer
@@ -31,7 +40,9 @@ The current `dfxlab` implementation already provides:
 - environment capture, Markdown summaries and signal-injection helpers;
 - unit coverage for basic collection, metric parsing, bounded history and
   trigger classification;
-- single-GPU and TP=2 fault-boundary evidence under `results/`.
+- single-GPU fault-boundary evidence under `results/`;
+- separate TP=2 process-lifecycle evidence associated with vLLM PR #52178,
+  which is not current multi-producer observer validation.
 
 ## Decisions implemented in the alpha preview
 
@@ -84,17 +95,18 @@ ExternalIncidentArtifact
   writer_health
 ```
 
-The conversion seam is the projected observation, not the file format:
+The component seam is the projected observation, not the file format:
 
 ```text
 collectors -> ExternalObservation -> BoundedRecorder -> IncidentWriter
-                                    ^
-future EngineCore producer ---------|
+
+future EngineCore/PyTorch/NCCL/supervisor artifacts
+                          -> closed manifest -> semantic join
 ```
 
-A future in-process implementation can replace the producer and typed trigger
-while reusing bounded-recorder and writer tests. It must emit the RFC schema,
-not relabel an external artifact.
+A future in-process implementation may reuse bounded-recorder and writer ideas,
+but it must emit its own versioned contract. It does not replace the external
+observer, and it must not relabel an external artifact as internal evidence.
 
 ## MVP implementation sequence
 
@@ -146,7 +158,7 @@ indistinguishable externally.
 | EngineCore failure | 1 GPU | bounded artifact; external cause remains unknown |
 | Runtime CUDA OOM | 1 GPU | health/process transition preserved; no traceback parsing |
 | KV pressure/preemption | 1 GPU | ordered aggregate pressure history and warning trigger |
-| Worker loss | TP=2 | process/health evidence plus topology metadata already available externally |
+| Worker loss | TP=2 | explicit producer identity, missing-peer/state transition and ordering boundary |
 | Read-only/full directory | CPU first, then GPU smoke | service outcome unaffected; writer failure visible |
 | Disabled recorder | 1 GPU A/B | no polling process and no artifact |
 
@@ -163,6 +175,24 @@ recorder exit and orphaned processes separately.
 - Attach an artifact only after validating it and checking the privacy canary.
 - Record whether it changed a diagnostic action or avoided a reproduction; do
   not infer value from file creation alone.
+
+### M5 — progress and correlation value
+
+1. Implement CPU fake-service states for idle, healthy progress, long prefill,
+   waiting with progress, health-green stall and recovery.
+2. Define pre-failure `run_id`, per-process `producer_id`, content-addressed
+   `artifact_id`, per-source clocks and a coordinator-assigned `incident_id`.
+3. Publish a closed correlation manifest and one bounded vLLM process/progress
+   semantic joiner.
+4. Compare unlinked and linked presentations of identical producer artifacts.
+5. Compare the result with the Prometheus/OpenTelemetry evidence normally
+   retained by an operator.
+6. Move to TP=2 only after the CPU state-machine, integrity and missing-producer
+   cases pass.
+
+Exit criterion: the linked arm creates at least one checkable relationship fact
+that the unlinked arm cannot define, while incomplete or incomparable evidence
+remains explicit. A better-looking report does not count as value.
 
 ## Acceptance matrix
 
@@ -185,6 +215,7 @@ recorder exit and orphaned processes separately.
 - automatic upload, fleet identity or cross-restart stable fingerprints;
 - parsing arbitrary logs or exception strings into a root cause;
 - automatic restart or remediation;
+- a general telemetry database, query engine or retention service;
 - DP aggregation, NCCL collectives or GPU XID collection inside the recorder;
 - claiming that external polling reproduces per-iteration EngineCore history.
 
@@ -194,5 +225,5 @@ recorder exit and orphaned processes separately.
 collection work, reconciles M2, and publishes the completed subset of M3 with
 explicit exclusions. It does not claim paired overhead, fresh KV-pressure,
 multi-GPU observer behavior, diagnostic utility, production adoption, DP/NCCL
-coverage, or safe automatic remediation. Those claims remain gated by the
-unfinished M3 work and M4.
+coverage, health-green no-progress detection, cross-producer correlation or safe
+automatic remediation. Those claims remain gated by the unfinished M3–M5 work.

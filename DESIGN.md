@@ -1,5 +1,18 @@
 # Design
 
+## Problem model
+
+The product is not a generic data collector. It addresses two evidence gaps:
+
+1. a service can remain process- and health-alive while useful inference progress
+   has stopped; and
+2. a distributed failure is expressed as relationships between producers, while
+   each producer can record only its local state.
+
+The current alpha covers bounded single-target capture. A planned v0.2 will test
+health-green no-progress detection and offline cross-producer correlation. Those
+capabilities are not claims of the current release.
+
 ## Trust boundary
 
 The recorder is a separate process. It can observe HTTP status, selected
@@ -87,3 +100,58 @@ The conversion seam is `ExternalObservation`. A future in-process producer may
 reuse bounded-recorder and writer ideas, but it must emit a separately versioned
 EngineCore contract. The external schema will not be relabeled as internal
 evidence.
+
+## Planned correlation boundary
+
+Cross-layer correlation does not require this project to own ingestion, storage
+or a query service. The proposed boundary is a closed manifest plus one concrete
+vLLM process/progress joiner:
+
+```text
+independent producer artifacts
+        | run identity, producer identity, clocks, content hashes
+        v
+closed correlation manifest
+        | topology and time alignment
+        v
+vLLM process/progress semantic join
+        |
+        v
+first observed divergence + explicit unknowns
+```
+
+The identities have separate roles:
+
+- `run_id` is random or operator-supplied before failure and shared by producers;
+- `producer_id` identifies one process instance and its declared role/rank;
+- `artifact_id` is content-addressed;
+- `incident_id` is assigned by the bundle coordinator and does not require a
+  stalled producer to acknowledge it.
+
+Each producer must declare its clock domain. Same-host monotonic clocks may be
+aligned when the platform contract supports it; cross-host monotonic clocks are
+not assumed comparable. Unknown synchronization error prevents a total-order
+claim.
+
+The first semantic join will report missing producers, state/progress divergence
+and ordering limitations. It will not translate those observations into a CUDA,
+NCCL or scheduler root cause.
+
+Prometheus and OpenTelemetry remain continuous telemetry systems. A correlation
+manifest may reference their reviewed outputs, PyTorch/NCCL Flight Recorder
+dumps, process evidence and supervisor events. It does not copy their storage or
+query responsibilities.
+
+## Value test
+
+The correlation design must pass an unlinked-versus-linked ablation using the
+same underlying producer records. Required structural outcomes include capture
+coverage, join coverage, tamper detection, missing-producer detection and the
+ability to identify the first externally observed divergence when the declared
+clock precision permits it. Human utility is evaluated separately through
+hypotheses eliminated and time to the next diagnostic action.
+
+PyTorch Flight Recorder is the closest published precedent: its offline
+cross-rank alignment produces mismatch facts that a single rank cannot define.
+See [`PRIOR_ART_AND_VALUE.md`](PRIOR_ART_AND_VALUE.md) for the before/after and
+the boundary on transferring training evidence to inference serving.

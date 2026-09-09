@@ -4,7 +4,8 @@
 
 Produce a bounded external incident artifact for an operator investigating a
 vLLM runtime failure, without changing vLLM or claiming internal state that an
-external process cannot observe.
+external process cannot observe. This alpha is the first evidence layer of a
+broader reliability-validation product; it is not the final product boundary.
 
 ## Functional requirements
 
@@ -45,3 +46,29 @@ external process cannot observe.
 
 GPU overhead, repeated fatal trials, supervisor recovery and operator adoption
 are post-alpha gates, not claims of this release.
+
+## Post-alpha problem and product gates
+
+The following are planned evaluation gates, not requirements or capabilities of
+the current alpha. They deliberately have no `FR-*` or `SR-*` identifiers until
+their contracts and tests are implemented.
+
+- **Health-green no-progress:** distinguish idle, healthy progress, long-running
+  work, queued work with progress, a sustained stall and recovery without
+  treating `/health=200` as proof of useful progress.
+- **Producer identity:** establish a pre-failure `run_id`, per-process
+  `producer_id`, content-addressed `artifact_id` and coordinator-assigned
+  `incident_id` without requiring acknowledgement from a stalled producer.
+- **Clock declaration:** record the clock domain and precision of every source;
+  do not claim a total order when clocks are not comparable.
+- **Closed manifest:** reference independently produced evidence by identity and
+  hash rather than copy it into a new telemetry store.
+- **Semantic join:** produce checkable vLLM process/progress facts such as a
+  missing producer, state divergence or first externally observed divergence.
+- **Existing-system baseline:** compare with retained Prometheus/OpenTelemetry
+  evidence rather than assuming an additional recorder is useful.
+- **Linkage ablation:** compare unlinked and linked views of identical producer
+  artifacts. Packaging alone is not counted as diagnostic value.
+
+These gates do not authorize a general telemetry platform, automated root-cause
+classification or automatic remediation.

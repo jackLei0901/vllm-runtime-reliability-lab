@@ -2,16 +2,27 @@
 
 ## 1. 最终目标
 
-目标不是把实验脚本包装成一个命令，而是交付一个满足以下条件的公开产品：
+目标不是把实验脚本包装成一个命令，也不是建设新的通用监控平台。目标是交付
+一个面向 vLLM 运行时故障的外部可靠性证据层，优先解决两个实际问题：
+
+- 进程和 `/health` 仍然存活，但请求已经不再取得进展；
+- 多进程或多 rank 故障中，各方只有局部记录，无法判断谁先出现分歧、谁缺失。
+
+产品最终需要满足以下条件：
 
 - 操作者可以稳定安装、升级和回滚；
 - 默认配置不会泄露请求内容；
 - 资源开销有可复现的上界；
 - 在单卡和主要分布式拓扑中不干扰 vLLM；
-- 故障时能稳定生成有限、可解释的证据；
+- 故障时能稳定生成有限、可解释且可以相互关联的证据；
+- 关联结果能够产生单份日志无法表达的事实，而不是只把文件打包在一起；
 - 不支持的版本、指标和拓扑会明确失败或降级；
 - 至少有真实用户证明 artifact 改变了诊断动作；
 - 项目有 issue、兼容、发布和安全响应流程。
+
+明确不做：通用 telemetry 数据库、查询引擎、长期数据仓库，以及没有证据边界的
+自动根因判断。Prometheus、OpenTelemetry、NCCL/PyTorch Flight Recorder 和
+编排器仍然拥有各自的数据；本项目只定义事故边界上的冻结、身份、校验和语义关联。
 
 建议将“正式公开产品”分成 `public alpha → production preview → 1.0` 三个承诺
 等级，避免一次性声称生产可用。
@@ -27,8 +38,9 @@
 - 需求与测试用例可机器追踪；
 - 已公开无效试次和未覆盖边界。
 
-它尚未达到 production preview，主要缺口是开销、多卡、长稳、版本兼容、部署
-模板和采用证据。
+它尚未达到 production preview，也还不能检测 health-green no-progress 或关联
+多个 producer。主要缺口是开销、进展语义、跨进程关联、多卡、长稳、版本兼容、
+部署模板和采用证据。
 
 ## 3. 阶段 P1：单卡运行特性闭环
 
@@ -62,26 +74,39 @@
 
 代码与脚本约 3–5 个工作日；GPU 实际占用约 1–2 天，可分批执行。
 
-## 4. 阶段 P2：分布式与版本兼容
+## 4. 阶段 P2：Progress Sentinel 与 Correlation Contract
 
 ### 工作项
 
-1. TP=2：分别终止非主 rank、EngineCore 和 API server；
-2. 检查 rank/process 变化、health、退出码和孤儿进程；
-3. 明确外部 recorder 对 DP supervisor 的观察边界；
-4. 建立 NCCL hang/abort 的受控实验，不通过日志字符串伪造根因；
-5. 覆盖至少三个 vLLM 版本；
-6. 覆盖至少两类 GPU 架构；
-7. 为 metrics 缺失、改名和 label 变化制定兼容策略。
+1. 先用 CPU fake service 建立 no-progress 状态机，区分 idle、正常推进、长
+   prefill、等待但仍推进、health-green stall 和恢复；
+2. 定义 `run_id`、`producer_id`、content-addressed `artifact_id` 和由外部
+   coordinator 分配的 `incident_id`；
+3. 定义关闭的 correlation manifest，每个 producer 声明 role/rank、clock
+   domain、时间精度和 artifact hash；
+4. 实现一个有限的 vLLM process/progress semantic join，输出 missing producer、
+   state/progress divergence、first observed divergence 和 ordering unknown；
+5. 使用同一组 producer records 做 unlinked-versus-linked 消融，验证关联是否
+   产生新事实，而不是只改善展示；
+6. 再进入 TP=2：分别终止或暂停非主 rank、EngineCore 和 API server；
+7. 检查 rank/process 变化、health、退出码、关联覆盖和孤儿进程；
+8. 建立 NCCL hang/abort 的受控实验，不通过日志字符串伪造根因；
+9. 覆盖至少三个 vLLM 版本、两类 GPU 架构，并处理 metrics 演进。
 
 ### 环境
 
-- 最低 2×同型号 GPU；
+- 状态机、manifest 和 join 的第一轮只需要 CPU；
+- 拓扑验证最低需要 2×同型号 GPU；
 - 一个当前 main/开发版、一个近期稳定 release、一个较旧受支持 release；
 - 优先覆盖 Ampere/Ada 与 Hopper 中至少两类。
 
 ### 通过条件
 
+- 不把 SIGSTOP 定位能力外推成任意 CUDA/NCCL hang 定位能力；
+- 每个 producer 的身份与 clock domain 可机器校验，缺失或 hash 不一致必须显式失败；
+- 不宣称跨主机 monotonic clock 存在全局顺序；
+- 相同底层记录的 linked arm 至少产生一项 unlinked arm 无法定义的可核查关系事实；
+- Prometheus 对照能够说明本项目是否提供增量证据；
 - 不把单卡结论外推为多卡结论；
 - 每个进程故障点至少重复三次；
 - 没有遗留 worker、共享内存或 GPU context；
@@ -90,7 +115,8 @@
 
 ### 预计投入
 
-约 5–8 个工作日，双卡计费时间约 1–3 天，取决于模型准备和故障注入速度。
+CPU 状态机、契约、join 和消融约 5–8 个工作日；双卡验证另需约 1–3 天计费
+时间，取决于模型准备和故障注入速度。
 
 ## 5. 阶段 P3：部署与可运维性
 
@@ -146,7 +172,7 @@
 
 ## 7. 阶段 P5：production preview
 
-满足 P1–P4 后发布 `0.2.0` production preview，并承诺：
+满足 P1–P4 后发布 production preview。版本号由届时的兼容承诺决定，并承诺：
 
 - 固定支持矩阵；
 - 有限 schema 兼容周期；
@@ -175,14 +201,16 @@
 
 按投入产出比，建议下一轮依次执行：
 
-1. 固化单卡配对 overhead harness；
-2. 在无需 GPU 的环境完成配置 schema 与 systemd 草案；
-3. 租单卡完成 overhead、KV pressure 和 2 小时运行；
-4. 分析结果，决定是否值得投入 24 小时和双卡；
-5. 租双卡完成 TP=2 worker/EngineCore 故障矩阵；
-6. 发布 `0.2.0-rc1` 试用包与支持矩阵；
-7. 以可执行工具和结果表推进 RFC，而不是继续扩充 RFC 正文；
-8. 招募真实使用者，进入 adoption gate。
+1. 固化并发布现有单卡配对 overhead 结果；
+2. 在无需 GPU 的环境实现 no-progress fake states；
+3. 定义 correlation schema、身份、clock 和 hash 校验；
+4. 实现最小 process/progress semantic join，并完成 unlinked-versus-linked 消融；
+5. 加入 Prometheus 基线，判断现有监控能否提供同等证据；
+6. 租单卡验证 health-green stall、恢复和误报边界；
+7. 租双卡完成 TP=2 worker/rank stall、loss 和证据关联矩阵；
+8. 再执行长稳、版本兼容和部署模板；
+9. 发布 preview 试用包，以可执行工具和结果推进 RFC；
+10. 招募真实使用者，进入 adoption gate。
 
 当前进度：CPU 配对 harness、固定 A/B 顺序、工作负载签名校验、独立试次日志和
 GPU 配置模板已经进入 `experiments/overhead/`。GPU 模板仍标记为不可执行，必须
@@ -193,7 +221,7 @@ GPU 配置模板已经进入 `experiments/overhead/`。GPU 模板仍标记为不
 GitHub milestone 可以按下面方式划分：
 
 - `P1-single-gpu-evidence`
-- `P2-distributed-compatibility`
+- `P2-progress-correlation`
 - `P3-deployment`
 - `P4-adoption`
 - `0.2.0-production-preview`

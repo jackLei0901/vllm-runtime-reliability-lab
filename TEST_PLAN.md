@@ -54,6 +54,57 @@ template are in [`experiments/overhead/`](experiments/overhead/). The CPU run
 validates pairing, signatures, process cleanup and report generation only; its
 latency values are not vLLM overhead evidence.
 
+## Post-alpha no-progress protocol
+
+Start with deterministic CPU fake services before using GPU time. Exercise the
+same health endpoint under these states:
+
+| State | Health | Work state | Expected classification |
+| --- | --- | --- | --- |
+| Idle | 200 | no admitted work | not stalled |
+| Healthy progress | 200 | progress counter advances | not stalled |
+| Long prefill | 200 | work is long but progress evidence advances | not stalled |
+| Waiting with progress | 200 | queue grows while completions/progress continue | not stalled |
+| Health-green stall | 200 | admitted work exists and progress stops beyond the frozen threshold | suspected no progress |
+| Recovery | 200 | progress resumes | recovery transition is recorded |
+
+The detector must be a state machine with a predeclared threshold and explicit
+evidence of admitted work. A paused fake process or `SIGSTOP` is a controlled
+test stimulus, not evidence that arbitrary CUDA or NCCL hangs are detectable.
+
+## Post-alpha correlation protocol
+
+Use identical producer artifacts for both arms:
+
+1. unlinked local files with no topology or normalized timeline;
+2. a closed manifest plus the vLLM process/progress semantic join.
+
+Required negative and boundary cases:
+
+- tampered content hash;
+- missing expected producer;
+- duplicate or mismatched `producer_id`;
+- artifacts from different `run_id` values;
+- clocks that cannot support a cross-host total order;
+- one stalled rank while peers continue or wait;
+- an incomplete bundle that must remain analyzable without inventing state.
+
+Report capture coverage, join coverage, hash-verification outcomes,
+missing-producer detection and first-observed-divergence accuracy where the
+declared clock precision permits it. Separately record whether the linked arm
+eliminates a hypothesis or changes the next diagnostic action.
+
+The GPU extension uses TP=2 and repeats worker loss and controlled rank stall at
+least three times. It must not require a new failure-time collective. A later
+NCCL experiment is a separate claim and cannot be inferred from TP=2 `SIGSTOP`.
+
+## Existing telemetry baseline
+
+For each positive scenario, retain the Prometheus/OpenTelemetry evidence that an
+operator would normally have. Compare whether it already answers the same
+blocking question. If it does, report no incremental value rather than crediting
+the recorder merely because its schema contains the field.
+
 ## Result boundary
 
 Passing the CPU gate validates the artifact and failure-isolation contracts. It
