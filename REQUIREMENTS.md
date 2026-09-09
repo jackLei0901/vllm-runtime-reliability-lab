@@ -64,11 +64,14 @@ their contracts and tests are implemented.
 - **Closed manifest:** reference independently produced evidence by identity and
   hash rather than copy it into a new telemetry store.
 - **Semantic join:** produce checkable vLLM process/progress facts such as a
-  missing producer, state divergence or first externally observed divergence.
+  missing producer, state divergence or mismatch at a shared logical position.
 - **Optional stack producer:** collect CPU main-thread stacks only with explicit
   operator consent and attachment permission. Raw stacks remain private and use
   a separately reviewed contract rather than entering the current shareable
   schema.
+- **Sampling feasibility gate:** do not build the stack/FR joiner until bounded
+  attachment tests show useful context for blocked processes. Treat denied,
+  timed-out and partial captures as explicit outcomes.
 - **Existing-system baseline:** compare with retained Prometheus/OpenTelemetry
   evidence rather than assuming an additional recorder is useful.
 - **Linkage ablation:** compare unlinked and linked views of identical producer

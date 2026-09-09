@@ -49,7 +49,20 @@
 当前 Alpha 提供的是有界本地证据这一基础能力。表中的 no-progress 和多 producer
 输出属于 v0.2 验收目标，不是当前已经交付的功能。
 
-### 1.1 为什么不直接使用 Prometheus
+### 1.1 计划中的 stack adapter 有严格部署门槛
+
+CPU stack adapter 同样不是当前能力。`py-spy` 需要读取另一个进程的内存：Linux
+attach 通常需要 root 或调整 `ptrace_scope`，Docker/Kubernetes 往往需要
+`SYS_PTRACE`。默认采样可能短暂停顿目标进程；`--nonblocking` 可以避免暂停，但
+由于多次内存读取不是原子的，可能得到错误或不完整 stack。具体限制见
+[py-spy FAQ](https://github.com/benfred/py-spy#frequently-asked-questions)。
+
+实现 joiner 之前必须先做 go/no-go 实验：在固定耗时和样本数预算内，能否从阻塞
+进程获得有用的 Python/native 上下文。单进程、单 GPU 只能验证 attach 以及
+CUDA/native wait；真实的 unmatched NCCL collective 需要多 rank GPU 环境。
+权限拒绝、超时或 partial output 都是正常的明确结果，不能被当作 recorder 异常。
+
+### 1.2 为什么不直接使用 Prometheus
 
 Prometheus 和 OpenTelemetry 适合持续监控，本项目不替代它们。当前 recorder
 交付的是一个本地、触发时冻结、有大小上限且可以离线校验和分享的故障窗口，
@@ -59,7 +72,7 @@ Prometheus 和 OpenTelemetry 适合持续监控，本项目不替代它们。当
 可分享证据，那么本项目可能没有增量价值。后续必须通过 Prometheus 对照和
 unlinked-versus-linked 消融证明价值，不能把它作为前提。
 
-### 1.2 当前 Alpha 与后续目标
+### 1.3 当前 Alpha 与后续目标
 
 当前 Alpha 只完成单目标外部时间线和 bounded artifact。它尚未实现：
 

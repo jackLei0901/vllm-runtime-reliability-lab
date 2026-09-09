@@ -10,6 +10,9 @@
   unlinked-versus-linked value test with transfer limitations.
 - Record PyTorch's published distributed CPU main-thread-stack gap as an
   optional external adapter and correlation experiment, not a shipped feature.
+- Correct the correlation claim: Flight Recorder identifies logical
+  missing/mismatched ranks; stack sampling explains current CPU activity and is
+  gated by attachment, privilege and bounded-interference experiments.
 - Add a detailed Chinese guide covering usage, evidence boundaries, validation,
   current product readiness, and the path from public alpha to production preview.
 - Add a Chinese architecture/design document and a gated product roadmap.

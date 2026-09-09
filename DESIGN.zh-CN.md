@@ -4,7 +4,8 @@
 
 本项目希望在不修改 vLLM 的前提下，保存故障发生前的一段有限运行历史，并
 逐步解决两个单一数据源无法回答的问题：服务是否在 `/health=200` 时失去推理
-进展，以及多个 process/rank 中谁最先出现外部可观察的分歧。
+进展，以及多个 process/rank 在共同逻辑位置上是否不一致、相关 CPU 线程当时
+在做什么。
 
 设计优先级依次是：
 
@@ -72,7 +73,7 @@ closed correlation manifest
 vLLM process/progress semantic join
         │
         v
-first observed divergence + 明确的 unknown
+logical mismatch position + 明确的 unknown
 ```
 
 这不是中央数据底座：不负责遥测数据的长期接入、存储、SQL 查询、多租户权限
@@ -89,6 +90,13 @@ manifest 之后的第一个可选 adapter，计划验证 PyTorch Flight Recorder
 进入 `external-runtime-observation-v1`。采集必须由 operator 显式开启，并满足
 平台的进程 attach/ptrace 权限；manifest 只能引用单独版本化、经过审核的 stack
 artifact 及其内容 hash。
+
+Flight Recorder 继续负责按 process-group-local logical position 对齐 collective，
+并指出缺失或不一致的 ranks。stack sampling 的职责不同：解释被选中 rank 的 CPU
+线程当时在做什么。若两边存在共同的归一化 frames，可以作为 stack 与 collective
+关联的佐证；但它不能成为唯一 join key——rank 若在调度下一条 collective 之前
+就卡住，当前 stack 可能没有对应的 FR record。本地 timestamp 只能作为带边界的
+辅助证据，不能替代 logical collective identity。
 
 v0.2 也不是当前能力。no-progress、process/rank 发现、manifest 和 semantic join
 都必须完成实现和验证后才能进入发布声明。
@@ -334,5 +342,5 @@ EngineCore producer  -> InternalObservation -> incident snapshot v1
 - writer fail-open 优先于“保证每次都写成功”；
 - 真实实验、无效试次和局限说明必须一起发布；
 - 关联契约优先于通用数据平台，semantic join 优先于文件聚合；
-- first observed divergence 优先于没有证据支撑的 root-cause 标签；
+- logical mismatch position 优先于没有证据支撑的“哪个 rank 最先出错”；
 - 自动修复暂不进入 v1，先证明证据和分类可靠。

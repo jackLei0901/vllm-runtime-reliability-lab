@@ -117,7 +117,7 @@ closed correlation manifest
 vLLM process/progress semantic join
         |
         v
-first observed divergence + explicit unknowns
+logical mismatch position + explicit unknowns
 ```
 
 The identities have separate roles:
@@ -133,9 +133,10 @@ aligned when the platform contract supports it; cross-host monotonic clocks are
 not assumed comparable. Unknown synchronization error prevents a total-order
 claim.
 
-The first semantic join will report missing producers, state/progress divergence
-and ordering limitations. It will not translate those observations into a CUDA,
-NCCL or scheduler root cause.
+The first semantic join will report missing producers, state/progress divergence,
+the earliest shared logical position with an observed mismatch, and ordering
+limitations. It will not claim which rank failed first in causal time or
+translate those observations into a CUDA, NCCL or scheduler root cause.
 
 The first optional evidence adapter after the manifest will target a gap stated
 by the PyTorch Flight Recorder team: distributed CPU main-thread stack context.
@@ -152,6 +153,15 @@ requires explicit operator opt-in and the platform's process-attachment
 permission; a manifest may reference only a separately versioned, reviewed
 stack artifact and its content hash.
 
+Flight Recorder remains responsible for aligning collective records and
+identifying missing or mismatched ranks at a process-group-local logical
+position. Stack sampling has a different job: explain what a selected rank's CPU
+thread was doing. Shared normalized frames may corroborate a stack-to-collective
+association when they exist, but frame content is not a universal join key: a
+rank stuck before scheduling the next collective may have no matching FR record.
+Local timestamps are bounded auxiliary evidence, not a substitute for logical
+collective identity.
+
 Prometheus and OpenTelemetry remain continuous telemetry systems. A correlation
 manifest may reference their reviewed outputs, PyTorch/NCCL Flight Recorder
 dumps, process evidence and supervisor events. It does not copy their storage or
@@ -162,8 +172,8 @@ query responsibilities.
 The correlation design must pass an unlinked-versus-linked ablation using the
 same underlying producer records. Required structural outcomes include capture
 coverage, join coverage, tamper detection, missing-producer detection and the
-ability to identify the first externally observed divergence when the declared
-clock precision permits it. Human utility is evaluated separately through
+ability to localize a mismatch at a shared logical position. Human utility is
+evaluated separately through
 hypotheses eliminated and time to the next diagnostic action.
 
 PyTorch Flight Recorder is the closest published precedent: its offline

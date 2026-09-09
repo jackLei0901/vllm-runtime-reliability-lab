@@ -72,6 +72,25 @@ The detector must be a state machine with a predeclared threshold and explicit
 evidence of admitted work. A paused fake process or `SIGSTOP` is a controlled
 test stimulus, not evidence that arbitrary CUDA or NCCL hangs are detectable.
 
+## Phase 0 stack-sampling go/no-go
+
+Run this before implementing stack/FR correlation:
+
+| Gate | Minimum environment | Question |
+| --- | --- | --- |
+| 0a attachment | CPU | Can the sampler attach under the documented permission model and report denial cleanly? |
+| 0a blocked Python/native path | CPU | Does a bounded dump preserve useful Python and optional native context? |
+| 0a CUDA/native wait | 1 GPU | Can a process blocked at a CUDA synchronization boundary be sampled without changing its outcome? |
+| 0b unmatched collective | 2 ranks on separate GPUs | Can the actually blocked NCCL rank be sampled before timeout/teardown? |
+
+Freeze a maximum attachment duration, sample count and total target-pause budget
+before running the experiment. Compare default and `--nonblocking` modes; report
+partial frames and sample errors rather than silently retrying until success.
+A single-process world-size-one collective is not evidence for gate 0b.
+
+If gate 0b fails or the required privileges are unacceptable for the target
+deployment, stop the FR-correlation work and publish the boundary result.
+
 ## Post-alpha correlation protocol
 
 Use identical producer artifacts for both arms:
@@ -95,8 +114,8 @@ Required negative and boundary cases:
 - an incomplete bundle that must remain analyzable without inventing state.
 
 Report capture coverage, join coverage, hash-verification outcomes,
-missing-producer detection and first-observed-divergence accuracy where the
-declared clock precision permits it. Separately record whether the linked arm
+missing-producer detection and logical-mismatch localization. Separately record
+whether the linked arm
 eliminates a hypothesis or changes the next diagnostic action.
 
 The GPU extension uses TP=2 and repeats worker loss and controlled rank stall at

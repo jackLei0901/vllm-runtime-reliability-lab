@@ -27,7 +27,7 @@ Two failure modes expose gaps in ordinary serving health checks:
 
 A final traceback is useful for a point failure, but it does not preserve the
 trajectory before the failure. A single-rank record also cannot define a
-missing peer, a cross-rank state mismatch or the first observed divergence.
+missing peer or a cross-rank state mismatch at a shared logical position.
 Those are relationship facts created only by joining independently produced
 evidence.
 
@@ -48,6 +48,23 @@ an operational gap:
 The current alpha supplies the bounded local evidence primitive. The table's
 no-progress and multi-producer outputs are planned v0.2 gates, not shipped
 features.
+
+### Planned stack adapter: a hard deployment gate
+
+The proposed CPU-stack adapter is also not shipped. `py-spy` reads another
+process's memory: attaching on Linux usually needs root or an adjusted
+`ptrace_scope`; Docker and Kubernetes commonly require `SYS_PTRACE`. The default
+sampling path may pause the target briefly. `--nonblocking` avoids that pause but
+can return sampling errors or partial frames because the reads are not atomic.
+See the [py-spy deployment and nonblocking
+notes](https://github.com/benfred/py-spy#frequently-asked-questions).
+
+Before any joiner is built, a go/no-go experiment must establish that useful
+Python/native context can be captured from a blocked process within a fixed
+duration and sample-count budget. Single-process and single-GPU tests can cover
+attachment and CUDA/native waits; a real rank blocked in an unmatched NCCL
+collective requires a multi-rank GPU test. Capture denial, timeout or partial
+output is a normal explicit result, not a recorder failure.
 
 ### This is not another Prometheus
 

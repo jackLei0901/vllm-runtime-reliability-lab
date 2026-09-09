@@ -66,9 +66,17 @@ possible telemetry source.
 That is a bounded adjacent problem for this lab: collect per-process stack
 snapshots externally, bind them to declared rank/process identities, and join
 them with existing Flight Recorder artifacts after failure. The first experiment
-will use controlled divergence and compare the same stack/FR inputs with and
-without linkage. It will not claim arbitrary hang detection or add `py-spy` as a
-mandatory runtime dependency.
+must first determine whether a genuinely blocked NCCL rank can be sampled at all.
+Only after that gate passes will controlled divergence compare the same stack/FR
+inputs with and without linkage. It will not claim arbitrary hang detection or
+add `py-spy` as a mandatory runtime dependency.
+
+FR already identifies missing or mismatched ranks at a collective's logical
+position. The added stack answers a narrower question: what was that rank's CPU
+thread doing instead? Matching normalized frames can support some associations,
+but it is not universal when the rank stalled before scheduling the missing
+collective. Unsynchronized wall time is not used to infer which rank failed
+first.
 
 Raw stack output remains private by default and outside the current shareable
 schema because it may expose source paths or application-specific symbols.
@@ -105,6 +113,6 @@ two arms:
 
 The join must create checkable relationship facts rather than merely collect
 more files. Structural measures are capture coverage, join coverage, missing
-producer detection, hash verification and first-observed-divergence accuracy
-where clock precision permits. Human diagnostic utility remains a separate
+producer detection, hash verification and logical-mismatch localization. Human
+diagnostic utility remains a separate
 measure: hypotheses eliminated and time to the next action.

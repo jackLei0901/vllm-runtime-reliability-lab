@@ -57,9 +57,15 @@ PyTorch 后续记录过一个限制：当 process group 同时包含 collective 
 
 这给本项目留下了一个边界清晰的问题：从进程外采集各 rank 的 stack snapshot，
 绑定已声明的 process/rank 身份，再在事故后与已有 Flight Recorder artifact
-关联。第一轮只使用受控 execution divergence，并比较相同 stack/FR 输入在未关联
-和已关联时能否产生新事实。它不承诺检测任意 hang，也不会让 `py-spy` 成为核心
-运行时的强制依赖。
+关联。第一轮首先验证真正卡在 NCCL collective 的 rank 能否被采样；只有该 gate
+通过，才使用受控 execution divergence 比较相同 stack/FR 输入在未关联和已关联
+时能否产生新事实。它不承诺检测任意 hang，也不会让 `py-spy` 成为核心运行时
+的强制依赖。
+
+FR 已经能够在 collective 的逻辑位置上指出缺失或不一致的 ranks。新增 stack
+只回答一个更窄的问题：该 rank 的 CPU 线程当时在做什么。归一化 frame 匹配可以
+支持部分关联，但如果 rank 在调度缺失 collective 之前就卡住，它并不适用。设计
+不能用未同步 wall time 推断“哪个 rank 最先出错”。
 
 原始 stack 可能暴露源码路径或业务相关符号，因此默认按私有材料处理，并保持在
 当前公开 schema 之外。
@@ -91,5 +97,5 @@ v0.2 的第一项价值实验使用完全相同的 producer artifacts，比较�
 
 关联必须产生可校验的新事实，不能只把文件放进同一个压缩包。结构性指标包括
 capture coverage、join coverage、missing producer 检测、hash 校验，以及在
-clock 精度允许时判断第一个外部可观察分歧。人的诊断收益单独衡量：排除了哪些
-假设，以及多久能够确定下一步动作。
+共享 logical position 上定位 mismatch。人的诊断收益单独衡量：排除了哪些假设，
+以及多久能够确定下一步动作。
