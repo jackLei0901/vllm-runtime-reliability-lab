@@ -1,5 +1,8 @@
 # vLLM Runtime Reliability Lab
 
+[中文文档](README.zh-CN.md) · [中文方案设计](DESIGN.zh-CN.md) ·
+[中文产品化计划](PRODUCT_ROADMAP.zh-CN.md)
+
 [![CI](https://github.com/jackLei0901/vllm-runtime-reliability-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/jackLei0901/vllm-runtime-reliability-lab/actions/workflows/ci.yml)
 
 An opt-in, external flight recorder and fault-injection lab for investigating
@@ -179,6 +182,9 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Documentation
 
+- [`README.zh-CN.md`](README.zh-CN.md): detailed Chinese usage and readiness guide.
+- [`DESIGN.zh-CN.md`](DESIGN.zh-CN.md): Chinese architecture and design review.
+- [`PRODUCT_ROADMAP.zh-CN.md`](PRODUCT_ROADMAP.zh-CN.md): productization stages and gates.
 - [`REQUIREMENTS.md`](REQUIREMENTS.md): scope and acceptance criteria.
 - [`DESIGN.md`](DESIGN.md): trust boundary and component design.
 - [`TEST_PLAN.md`](TEST_PLAN.md): CPU and GPU validation matrix.

@@ -1,7 +1,9 @@
 # External Runtime Incident Recorder — MVP plan
 
-> Status on 2026-09-09: M0 and M1 are complete in `v0.1.0-alpha.2`.
-> M2 and M3 remain evidence gates and are not claims of the alpha release.
+> Status on 2026-09-09: M0 and M1 are complete in `v0.1.0-alpha.3`, and M2
+> has been reconciled against the published evidence. M3 is partial: the fresh
+> single-GPU fatal, writer-failure, and disabled controls are complete; fresh
+> KV-pressure/preemption and multi-GPU observer coverage remain open.
 
 ## Outcome
 
@@ -188,7 +190,9 @@ recorder exit and orphaned processes separately.
 
 ## Release boundary
 
-`v0.1.0-alpha.2` completes the M0 contract/writer work and the M1 bounded
-collection work. It does not claim fresh GPU validation, diagnostic utility,
-production adoption, DP/NCCL coverage, or safe automatic remediation. Those
-claims remain gated by M2–M4.
+`v0.1.0-alpha.3` completes the M0 contract/writer work and the M1 bounded
+collection work, reconciles M2, and publishes the completed subset of M3 with
+explicit exclusions. It does not claim paired overhead, fresh KV-pressure,
+multi-GPU observer behavior, diagnostic utility, production adoption, DP/NCCL
+coverage, or safe automatic remediation. Those claims remain gated by the
+unfinished M3 work and M4.

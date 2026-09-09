@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add a detailed Chinese guide covering usage, evidence boundaries, validation,
+  current product readiness, and the path from public alpha to production preview.
+- Add a Chinese architecture/design document and a gated product roadmap.
+
 ## 0.1.0-alpha.3 - 2026-09-09
 
 - Document the development extra required to run the validation suite.
