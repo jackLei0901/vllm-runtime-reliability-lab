@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.3 - 2026-09-09
 
 - Document the development extra required to run the validation suite.
 - Install the schema under the repository's current project name.

@@ -1,27 +1,31 @@
-# v0.1.0-alpha.2
+# v0.1.0-alpha.3
 
-This corrective alpha preserves the external observer's evidence boundary: it
-does not infer target package versions from the recorder's Python environment.
+This release makes the public validation path reproducible from a clean clone
+and restores machine-checked requirement-to-test traceability.
 
-## Correction
+## Corrections
 
-- `vllm_version` and `torch_version` now remain `null` by default.
-- Operators may supply exact observed-server values with
-  `--target-vllm-version` and `--target-torch-version`.
-- Two regression tests cover both unknown and explicitly supplied versions.
+- The README now installs the `dev` extra before running the test suite, so the
+  documented clean-clone path includes `jsonschema` and Ruff.
+- The installed schema path now uses
+  `share/vllm-runtime-reliability-lab/schema`.
+- Functional and safety requirements have stable `FR-*` and `SR-*` identifiers.
+- `tests/cases.json` maps every requirement to one or more concrete tests.
+- `test_testplan.py` checks bidirectional requirement coverage, non-empty
+  mappings, and the existence of every referenced test method.
 
-All `alpha.1` functionality remains: closed schema, bounded cadenced history,
-privacy canaries, four-file rotation, fail-open persistence, fake-service tests,
-and Markdown summaries.
+## Validation
 
-Fresh RTX 4090 validation covers intentional `SIGTERM`, three EngineCore
-`SIGKILL` trials, three controlled `execute_model` CUDA OOM trials, an
-unavailable writer directory, and a recorder-disabled control. See
-[`results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md`](results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md)
-for the exact environment, exclusions, and remaining gates.
+The documented clean-clone path passes 33 tests on the release source, with the
+POSIX permission test skipped on Windows. CI also runs lint, formatting,
+compilation, CLI smoke tests, and the suite on Python 3.10, 3.12, and 3.13.
+
+The runtime contract and schema are unchanged from alpha.2. The RTX 4090 fatal
+matrix remains documented in
+[`results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md`](results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md).
 
 Wheel SHA-256:
 
 ```text
-fb5ac984e19347fbb304c41ae3da8695e0a8a1c257b4df1b8f691982b3e60ce6
+15b812029a382b8feeb5699daff186e389e9483bc1fbd861268d16f89590d5c4
 ```

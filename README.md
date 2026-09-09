@@ -187,10 +187,10 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Status
 
-`v0.1.0-alpha.2` validates the external artifact contract, CPU/local-service
-behavior, and a bounded RTX 4090 fault matrix. Paired overhead, fresh
-KV-pressure, multi-GPU, long-duration, and production-utility gates remain open.
-Treat this release as an evaluation build.
+`v0.1.0-alpha.3` validates the external artifact contract, CPU/local-service
+behavior, and retains the bounded RTX 4090 fault matrix from alpha.2. Paired
+overhead, fresh KV-pressure, multi-GPU, long-duration, and production-utility
+gates remain open. Treat this release as an evaluation build.
 
 ## License
 

@@ -1,3 +1,3 @@
 """Small, dependency-free runtime DFX helpers for vLLM experiments."""
 
-__version__ = "0.1.0a2"
+__version__ = "0.1.0a3"
