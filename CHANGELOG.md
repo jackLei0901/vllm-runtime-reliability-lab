@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Document the development extra required to run the validation suite.
+- Install the schema under the repository's current project name.
+- Restore machine-checked requirement-to-test traceability.
+
 ## 0.1.0-alpha.2 - 2026-09-09
 
 - Stop inferring target vLLM and Torch versions from the recorder environment.

@@ -2,17 +2,23 @@
 
 ## Alpha CPU gate
 
-| Area | Required checks |
-| --- | --- |
-| Schema | valid example; unknown top-level and nested fields rejected |
-| Privacy | prompt/token/auth canaries absent; external cause stays unknown |
-| Identity | same value under different process keys produces different IDs |
-| Recorder | bounded history; overwrite/drop counts; retained range |
-| Writer | size cap; four-file rotation; atomic write; fail-open I/O |
-| Permissions | final artifact is `0600` on POSIX CI |
-| HTTP | healthy, 503, timeout and malformed metrics |
-| Cadence | GPU polling occurs less frequently than health/metrics polling |
-| Packaging | clean editable install; Ruff; CLI help; source compilation |
+| Area | Requirements | Required checks |
+| --- | --- | --- |
+| Schema | FR-004, SR-001, SR-007 | valid example; unknown top-level and nested fields rejected |
+| Privacy | SR-002, SR-007 | prompt/token/auth canaries absent; external cause stays unknown |
+| Identity | SR-003 | same value under different process keys produces different IDs |
+| Recorder | FR-002, FR-003, FR-005 | bounded history; overwrite/drop counts; retained range |
+| Writer | SR-004, SR-005, SR-006 | size cap; four-file rotation; atomic write; fail-open I/O |
+| HTTP | FR-001 | healthy, 503, timeout and malformed metrics |
+| Cadence | FR-001 | GPU polling occurs less frequently than health/metrics polling |
+| Injection | FR-006 | dry run records intent without signalling the target |
+| Version provenance | SR-008 | unknown remains null; explicit target values are preserved |
+| Packaging | FR-004 | clean editable install; Ruff; CLI help; source compilation |
+
+The machine-checkable requirement-to-test mapping is in
+[`tests/cases.json`](tests/cases.json). `test_testplan.py` verifies that every
+functional and safety requirement is mapped and that every referenced test
+case exists.
 
 ## Post-alpha GPU gate
 

@@ -1,0 +1,55 @@
+{
+  "FR-001": [
+    "test_collectors.CollectorHttpTest.test_healthy_and_selected_metrics",
+    "test_collectors.CadenceTest.test_gpu_collector_runs_at_slower_cadence"
+  ],
+  "FR-002": [
+    "test_recorder.RecorderTest.test_bounded_history_accounts_for_overwrites"
+  ],
+  "FR-003": [
+    "test_recorder.RecorderTest.test_health_must_have_been_healthy_before_loss",
+    "test_recorder.RecorderTest.test_pressure_and_preemption_classification",
+    "test_recorder.RecorderTest.test_process_exit_is_fatal"
+  ],
+  "FR-004": [
+    "test_recorder.RecorderTest.test_capture_writes_closed_external_artifact",
+    "test_external_schema.ExternalSchemaTest.test_example_conforms_to_published_json_schema"
+  ],
+  "FR-005": [
+    "test_recorder.RecorderTest.test_bounded_history_accounts_for_overwrites"
+  ],
+  "FR-006": [
+    "test_faults.FaultsTest.test_dry_run_records_without_signalling",
+    "test_faults.FaultsTest.test_unknown_signal_rejected"
+  ],
+  "SR-001": [
+    "test_external_schema.ExternalSchemaTest.test_published_json_schema_is_closed",
+    "test_external_schema.ExternalSchemaTest.test_unknown_nested_field_is_rejected",
+    "test_external_schema.ExternalSchemaTest.test_unknown_top_level_field_is_rejected"
+  ],
+  "SR-002": [
+    "test_external_schema.ExternalSchemaTest.test_privacy_canaries_are_absent"
+  ],
+  "SR-003": [
+    "test_external_schema.ExternalSchemaTest.test_ephemeral_keys_do_not_correlate_across_processes"
+  ],
+  "SR-004": [
+    "test_external_writer.ExternalWriterTest.test_size_limit_fails_open",
+    "test_external_writer.ExternalWriterTest.test_writes_and_rotates_to_four_files"
+  ],
+  "SR-005": [
+    "test_external_writer.ExternalWriterTest.test_posix_artifact_mode_is_0600",
+    "test_external_writer.ExternalWriterTest.test_writes_and_rotates_to_four_files"
+  ],
+  "SR-006": [
+    "test_external_writer.ExternalWriterTest.test_io_failure_is_reported_not_raised",
+    "test_recorder.RecorderTest.test_unavailable_output_directory_does_not_block_collection"
+  ],
+  "SR-007": [
+    "test_external_schema.ExternalSchemaTest.test_external_trigger_cannot_claim_internal_cause"
+  ],
+  "SR-008": [
+    "test_collectors.RuntimeAllowlistTest.test_explicit_target_versions_are_preserved",
+    "test_collectors.RuntimeAllowlistTest.test_target_versions_are_not_inferred_from_recorder_environment"
+  ]
+}

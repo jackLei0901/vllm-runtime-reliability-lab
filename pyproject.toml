@@ -32,7 +32,7 @@ vllm-dfx = "dfxlab.cli:main"
 where = ["src"]
 
 [tool.setuptools.data-files]
-"share/vllm-runtime-dfx-lab/schema" = ["schema/*.json"]
+"share/vllm-runtime-reliability-lab/schema" = ["schema/*.json"]
 
 [tool.ruff]
 line-length = 88

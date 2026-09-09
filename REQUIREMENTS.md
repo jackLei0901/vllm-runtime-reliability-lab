@@ -8,30 +8,30 @@ external process cannot observe.
 
 ## Functional requirements
 
-1. Poll health, selected Prometheus metrics, an explicit PID and aggregate GPU
+1. **FR-001:** Poll health, selected Prometheus metrics, an explicit PID and aggregate GPU
    state on configurable cadences.
-2. Retain only the newest configured number of observations in memory.
-3. Trigger on process exit, health loss after a healthy observation, KV pressure
+2. **FR-002:** Retain only the newest configured number of observations in memory.
+3. **FR-003:** Trigger on process exit, health loss after a healthy observation, KV pressure
    or a preemption delta.
-4. Write a schema-valid incident artifact and provide a readable summary.
-5. Expose appended, overwritten and dropped observation counts.
-6. Support explicit, dry-run-first signal injection for isolated experiments.
+4. **FR-004:** Write a schema-valid incident artifact and provide a readable summary.
+5. **FR-005:** Expose appended, overwritten and dropped observation counts.
+6. **FR-006:** Support explicit, dry-run-first signal injection for isolated experiments.
 
 ## Safety and privacy requirements
 
-1. Shareable artifacts use a closed allow-list and reject unknown fields.
-2. They contain no prompt, token IDs, request IDs, paths, command lines or
+1. **SR-001:** Shareable artifacts use a closed allow-list and reject unknown fields.
+2. **SR-002:** They contain no prompt, token IDs, request IDs, paths, command lines or
    arbitrary configuration.
-3. Incident IDs use an ephemeral per-process HMAC key and are not comparable
+3. **SR-003:** Incident IDs use an ephemeral per-process HMAC key and are not comparable
    across restarts.
-4. Each artifact is at most 256 KiB and at most four completed artifacts are
+4. **SR-004:** Each artifact is at most 256 KiB and at most four completed artifacts are
    retained per output directory.
-5. Files use mode `0600` on POSIX and atomic replacement.
-6. Collection, encoding, rotation or write failure never signals or terminates
+5. **SR-005:** Files use mode `0600` on POSIX and atomic replacement.
+6. **SR-006:** Collection, encoding, rotation or write failure never signals or terminates
    the observed vLLM process.
-7. External triggers always report `internal_kind=unknown` and
+7. **SR-007:** External triggers always report `internal_kind=unknown` and
    `internal_stage=unknown`.
-8. Target vLLM/Torch versions are never inferred from the recorder environment;
+8. **SR-008:** Target vLLM/Torch versions are never inferred from the recorder environment;
    unknown values remain `null` unless explicitly supplied.
 
 ## Alpha acceptance

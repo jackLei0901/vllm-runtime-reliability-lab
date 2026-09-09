@@ -154,9 +154,10 @@ guard for private lab metadata.
 
 ## Validation
 
-Run the CPU suite:
+Install the development dependencies, then run the CPU suite:
 
 ```bash
+python -m pip install -e ".[dev]"
 python -m unittest discover -s tests -v
 python -m compileall -q src tests
 vllm-dfx --help
