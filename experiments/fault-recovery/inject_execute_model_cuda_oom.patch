@@ -1,0 +1,28 @@
+diff --git a/vllm/v1/worker/gpu/model_runner.py b/vllm/v1/worker/gpu/model_runner.py
+index 000000000..000000000 100644
+--- a/vllm/v1/worker/gpu/model_runner.py
++++ b/vllm/v1/worker/gpu/model_runner.py
+@@ -19,6 +19,7 @@ instead of embedding feature-specific logic directly.
+
+ import functools
+ import gc
++import os
+ import time
+ from copy import deepcopy
+ from typing import Any, NamedTuple
+@@ -1405,6 +1406,15 @@ class GPUModelRunner(LoRAModelRunnerMixin):
+         is_profile: bool = False,
+         context_len: int = 0,
+     ) -> ModelRunnerOutput | IntermediateTensors | None:
++        # Fault-injection hook for the external runtime-DFX lab only. This patch
++        # is applied in an isolated worktree and must never be shipped.
++        sentinel = os.getenv("VLLM_DFX_CUDA_OOM_SENTINEL")
++        if not dummy_run and sentinel and os.path.exists(sentinel):
++            os.unlink(sentinel)
++            raise torch.OutOfMemoryError(
++                "vLLM runtime-DFX lab: injected execute_model CUDA OOM"
++            )
++
+         if not dummy_run:
+             # Update the request states.
+             self.update_pp_decode_requests()

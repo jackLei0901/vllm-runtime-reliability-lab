@@ -1,0 +1,89 @@
+{
+  "schema_version": "external-runtime-observation-v1",
+  "component_type": "external_observer",
+  "created_at": "2026-09-09T12:00:02+00:00",
+  "incident_id": "hmac-sha256:0123456789abcdef01234567",
+  "trigger": {
+    "kind": "health_lost",
+    "observed_at": "2026-09-09T12:00:02+00:00",
+    "observation_sequence": 2,
+    "internal_kind": "unknown",
+    "internal_stage": "unknown"
+  },
+  "runtime": {
+    "python_version": "3.12.3",
+    "platform": "Linux",
+    "torch_version": "2.13.0+cu130",
+    "vllm_version": "0.27.0",
+    "gpu_count": 1,
+    "gpu_models": ["NVIDIA GeForce RTX 4090"]
+  },
+  "history": [
+    {
+      "sequence": 1,
+      "observed_at": "2026-09-09T12:00:01+00:00",
+      "monotonic_ns": 1000000000,
+      "health": {"ok": true, "status": 200},
+      "process": {
+        "tracked": true,
+        "alive": true,
+        "rss_bytes": 734003200,
+        "vms_bytes": 8589934592,
+        "threads": 48
+      },
+      "metrics": {
+        "kv_cache_usage": 0.42,
+        "preemptions_total": 0.0,
+        "running_requests": 4.0,
+        "waiting_requests": 0.0
+      },
+      "gpu": {
+        "device_count": 1,
+        "memory_used_mib": 20445,
+        "memory_total_mib": 24564,
+        "utilization_percent_mean": 88.0
+      },
+      "sampled_sources": ["health", "metrics", "process", "gpu"],
+      "collector_errors": []
+    },
+    {
+      "sequence": 2,
+      "observed_at": "2026-09-09T12:00:02+00:00",
+      "monotonic_ns": 2000000000,
+      "health": {"ok": false, "status": 503},
+      "process": {
+        "tracked": true,
+        "alive": true,
+        "rss_bytes": 735051776,
+        "vms_bytes": 8589934592,
+        "threads": 47
+      },
+      "metrics": {
+        "kv_cache_usage": null,
+        "preemptions_total": null,
+        "running_requests": null,
+        "waiting_requests": null
+      },
+      "gpu": {
+        "device_count": 1,
+        "memory_used_mib": 20445,
+        "memory_total_mib": 24564,
+        "utilization_percent_mean": 0.0
+      },
+      "sampled_sources": ["health", "metrics", "process"],
+      "collector_errors": ["metrics_http_status"]
+    }
+  ],
+  "recorder": {
+    "events_appended_total": 3,
+    "events_overwritten_total": 1,
+    "events_dropped_total": 0,
+    "retained_sequence_start": 1,
+    "retained_sequence_end": 2
+  },
+  "writer": {
+    "artifacts_written_total": 0,
+    "artifacts_failed_total": 0,
+    "last_error_kind": null
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/jackLei0901/vllm-runtime-reliability-lab/v0.1.0-alpha.1/schema/external-runtime-observation-v1.schema.json",
+  "title": "External runtime incident observation v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "component_type",
+    "created_at",
+    "incident_id",
+    "trigger",
+    "runtime",
+    "history",
+    "recorder",
+    "writer"
+  ],
+  "properties": {
+    "schema_version": {"const": "external-runtime-observation-v1"},
+    "component_type": {"const": "external_observer"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "incident_id": {"type": "string", "pattern": "^hmac-sha256:[0-9a-f]{24}$"},
+    "trigger": {"$ref": "#/$defs/trigger"},
+    "runtime": {"$ref": "#/$defs/runtime"},
+    "history": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/observation"}
+    },
+    "recorder": {"$ref": "#/$defs/recorderHealth"},
+    "writer": {"$ref": "#/$defs/writerHealth"}
+  },
+  "$defs": {
+    "nullableNumber": {"type": ["number", "null"]},
+    "nullableInteger": {"type": ["integer", "null"]},
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "observed_at", "observation_sequence", "internal_kind", "internal_stage"],
+      "properties": {
+        "kind": {
+          "enum": ["process_exit", "health_lost", "kv_pressure", "preemption_storm"]
+        },
+        "observed_at": {"type": "string", "format": "date-time"},
+        "observation_sequence": {"type": "integer", "minimum": 0},
+        "internal_kind": {"const": "unknown"},
+        "internal_stage": {"const": "unknown"}
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["python_version", "platform", "torch_version", "vllm_version", "gpu_count", "gpu_models"],
+      "properties": {
+        "python_version": {"type": "string"},
+        "platform": {"type": "string"},
+        "torch_version": {"type": ["string", "null"]},
+        "vllm_version": {"type": ["string", "null"]},
+        "gpu_count": {"type": "integer", "minimum": 0},
+        "gpu_models": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "status"],
+      "properties": {
+        "ok": {"type": "boolean"},
+        "status": {"$ref": "#/$defs/nullableInteger"}
+      }
+    },
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tracked", "alive", "rss_bytes", "vms_bytes", "threads"],
+      "properties": {
+        "tracked": {"type": "boolean"},
+        "alive": {"type": ["boolean", "null"]},
+        "rss_bytes": {"$ref": "#/$defs/nullableInteger"},
+        "vms_bytes": {"$ref": "#/$defs/nullableInteger"},
+        "threads": {"$ref": "#/$defs/nullableInteger"}
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kv_cache_usage", "preemptions_total", "running_requests", "waiting_requests"],
+      "properties": {
+        "kv_cache_usage": {"$ref": "#/$defs/nullableNumber"},
+        "preemptions_total": {"$ref": "#/$defs/nullableNumber"},
+        "running_requests": {"$ref": "#/$defs/nullableNumber"},
+        "waiting_requests": {"$ref": "#/$defs/nullableNumber"}
+      }
+    },
+    "gpu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["device_count", "memory_used_mib", "memory_total_mib", "utilization_percent_mean"],
+      "properties": {
+        "device_count": {"type": "integer", "minimum": 0},
+        "memory_used_mib": {"$ref": "#/$defs/nullableInteger"},
+        "memory_total_mib": {"$ref": "#/$defs/nullableInteger"},
+        "utilization_percent_mean": {"$ref": "#/$defs/nullableNumber"}
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sequence", "observed_at", "monotonic_ns", "health", "process", "metrics", "gpu", "sampled_sources", "collector_errors"],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 0},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "monotonic_ns": {"type": "integer", "minimum": 0},
+        "health": {"$ref": "#/$defs/health"},
+        "process": {"$ref": "#/$defs/process"},
+        "metrics": {"$ref": "#/$defs/metrics"},
+        "gpu": {"$ref": "#/$defs/gpu"},
+        "sampled_sources": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"enum": ["health", "metrics", "process", "gpu"]}
+        },
+        "collector_errors": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "health_timeout",
+              "health_connection",
+              "health_os_error",
+              "metrics_timeout",
+              "metrics_connection",
+              "metrics_os_error",
+              "metrics_http_status",
+              "metrics_malformed_metrics",
+              "gpu_timeout",
+              "gpu_error",
+              "gpu_malformed"
+            ]
+          }
+        }
+      }
+    },
+    "recorderHealth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["events_appended_total", "events_overwritten_total", "events_dropped_total", "retained_sequence_start", "retained_sequence_end"],
+      "properties": {
+        "events_appended_total": {"type": "integer", "minimum": 0},
+        "events_overwritten_total": {"type": "integer", "minimum": 0},
+        "events_dropped_total": {"type": "integer", "minimum": 0},
+        "retained_sequence_start": {"$ref": "#/$defs/nullableInteger"},
+        "retained_sequence_end": {"$ref": "#/$defs/nullableInteger"}
+      }
+    },
+    "writerHealth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifacts_written_total", "artifacts_failed_total", "last_error_kind"],
+      "properties": {
+        "artifacts_written_total": {"type": "integer", "minimum": 0},
+        "artifacts_failed_total": {"type": "integer", "minimum": 0},
+        "last_error_kind": {"type": ["string", "null"], "enum": ["validation", "size_limit", "io", null]}
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+
+# Raw incident data may contain private lab metadata. Only reviewed summaries
+# and the synthetic example are versioned.
+results/**
+!results/README.md
+!results/VALIDATION_SUMMARY_2026-08-27.md
+!results/gpu-20260901-fault-boundary/
+results/gpu-20260901-fault-boundary/**
+!results/gpu-20260901-fault-boundary/VALIDATION_SUMMARY.md
