@@ -5,6 +5,8 @@
 - Stop inferring target vLLM and Torch versions from the recorder environment.
 - Add explicit `--target-vllm-version` and `--target-torch-version` inputs.
 - Preserve unknown target versions as `null`.
+- Publish repeated RTX 4090 fatal-path, writer fail-open, and disabled-control
+  validation with explicit limitations.
 
 ## 0.1.0-alpha.1 - 2026-09-09
 

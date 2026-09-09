@@ -162,7 +162,7 @@ python -m compileall -q src tests
 vllm-dfx --help
 ```
 
-The repository includes reviewed summaries from earlier RTX 4090 experiments:
+The repository includes reviewed summaries from RTX 4090 experiments:
 
 - startup KV-capacity boundary;
 - paired KV-pressure/preemption behavior;
@@ -172,7 +172,9 @@ The repository includes reviewed summaries from earlier RTX 4090 experiments:
 
 These results establish test-harness behavior only for the pinned environments.
 They do not establish long-term stability, DP/NCCL behavior or production value.
-The post-alpha GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
+The fresh alpha.2 result is in
+[`results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md`](results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md).
+The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Documentation
 
@@ -184,9 +186,10 @@ The post-alpha GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Status
 
-`v0.1.0-alpha.2` validates the external artifact contract and CPU/local-service
-behavior. GPU re-validation of this hardened schema is the next gate. Until that
-is complete, treat this release as an evaluation build.
+`v0.1.0-alpha.2` validates the external artifact contract, CPU/local-service
+behavior, and a bounded RTX 4090 fault matrix. Paired overhead, fresh
+KV-pressure, multi-GPU, long-duration, and production-utility gates remain open.
+Treat this release as an evaluation build.
 
 ## License
 

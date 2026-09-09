@@ -2,15 +2,14 @@ diff --git a/vllm/v1/worker/gpu/model_runner.py b/vllm/v1/worker/gpu/model_runne
 index 000000000..000000000 100644
 --- a/vllm/v1/worker/gpu/model_runner.py
 +++ b/vllm/v1/worker/gpu/model_runner.py
-@@ -19,6 +19,7 @@ instead of embedding feature-specific logic directly.
-
+@@ -20,5 +20,6 @@
  import functools
  import gc
 +import os
  import time
  from copy import deepcopy
  from typing import Any, NamedTuple
-@@ -1405,6 +1406,15 @@ class GPUModelRunner(LoRAModelRunnerMixin):
+@@ -1384,6 +1385,15 @@ class GPUModelRunner(LoRAModelRunnerMixin):
          is_profile: bool = False,
          context_len: int = 0,
      ) -> ModelRunnerOutput | IntermediateTensors | None:

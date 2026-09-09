@@ -8,3 +8,11 @@ Do not present any of the following as a validated conclusion:
 - performance comparisons with mismatched environments or server arguments
 - failure trials that preserve a log excerpt but not the complete exit code or request result
 - multi-GPU conclusions extrapolated from a single-GPU run
+
+## Published summaries
+
+- [`gpu-20260909-alpha2/VALIDATION_SUMMARY.md`](gpu-20260909-alpha2/VALIDATION_SUMMARY.md):
+  fresh RTX 4090 validation of the alpha.2 schema, fatal-path repetition,
+  fail-open writer, and disabled control.
+- [`gpu-20260901-fault-boundary/VALIDATION_SUMMARY.md`](gpu-20260901-fault-boundary/VALIDATION_SUMMARY.md):
+  earlier external-observer boundary experiments.
