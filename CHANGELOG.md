@@ -8,6 +8,8 @@
   semantic-join boundaries without claiming them as current alpha features.
 - Add a PyTorch Flight Recorder before/after case and an explicit
   unlinked-versus-linked value test with transfer limitations.
+- Record PyTorch's published distributed CPU main-thread-stack gap as an
+  optional external adapter and correlation experiment, not a shipped feature.
 - Add a detailed Chinese guide covering usage, evidence boundaries, validation,
   current product readiness, and the path from public alpha to production preview.
 - Add a Chinese architecture/design document and a gated product roadmap.

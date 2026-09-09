@@ -86,12 +86,14 @@
    domain、时间精度和 artifact hash；
 4. 实现一个有限的 vLLM process/progress semantic join，输出 missing producer、
    state/progress divergence、first observed divergence 和 ordering unknown；
-5. 使用同一组 producer records 做 unlinked-versus-linked 消融，验证关联是否
+5. 增加可选的 CPU main-thread stack adapter，把逐进程 stack snapshot 与
+   producer/rank 身份及已有 Flight Recorder dump 引用关联；
+6. 使用同一组 producer records 做 unlinked-versus-linked 消融，验证关联是否
    产生新事实，而不是只改善展示；
-6. 再进入 TP=2：分别终止或暂停非主 rank、EngineCore 和 API server；
-7. 检查 rank/process 变化、health、退出码、关联覆盖和孤儿进程；
-8. 建立 NCCL hang/abort 的受控实验，不通过日志字符串伪造根因；
-9. 覆盖至少三个 vLLM 版本、两类 GPU 架构，并处理 metrics 演进。
+7. 再进入 TP=2：分别终止或暂停非主 rank、EngineCore 和 API server；
+8. 检查 rank/process 变化、health、退出码、关联覆盖和孤儿进程；
+9. 建立 NCCL hang/abort 的受控实验，不通过日志字符串伪造根因；
+10. 覆盖至少三个 vLLM 版本、两类 GPU 架构，并处理 metrics 演进。
 
 ### 环境
 
@@ -107,6 +109,7 @@
 - 不宣称跨主机 monotonic clock 存在全局顺序；
 - 相同底层记录的 linked arm 至少产生一项 unlinked arm 无法定义的可核查关系事实；
 - Prometheus 对照能够说明本项目是否提供增量证据；
+- raw stack 默认私有且不进入当前公开 schema，attach 权限不足时明确记录缺失；
 - 不把单卡结论外推为多卡结论；
 - 每个进程故障点至少重复三次；
 - 没有遗留 worker、共享内存或 GPU context；
@@ -205,12 +208,13 @@ CPU 状态机、契约、join 和消融约 5–8 个工作日；双卡验证另�
 2. 在无需 GPU 的环境实现 no-progress fake states；
 3. 定义 correlation schema、身份、clock 和 hash 校验；
 4. 实现最小 process/progress semantic join，并完成 unlinked-versus-linked 消融；
-5. 加入 Prometheus 基线，判断现有监控能否提供同等证据；
-6. 租单卡验证 health-green stall、恢复和误报边界；
-7. 租双卡完成 TP=2 worker/rank stall、loss 和证据关联矩阵；
-8. 再执行长稳、版本兼容和部署模板；
-9. 发布 preview 试用包，以可执行工具和结果推进 RFC；
-10. 招募真实使用者，进入 adoption gate。
+5. 用受控多进程场景验证 CPU stack adapter 与 rank/FR 关联；
+6. 加入 Prometheus 基线，判断现有监控能否提供同等证据；
+7. 租单卡验证 health-green stall、恢复和误报边界；
+8. 租双卡完成 TP=2 worker/rank stall、loss 和证据关联矩阵；
+9. 再执行长稳、版本兼容和部署模板；
+10. 发布 preview 试用包，以可执行工具和结果推进 RFC；
+11. 招募真实使用者，进入 adoption gate。
 
 当前进度：CPU 配对 harness、固定 A/B 顺序、工作负载签名校验、独立试次日志和
 GPU 配置模板已经进入 `experiments/overhead/`。GPU 模板仍标记为不可执行，必须

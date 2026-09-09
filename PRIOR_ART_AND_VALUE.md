@@ -55,6 +55,24 @@ a reference frame after the beginning of execution has fallen out of the ring.
 Source: [pytorch/pytorch
 #125173](https://github.com/pytorch/pytorch/issues/125173).
 
+### A published gap this lab can test
+
+The same PyTorch account says Flight Recorder analysis must be coupled with a
+distributed view of CPU main-thread stacks to distinguish CPU work, barriers,
+CPU-GPU synchronization and exception handling. It also states that PyTorch does
+not currently provide this diagnostic tool and points to `py-spy` as one
+possible telemetry source.
+
+That is a bounded adjacent problem for this lab: collect per-process stack
+snapshots externally, bind them to declared rank/process identities, and join
+them with existing Flight Recorder artifacts after failure. The first experiment
+will use controlled divergence and compare the same stack/FR inputs with and
+without linkage. It will not claim arbitrary hang detection or add `py-spy` as a
+mandatory runtime dependency.
+
+Raw stack output remains private by default and outside the current shareable
+schema because it may expose source paths or application-specific symbols.
+
 ### What transfers to this project
 
 - bounded per-producer capture before failure;
@@ -63,6 +81,7 @@ Source: [pytorch/pytorch
 - explicit capture-coverage measurement;
 - offline identity and sequence alignment;
 - semantic comparison after syntactic linkage;
+- optional external CPU main-thread stack capture correlated across ranks;
 - hypothesis elimination as a useful outcome.
 
 ### What does not transfer

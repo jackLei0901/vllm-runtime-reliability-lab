@@ -79,6 +79,17 @@ first observed divergence + 明确的 unknown
 和保留周期。Prometheus/OpenTelemetry 继续承担持续 telemetry，本项目只负责
 在事故边界冻结、校验和关联经过允许的证据。
 
+manifest 之后的第一个可选 adapter，计划验证 PyTorch Flight Recorder 团队明确
+指出但尚未提供工具支持的缺口：分布式 CPU 主线程栈。`py-spy` 一类外部工具可以
+生成逐进程 stack snapshot，本项目只负责把它与 producer/rank 身份、时间边界及
+已有的 rank-local Flight Recorder dump 引用关联。它不是核心运行时依赖；采样
+权限、采集失败、时间精度和 observer 开销必须明确写入结果。
+
+原始 stack 默认属于私有材料，因为函数名和源码路径可能包含敏感信息。它不能
+进入 `external-runtime-observation-v1`。采集必须由 operator 显式开启，并满足
+平台的进程 attach/ptrace 权限；manifest 只能引用单独版本化、经过审核的 stack
+artifact 及其内容 hash。
+
 v0.2 也不是当前能力。no-progress、process/rank 发现、manifest 和 semantic join
 都必须完成实现和验证后才能进入发布声明。
 
@@ -284,6 +295,7 @@ vLLM pod/process                  recorder sidecar/service
 - API server、EngineCore、worker/rank 的显式 producer model；
 - closed correlation manifest、artifact hash 和 per-source clock declaration；
 - 至少一个 vLLM process/progress semantic joiner；
+- 可选的 CPU main-thread stack producer adapter，并与已有 rank/FR 证据关联；
 - 使用相同原始数据的 unlinked-versus-linked 消融；
 - 配置文件及严格校验；
 - recorder 自身 `/health` 与低基数 metrics；

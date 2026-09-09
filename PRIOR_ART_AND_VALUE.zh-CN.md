@@ -49,6 +49,21 @@ PyTorch 后续记录过一个限制：当 process group 同时包含 collective 
 来源：[pytorch/pytorch
 #125173](https://github.com/pytorch/pytorch/issues/125173)。
 
+### 一个可以直接验证的公开缺口
+
+同一篇 PyTorch 文章明确指出，要区分 CPU 普通操作、barrier、CPU-GPU 同步点和
+异常处理，Flight Recorder 还需要配合分布式 CPU 主线程栈视图；PyTorch 当时
+没有提供这类诊断工具，并指出可使用 `py-spy` 等开源工具采集底层数据。
+
+这给本项目留下了一个边界清晰的问题：从进程外采集各 rank 的 stack snapshot，
+绑定已声明的 process/rank 身份，再在事故后与已有 Flight Recorder artifact
+关联。第一轮只使用受控 execution divergence，并比较相同 stack/FR 输入在未关联
+和已关联时能否产生新事实。它不承诺检测任意 hang，也不会让 `py-spy` 成为核心
+运行时的强制依赖。
+
+原始 stack 可能暴露源码路径或业务相关符号，因此默认按私有材料处理，并保持在
+当前公开 schema 之外。
+
 ## 可以迁移到本项目的设计
 
 - 每个 producer 在故障前持续维护有界记录；
@@ -57,6 +72,7 @@ PyTorch 后续记录过一个限制：当 process group 同时包含 collective 
 - 事故后再做身份、序列和时间对齐；
 - 先完成语法关联，再比较不同 producer 的语义；
 - 将排除错误假设视为有效结果。
+- 可选地从进程外采集 CPU 主线程栈，并按 rank 进行关联。
 
 ## 不能直接迁移的结论
 

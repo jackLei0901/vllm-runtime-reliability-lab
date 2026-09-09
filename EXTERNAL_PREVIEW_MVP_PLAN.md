@@ -184,10 +184,14 @@ recorder exit and orphaned processes separately.
    `artifact_id`, per-source clocks and a coordinator-assigned `incident_id`.
 3. Publish a closed correlation manifest and one bounded vLLM process/progress
    semantic joiner.
-4. Compare unlinked and linked presentations of identical producer artifacts.
-5. Compare the result with the Prometheus/OpenTelemetry evidence normally
+4. Add an optional external CPU main-thread stack adapter and correlate its
+   per-process snapshots with declared rank identity and existing Flight
+   Recorder dump references. Raw stacks remain opt-in private evidence under a
+   separate contract; they do not enter the current shareable schema.
+5. Compare unlinked and linked presentations of identical producer artifacts.
+6. Compare the result with the Prometheus/OpenTelemetry evidence normally
    retained by an operator.
-6. Move to TP=2 only after the CPU state-machine, integrity and missing-producer
+7. Move to TP=2 only after the CPU state-machine, integrity and missing-producer
    cases pass.
 
 Exit criterion: the linked arm creates at least one checkable relationship fact

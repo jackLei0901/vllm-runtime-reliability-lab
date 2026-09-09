@@ -65,6 +65,10 @@ their contracts and tests are implemented.
   hash rather than copy it into a new telemetry store.
 - **Semantic join:** produce checkable vLLM process/progress facts such as a
   missing producer, state divergence or first externally observed divergence.
+- **Optional stack producer:** collect CPU main-thread stacks only with explicit
+  operator consent and attachment permission. Raw stacks remain private and use
+  a separately reviewed contract rather than entering the current shareable
+  schema.
 - **Existing-system baseline:** compare with retained Prometheus/OpenTelemetry
   evidence rather than assuming an additional recorder is useful.
 - **Linkage ablation:** compare unlinked and linked views of identical producer

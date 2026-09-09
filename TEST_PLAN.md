@@ -87,6 +87,11 @@ Required negative and boundary cases:
 - artifacts from different `run_id` values;
 - clocks that cannot support a cross-host total order;
 - one stalled rank while peers continue or wait;
+- controlled CPU execution divergence with per-process stack snapshots;
+- a stack snapshot that cannot be captured because permission or attachment
+  fails, reported as missing rather than fabricated;
+- path and application-symbol canaries remain absent from the current shareable
+  observation and manifest;
 - an incomplete bundle that must remain analyzable without inventing state.
 
 Report capture coverage, join coverage, hash-verification outcomes,

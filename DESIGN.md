@@ -137,6 +137,21 @@ The first semantic join will report missing producers, state/progress divergence
 and ordering limitations. It will not translate those observations into a CUDA,
 NCCL or scheduler root cause.
 
+The first optional evidence adapter after the manifest will target a gap stated
+by the PyTorch Flight Recorder team: distributed CPU main-thread stack context.
+An external sampler such as `py-spy` can produce per-process stack snapshots;
+the lab can associate those snapshots with declared producer/rank identity and
+reference rank-local Flight Recorder dumps when they already exist. This is an
+adapter and join experiment, not a core runtime dependency. Sampling permission,
+capture failure, stack timestamp precision and observer overhead must remain
+explicit in the artifact.
+
+Raw stacks are private by default because function names and source paths may be
+sensitive. They do not enter `external-runtime-observation-v1`. Collection
+requires explicit operator opt-in and the platform's process-attachment
+permission; a manifest may reference only a separately versioned, reviewed
+stack artifact and its content hash.
+
 Prometheus and OpenTelemetry remain continuous telemetry systems. A correlation
 manifest may reference their reviewed outputs, PyTorch/NCCL Flight Recorder
 dumps, process evidence and supervisor events. It does not copy their storage or
