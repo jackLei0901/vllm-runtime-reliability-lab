@@ -126,6 +126,39 @@ class CadenceTest(unittest.TestCase):
         self.assertEqual(process.call_count, 2)
         self.assertEqual(gpu.call_count, 1)
 
+    def test_records_collection_duration_by_source(self) -> None:
+        duration_clock = iter(range(0, 8_000_001, 1_000_000))
+        collector = CadencedCollector(
+            "http://127.0.0.1:1",
+            None,
+            0.01,
+            clock_ns=lambda: 0,
+            duration_clock_ns=lambda: next(duration_clock),
+        )
+        with (
+            patch(
+                "dfxlab.collectors.collect_health",
+                return_value=(collector.health, None),
+            ),
+            patch(
+                "dfxlab.collectors.collect_metrics",
+                return_value=(collector.metrics, None),
+            ),
+            patch(
+                "dfxlab.collectors.process_snapshot",
+                return_value=ProcessObservation(False, None),
+            ),
+            patch(
+                "dfxlab.collectors.gpu_snapshot",
+                return_value=(GpuAggregate(0), ()),
+            ),
+        ):
+            collector.collect(0)
+        for timing in collector.timing_summary().values():
+            self.assertEqual(timing["count"], 1)
+            self.assertEqual(timing["mean_ms"], 1.0)
+            self.assertEqual(timing["max_ms"], 1.0)
+
 
 class RuntimeAllowlistTest(unittest.TestCase):
     @patch("dfxlab.collectors.shutil.which", return_value=None)

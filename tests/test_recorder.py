@@ -143,6 +143,19 @@ class RecorderTest(unittest.TestCase):
             self.assertEqual(recorder.run(duration=0.01), 0)
             self.assertGreater(recorder.recorder_health().events_appended_total, 0)
 
+    def test_stop_request_ends_run_and_writes_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            recorder = IncidentRecorder(
+                "http://127.0.0.1:8000",
+                Path(tmp),
+                sample_interval=0.001,
+                collector=OneSampleCollector(),
+                runtime=RUNTIME,
+            )
+            recorder.request_stop()
+            self.assertEqual(recorder.run(), 0)
+            self.assertTrue((Path(tmp) / "run-summary.private.json").is_file())
+
 
 if __name__ == "__main__":
     unittest.main()

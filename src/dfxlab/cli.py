@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import signal
 from pathlib import Path
 
 from dfxlab.collectors import environment_snapshot, runtime_allowlist
@@ -111,6 +112,11 @@ def main(argv: list[str] | None = None) -> int:
                 target_torch_version=args.target_torch_version,
             ),
         )
+        handled_signals = [signal.SIGINT, signal.SIGTERM]
+        if hasattr(signal, "SIGBREAK"):
+            handled_signals.append(signal.SIGBREAK)
+        for signum in handled_signals:
+            signal.signal(signum, lambda _signum, _frame: recorder.request_stop())
         return recorder.run(args.duration, args.stop_on_incident)
     if args.command == "inject-signal":
         event = inject_signal(

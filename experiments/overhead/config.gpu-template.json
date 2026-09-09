@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "experiment_id": "replace-before-running",
+  "environment_class": "single-gpu-paired-overhead",
+  "sequence": ["disabled", "enabled", "disabled", "enabled", "disabled", "enabled"],
+  "variables": {
+    "repo_root": ".",
+    "base_url": "http://127.0.0.1:8000",
+    "port": "8000",
+    "model_path": "REPLACE_WITH_PINNED_MODEL",
+    "served_model_name": "reliability-overhead"
+  },
+  "commands": {
+    "server": [
+      "REPLACE_WITH_VLLM_PYTHON",
+      "-m",
+      "vllm.entrypoints.openai.api_server",
+      "--model",
+      "{model_path}",
+      "--served-model-name",
+      "{served_model_name}",
+      "--port",
+      "{port}",
+      "--dtype",
+      "bfloat16",
+      "--max-model-len",
+      "4096",
+      "--gpu-memory-utilization",
+      "0.8",
+      "--max-num-seqs",
+      "8"
+    ],
+    "workload": [
+      "{python}",
+      "{repo_root}/experiments/overhead/openai_completions_workload.py",
+      "--base-url",
+      "{base_url}",
+      "--model",
+      "{served_model_name}",
+      "--requests",
+      "200",
+      "--concurrency",
+      "8",
+      "--warmup-requests",
+      "10",
+      "--prompt-repeat",
+      "256",
+      "--max-tokens",
+      "128",
+      "--seed",
+      "20260909"
+    ],
+    "recorder": [
+      "{python}",
+      "-m",
+      "dfxlab",
+      "record",
+      "--base-url",
+      "{base_url}",
+      "--pid",
+      "{server_pid}",
+      "--output",
+      "{trial_dir}/artifacts",
+      "--sample-interval",
+      "1",
+      "--gpu-interval",
+      "5",
+      "--history",
+      "300"
+    ]
+  },
+  "ready_url": "{base_url}/health",
+  "startup_timeout_seconds": 300,
+  "workload_timeout_seconds": 1800,
+  "shutdown_timeout_seconds": 60,
+  "recorder_settle_seconds": 2,
+  "metadata": {
+    "vllm_commit": "REPLACE_WITH_CLEAN_COMMIT",
+    "model_revision": "REPLACE_WITH_MODEL_REVISION",
+    "seed": 20260909,
+    "status": "template-not-approved-for-execution"
+  }
+}

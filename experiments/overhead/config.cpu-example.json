@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "experiment_id": "cpu-fake-server-harness-check",
+  "environment_class": "cpu-harness-validation-only",
+  "sequence": ["disabled", "enabled", "disabled", "enabled"],
+  "variables": {
+    "repo_root": ".",
+    "base_url": "http://127.0.0.1:18080",
+    "port": "18080"
+  },
+  "commands": {
+    "server": [
+      "{python}",
+      "{repo_root}/examples/fake_vllm_server.py",
+      "--port",
+      "{port}"
+    ],
+    "workload": [
+      "{python}",
+      "{repo_root}/experiments/overhead/http_probe_workload.py",
+      "--base-url",
+      "{base_url}",
+      "--requests",
+      "10",
+      "--interval",
+      "0.02"
+    ],
+    "recorder": [
+      "{python}",
+      "-m",
+      "dfxlab",
+      "record",
+      "--base-url",
+      "{base_url}",
+      "--pid",
+      "{server_pid}",
+      "--output",
+      "{trial_dir}/artifacts",
+      "--sample-interval",
+      "0.1",
+      "--health-interval",
+      "0.1",
+      "--metrics-interval",
+      "0.1",
+      "--process-interval",
+      "0.1",
+      "--gpu-interval",
+      "1",
+      "--history",
+      "16"
+    ]
+  },
+  "ready_url": "{base_url}/health",
+  "startup_timeout_seconds": 15,
+  "workload_timeout_seconds": 30,
+  "shutdown_timeout_seconds": 5,
+  "recorder_settle_seconds": 0.2,
+  "metadata": {
+    "claim_boundary": "Validates harness behavior only; not a performance result."
+  }
+}

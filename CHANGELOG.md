@@ -5,6 +5,10 @@
 - Add a detailed Chinese guide covering usage, evidence boundaries, validation,
   current product readiness, and the path from public alpha to production preview.
 - Add a Chinese architecture/design document and a gated product roadmap.
+- Add a CPU-testable paired-overhead harness and an explicitly unapproved GPU
+  plan template.
+- Record collector latency by source, preserve graceful recorder summaries, and
+  report adjacent disabled/enabled relative deltas.
 
 ## 0.1.0-alpha.3 - 2026-09-09
 

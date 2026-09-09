@@ -282,6 +282,7 @@ class CadencedCollector:
         process_interval: float = 1.0,
         gpu_interval: float = 5.0,
         clock_ns: Callable[[], int] = time.monotonic_ns,
+        duration_clock_ns: Callable[[], int] = time.perf_counter_ns,
     ) -> None:
         intervals = (health_interval, metrics_interval, process_interval, gpu_interval)
         if any(value <= 0 for value in intervals):
@@ -290,6 +291,7 @@ class CadencedCollector:
         self.pid = pid
         self.timeout = timeout
         self.clock_ns = clock_ns
+        self.duration_clock_ns = duration_clock_ns
         self.intervals_ns = {
             "health": int(health_interval * 1_000_000_000),
             "metrics": int(metrics_interval * 1_000_000_000),
@@ -301,6 +303,29 @@ class CadencedCollector:
         self.metrics = MetricsObservation()
         self.process = ProcessObservation(tracked=pid is not None, alive=None)
         self.gpu = GpuAggregate(device_count=0)
+        self._timing_ns = {
+            name: {"count": 0, "total": 0, "maximum": 0} for name in self.intervals_ns
+        }
+
+    def _record_duration(self, source: str, started_ns: int) -> None:
+        elapsed_ns = max(0, self.duration_clock_ns() - started_ns)
+        timing = self._timing_ns[source]
+        timing["count"] += 1
+        timing["total"] += elapsed_ns
+        timing["maximum"] = max(timing["maximum"], elapsed_ns)
+
+    def timing_summary(self) -> dict[str, dict[str, float | int]]:
+        summary: dict[str, dict[str, float | int]] = {}
+        for source, timing in self._timing_ns.items():
+            count = timing["count"]
+            total_ms = timing["total"] / 1_000_000
+            summary[source] = {
+                "count": count,
+                "total_ms": total_ms,
+                "mean_ms": total_ms / count if count else 0.0,
+                "max_ms": timing["maximum"] / 1_000_000,
+            }
+        return summary
 
     def collect(self, sequence: int) -> ExternalObservation:
         now_ns = self.clock_ns()
@@ -308,23 +333,39 @@ class CadencedCollector:
         sampled_sources: list[str] = []
         if now_ns >= self.next_due["health"]:
             sampled_sources.append("health")
-            self.health, error = collect_health(self.base_url, self.timeout)
+            started_ns = self.duration_clock_ns()
+            try:
+                self.health, error = collect_health(self.base_url, self.timeout)
+            finally:
+                self._record_duration("health", started_ns)
             if error:
                 errors.append(f"health_{error}")
             self.next_due["health"] = now_ns + self.intervals_ns["health"]
         if now_ns >= self.next_due["metrics"]:
             sampled_sources.append("metrics")
-            self.metrics, error = collect_metrics(self.base_url, self.timeout)
+            started_ns = self.duration_clock_ns()
+            try:
+                self.metrics, error = collect_metrics(self.base_url, self.timeout)
+            finally:
+                self._record_duration("metrics", started_ns)
             if error:
                 errors.append(f"metrics_{error}")
             self.next_due["metrics"] = now_ns + self.intervals_ns["metrics"]
         if now_ns >= self.next_due["process"]:
             sampled_sources.append("process")
-            self.process = process_snapshot(self.pid)
+            started_ns = self.duration_clock_ns()
+            try:
+                self.process = process_snapshot(self.pid)
+            finally:
+                self._record_duration("process", started_ns)
             self.next_due["process"] = now_ns + self.intervals_ns["process"]
         if now_ns >= self.next_due["gpu"]:
             sampled_sources.append("gpu")
-            self.gpu, gpu_errors = gpu_snapshot(self.timeout)
+            started_ns = self.duration_clock_ns()
+            try:
+                self.gpu, gpu_errors = gpu_snapshot(self.timeout)
+            finally:
+                self._record_duration("gpu", started_ns)
             errors.extend(gpu_errors)
             self.next_due["gpu"] = now_ns + self.intervals_ns["gpu"]
         return ExternalObservation(

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import secrets
+import threading
 import time
 from collections import deque
 from pathlib import Path
@@ -78,6 +79,10 @@ class IncidentRecorder:
         self._events_dropped_total = 0
         self._incident_serial = 0
         self._warned_writer_errors: set[str] = set()
+        self._stop_requested = threading.Event()
+
+    def request_stop(self) -> None:
+        self._stop_requested.set()
 
     def classify(self, sample: ExternalObservation) -> TriggerKind | None:
         if sample.process.tracked and sample.process.alive is False:
@@ -161,7 +166,9 @@ class IncidentRecorder:
                     )
                 except OSError:
                     print("private timeline unavailable; continuing without it")
-            while duration is None or time.monotonic() - start < duration:
+            while not self._stop_requested.is_set() and (
+                duration is None or time.monotonic() - start < duration
+            ):
                 try:
                     sample = self.collector.collect(sequence)
                 except Exception as exc:
@@ -203,6 +210,7 @@ class IncidentRecorder:
                 timeline.close()
 
         try:
+            timing_summary = getattr(self.collector, "timing_summary", None)
             atomic_write_private_json(
                 self.output_dir / "run-summary.private.json",
                 {
@@ -212,6 +220,9 @@ class IncidentRecorder:
                     "writer": self.writer.health().to_dict(),
                     "incident_files": captured,
                     "private_raw_timeline": self.private_raw_timeline,
+                    "collector_timing": (
+                        timing_summary() if callable(timing_summary) else None
+                    ),
                 },
             )
         except OSError:

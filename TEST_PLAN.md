@@ -49,6 +49,11 @@ arrival pattern. Report:
 Do not set an overhead target after reading the measurements. Publish raw paired
 results and null outcomes.
 
+The executable CPU harness contract and the unapproved GPU configuration
+template are in [`experiments/overhead/`](experiments/overhead/). The CPU run
+validates pairing, signatures, process cleanup and report generation only; its
+latency values are not vLLM overhead evidence.
+
 ## Result boundary
 
 Passing the CPU gate validates the artifact and failure-isolation contracts. It

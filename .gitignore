@@ -21,3 +21,6 @@ results/gpu-20260901-fault-boundary/**
 !results/gpu-20260909-alpha2/
 results/gpu-20260909-alpha2/**
 !results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md
+!results/cpu-20260909-paired-harness/
+results/cpu-20260909-paired-harness/**
+!results/cpu-20260909-paired-harness/VALIDATION_SUMMARY.md
