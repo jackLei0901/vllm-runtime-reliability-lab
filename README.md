@@ -92,6 +92,8 @@ vllm-dfx snapshot-env --output private-run/environment.private.json
 vllm-dfx record \
   --base-url http://127.0.0.1:8000 \
   --pid "$API_SERVER_PID" \
+  --target-vllm-version "<exact server version or commit>" \
+  --target-torch-version "<exact server Torch version>" \
   --output shareable-incidents \
   --sample-interval 1 \
   --gpu-interval 5 \
@@ -101,6 +103,11 @@ vllm-dfx record \
 `snapshot-env` and `run-summary.private.json` are private lab metadata. Review
 them before sharing. Files named `incident-*.json` follow the stricter external
 artifact contract.
+
+The recorder may run in a different Python environment from vLLM. It therefore
+never infers the target's vLLM or Torch version from its own installed packages.
+Those artifact fields remain `null` unless the two explicit target-version
+arguments are provided.
 
 Raw timeline persistence is disabled by default. The explicit
 `--private-raw-timeline` option writes an unbounded private debugging file and
@@ -177,7 +184,7 @@ The post-alpha GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Status
 
-`v0.1.0-alpha.1` validates the external artifact contract and CPU/local-service
+`v0.1.0-alpha.2` validates the external artifact contract and CPU/local-service
 behavior. GPU re-validation of this hardened schema is the next gate. Until that
 is complete, treat this release as an evaluation build.
 

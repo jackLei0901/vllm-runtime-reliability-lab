@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from dfxlab.collectors import environment_snapshot
+from dfxlab.collectors import environment_snapshot, runtime_allowlist
 from dfxlab.external_writer import IncidentWriter
 from dfxlab.faults import inject_signal
 from dfxlab.recorder import IncidentRecorder
@@ -51,6 +51,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     record_parser.add_argument("--max-artifact-kib", type=int, default=256)
     record_parser.add_argument("--max-artifacts", type=int, default=4)
+    record_parser.add_argument(
+        "--target-vllm-version",
+        help="exact observed-server vLLM version; omitted rather than inferred",
+    )
+    record_parser.add_argument(
+        "--target-torch-version",
+        help="exact observed-server Torch version; omitted rather than inferred",
+    )
 
     signal_parser = subparsers.add_parser(
         "inject-signal", help="send an explicit signal"
@@ -98,6 +106,10 @@ def main(argv: list[str] | None = None) -> int:
             incident_cooldown=args.incident_cooldown,
             private_raw_timeline=args.private_raw_timeline,
             writer=writer,
+            runtime=runtime_allowlist(
+                target_vllm_version=args.target_vllm_version,
+                target_torch_version=args.target_torch_version,
+            ),
         )
         return recorder.run(args.duration, args.stop_on_incident)
     if args.command == "inject-signal":

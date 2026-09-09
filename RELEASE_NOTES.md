@@ -1,32 +1,18 @@
-# v0.1.0-alpha.1
+# v0.1.0-alpha.2
 
-This first public alpha turns the existing vLLM reliability experiments into a
-reproducible, installable external recorder with a deliberately narrow trust
-boundary.
+This corrective alpha preserves the external observer's evidence boundary: it
+does not infer target package versions from the recorder's Python environment.
 
-## Included
+## Correction
 
-- a closed `external-runtime-observation-v1` JSON contract;
-- bounded, independently cadenced health, metrics, process, and GPU sampling;
-- process-exit, health-loss, KV-pressure, and preemption triggers;
-- 256 KiB artifact cap, four-file rotation, atomic replacement, and POSIX
-  `0600` permissions;
-- privacy canaries and per-process HMAC incident identifiers;
-- fail-open collection and persistence behavior;
-- a fake vLLM HTTP service and 30 CPU tests;
-- reviewed summaries of earlier RTX 4090 and TP=2 experiments.
+- `vllm_version` and `torch_version` now remain `null` by default.
+- Operators may supply exact observed-server values with
+  `--target-vllm-version` and `--target-torch-version`.
+- Two regression tests cover both unknown and explicitly supplied versions.
 
-## Validation completed for this tag
+All `alpha.1` functionality remains: closed schema, bounded cadenced history,
+privacy canaries, four-file rotation, fail-open persistence, fake-service tests,
+and Markdown summaries.
 
-- clean editable install on Windows;
-- Ruff lint and format checks;
-- 30 unit/local-service tests passed, with the POSIX permission test skipped on
-  Windows and scheduled for Linux CI;
-- end-to-end fake-service health-loss capture and Markdown summarization;
-- published example validated against the Draft 2020-12 JSON Schema.
-
-## Not established by this alpha
-
-Fresh GPU validation, production diagnostic utility, DP/NCCL behavior,
-long-duration stability, and automatic remediation remain out of scope. See
-`TEST_PLAN.md` for the next evidence gates.
+Fresh GPU validation is being performed against this corrected build. It is not
+claimed by the tag until the evidence is published separately.

@@ -4,7 +4,12 @@ import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from unittest.mock import patch
 
-from dfxlab.collectors import CadencedCollector, collect_health, collect_metrics
+from dfxlab.collectors import (
+    CadencedCollector,
+    collect_health,
+    collect_metrics,
+    runtime_allowlist,
+)
 from dfxlab.external_schema import GpuAggregate, ProcessObservation
 
 
@@ -120,6 +125,25 @@ class CadenceTest(unittest.TestCase):
         self.assertEqual(metrics.call_count, 2)
         self.assertEqual(process.call_count, 2)
         self.assertEqual(gpu.call_count, 1)
+
+
+class RuntimeAllowlistTest(unittest.TestCase):
+    @patch("dfxlab.collectors.shutil.which", return_value=None)
+    def test_target_versions_are_not_inferred_from_recorder_environment(
+        self, _which: object
+    ) -> None:
+        runtime = runtime_allowlist()
+        self.assertIsNone(runtime.vllm_version)
+        self.assertIsNone(runtime.torch_version)
+
+    @patch("dfxlab.collectors.shutil.which", return_value=None)
+    def test_explicit_target_versions_are_preserved(self, _which: object) -> None:
+        runtime = runtime_allowlist(
+            target_vllm_version="0.23.1rc1+commit",
+            target_torch_version="2.13.0+cu130",
+        )
+        self.assertEqual(runtime.vllm_version, "0.23.1rc1+commit")
+        self.assertEqual(runtime.torch_version, "2.13.0+cu130")
 
 
 if __name__ == "__main__":

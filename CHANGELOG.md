@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-alpha.2 - 2026-09-09
+
+- Stop inferring target vLLM and Torch versions from the recorder environment.
+- Add explicit `--target-vllm-version` and `--target-torch-version` inputs.
+- Preserve unknown target versions as `null`.
+
 ## 0.1.0-alpha.1 - 2026-09-09
 
 - Add a closed, machine-checkable external incident artifact contract.

@@ -193,7 +193,16 @@ def _module_version(module_name: str) -> str | None:
         return None
 
 
-def runtime_allowlist() -> RuntimeInfo:
+def runtime_allowlist(
+    *,
+    target_torch_version: str | None = None,
+    target_vllm_version: str | None = None,
+) -> RuntimeInfo:
+    """Build shareable runtime metadata without guessing target versions.
+
+    The recorder may run in a different environment from the observed server,
+    so target package versions are recorded only when supplied explicitly.
+    """
     gpu_models: tuple[str, ...] = ()
     binary = shutil.which("nvidia-smi")
     if binary:
@@ -213,8 +222,8 @@ def runtime_allowlist() -> RuntimeInfo:
     return RuntimeInfo(
         python_version=platform.python_version(),
         platform=platform.system(),
-        torch_version=_module_version("torch"),
-        vllm_version=_module_version("vllm"),
+        torch_version=target_torch_version,
+        vllm_version=target_vllm_version,
         gpu_count=len(gpu_models),
         gpu_models=gpu_models,
     )

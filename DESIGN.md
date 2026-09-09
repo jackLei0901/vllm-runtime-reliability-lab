@@ -32,6 +32,10 @@ metrics and process polling default to one second; `nvidia-smi` defaults to five
 seconds because spawning it is materially more expensive. Transport failures are
 reduced to fixed error kinds. Raw exception text and URLs are not serialized.
 
+Python/platform fields describe the recorder. Target vLLM and Torch versions are
+never inferred from the recorder environment; they remain `null` unless the
+operator supplies exact observed-server values explicitly.
+
 Prometheus input is projected into four fields only: KV-cache usage,
 preemptions, running requests and waiting requests. Label variants are summed
 before projection, avoiding high-cardinality output.

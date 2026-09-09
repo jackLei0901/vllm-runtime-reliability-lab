@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/jackLei0901/vllm-runtime-reliability-lab/v0.1.0-alpha.1/schema/external-runtime-observation-v1.schema.json",
+  "$id": "https://raw.githubusercontent.com/jackLei0901/vllm-runtime-reliability-lab/v0.1.0-alpha.2/schema/external-runtime-observation-v1.schema.json",
   "title": "External runtime incident observation v1",
   "type": "object",
   "additionalProperties": false,

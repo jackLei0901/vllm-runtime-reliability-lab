@@ -31,6 +31,8 @@ external process cannot observe.
    the observed vLLM process.
 7. External triggers always report `internal_kind=unknown` and
    `internal_stage=unknown`.
+8. Target vLLM/Torch versions are never inferred from the recorder environment;
+   unknown values remain `null` unless explicitly supplied.
 
 ## Alpha acceptance
 
