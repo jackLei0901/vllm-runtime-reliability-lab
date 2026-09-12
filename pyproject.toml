@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vllm-runtime-dfx-lab"
-version = "0.1.0a3"
+version = "0.1.0a4"
 description = "Bounded external incident recording and fault-injection lab for vLLM"
 readme = "README.md"
 requires-python = ">=3.10"

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.1.0-alpha.4 - 2026-09-12
+
 - Reframe the product around health-green loss of progress and cross-producer
   evidence correlation rather than generic data collection.
 - Document the planned identity, clock, closed-manifest and process/progress
@@ -20,6 +22,14 @@
   plan template.
 - Record collector latency by source, preserve graceful recorder summaries, and
   report adjacent disabled/enabled relative deltas.
+- Add an auditable four-GPU reconstruction of the organic FSDP2 hang tracked by
+  pytorch/pytorch#158719 and pytorch/torchtitan#2747.
+- Publish three stable DETAIL oracle records and three matching automatic
+  ProcessGroupNCCL Flight Recorder records under a derived-only evidence
+  boundary with a standalone verifier.
+- Record the missing same-version no-divergence control, the blocked PyTorch
+  2.13 mixed-gradient-dtype control, and the unverified protocol-freeze timing
+  as explicit limitations rather than counting them as success.
 
 ## 0.1.0-alpha.3 - 2026-09-09
 

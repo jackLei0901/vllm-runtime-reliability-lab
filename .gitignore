@@ -24,3 +24,7 @@ results/gpu-20260909-alpha2/**
 !results/cpu-20260909-paired-harness/
 results/cpu-20260909-paired-harness/**
 !results/cpu-20260909-paired-harness/VALIDATION_SUMMARY.md
+!results/organic-hang-20260912/
+!results/organic-hang-20260912/**
+results/organic-hang-20260912/**/__pycache__/
+results/organic-hang-20260912/**/*.pyc

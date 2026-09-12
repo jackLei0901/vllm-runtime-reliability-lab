@@ -11,6 +11,9 @@ Do not present any of the following as a validated conclusion:
 
 ## Published summaries
 
+- [`organic-hang-20260912/`](organic-hang-20260912/): derived-only evidence for
+  a four-GPU known-answer FSDP2 hang reconstruction, including a standalone
+  verifier and explicit retention limitations.
 - [`gpu-20260909-alpha2/VALIDATION_SUMMARY.md`](gpu-20260909-alpha2/VALIDATION_SUMMARY.md):
   fresh RTX 4090 validation of the alpha.2 schema, fatal-path repetition,
   fail-open writer, and disabled control.

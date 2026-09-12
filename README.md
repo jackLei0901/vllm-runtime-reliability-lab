@@ -245,6 +245,16 @@ These results establish test-harness behavior only for the pinned environments.
 They do not establish long-term stability, DP/NCCL behavior or production value.
 The fresh alpha.2 result is in
 [`results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md`](results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md).
+
+The alpha.4 organic-hang campaign moves beyond project-designed faults. On a
+four-GPU PyTorch FSDP2 workload with an independently known answer, three
+`DebugLevel.DETAIL` trials and three automatic ProcessGroupNCCL Flight Recorder
+trials exposed the same `_REDUCE_SCATTER_BASE` input-shape mismatch. This is a
+known-answer reconstruction, not root-cause discovery, and the campaign remains
+short of GO because a same-version no-divergence control is still required. See
+the [review entry](experiments/organic-hang/REVIEW_RESPONSE_2026-09-10.md) and
+[derived-only public evidence](results/organic-hang-20260912/README.md).
+
 The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Documentation
@@ -262,11 +272,12 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Status
 
-`v0.1.0-alpha.3` validates the external artifact contract, CPU/local-service
-behavior, and retains the bounded RTX 4090 fault matrix from alpha.2. Paired
-overhead, fresh KV-pressure, health-green no-progress, cross-rank correlation,
-multi-GPU, long-duration, and production-utility gates remain open. Treat this
-release as an evaluation build.
+`v0.1.0-alpha.4` adds an auditable four-GPU known-answer reconstruction for an
+organic PyTorch FSDP2 hang. It does not establish unknown-root-cause discovery
+or a campaign-level GO decision. Paired overhead, fresh KV-pressure,
+health-green no-progress, cross-host correlation, long-duration, and
+production-utility gates remain open. Treat this release as an evaluation
+build.
 
 ## License
 
