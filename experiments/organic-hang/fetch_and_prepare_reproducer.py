@@ -20,6 +20,12 @@ FIXED_PREPARED_SHA256 = (
 NO_DIVERGENCE_PREPARED_SHA256 = (
     "bb4126cd3a74a57d1b58b11035876753871e599076728c559c3a5f3d46fa0201"
 )
+FIXED_NO_DIVERGENCE_PREPARED_SHA256 = (
+    "25e84dae1e3514ada1b0047e855fb8c4ef4b08f4664b03f7f9e42d4cb95e5b1b"
+)
+FIXED_DP_ONLY_PREPARED_SHA256 = (
+    "5ced00d84f64cabdbb9503baf74de05ec294a592609a55b6066d506da72386eb"
+)
 DEBUG_BLOCK = (
     "    if debug:  # need to enable to produce FSDP error, otherwise it will "
     "hang and not show the error\n"
@@ -155,6 +161,15 @@ def disable_random_output(prepared: str) -> str:
     )
 
 
+def use_dp_only_topology(prepared: str) -> str:
+    """Keep four ranks but replace PP=2/DP=2 with PP=1/DP=4."""
+    return replace_once(
+        prepared,
+        "        args=(4, 2, 2),",
+        "        args=(4, 4, 1),",
+    )
+
+
 def read_source(source_path: Path | None) -> bytes:
     if source_path is not None:
         return source_path.read_bytes()
@@ -166,9 +181,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path)
     parser.add_argument("--output", type=Path, required=True)
-    control = parser.add_mutually_exclusive_group()
-    control.add_argument("--enable-upstream-fix", action="store_true")
-    control.add_argument("--disable-random-output", action="store_true")
+    parser.add_argument("--enable-upstream-fix", action="store_true")
+    parser.add_argument("--disable-random-output", action="store_true")
+    parser.add_argument("--dp-only", action="store_true")
     args = parser.parse_args()
 
     raw = read_source(args.source)
@@ -180,13 +195,27 @@ def main() -> int:
         )
 
     prepared = prepare_source(raw.decode("utf-8"))
-    expected_prepared_hash = PREPARED_SHA256
+    transforms = (
+        args.enable_upstream_fix,
+        args.disable_random_output,
+        args.dp_only,
+    )
+    expected_hashes = {
+        (False, False, False): PREPARED_SHA256,
+        (True, False, False): FIXED_PREPARED_SHA256,
+        (False, True, False): NO_DIVERGENCE_PREPARED_SHA256,
+        (True, True, False): FIXED_NO_DIVERGENCE_PREPARED_SHA256,
+        (True, False, True): FIXED_DP_ONLY_PREPARED_SHA256,
+    }
+    if transforms not in expected_hashes:
+        raise SystemExit(f"unsupported preparation combination: {transforms}")
     if args.enable_upstream_fix:
         prepared = enable_upstream_fix(prepared)
-        expected_prepared_hash = FIXED_PREPARED_SHA256
-    elif args.disable_random_output:
+    if args.disable_random_output:
         prepared = disable_random_output(prepared)
-        expected_prepared_hash = NO_DIVERGENCE_PREPARED_SHA256
+    if args.dp_only:
+        prepared = use_dp_only_topology(prepared)
+    expected_prepared_hash = expected_hashes[transforms]
     compile(prepared, str(args.output), "exec")
     prepared_bytes = prepared.encode("utf-8")
     prepared_hash = hashlib.sha256(prepared_bytes).hexdigest()

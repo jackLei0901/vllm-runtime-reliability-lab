@@ -1,0 +1,33 @@
+{
+  "freeze_id": "gate1c-pre-execution-2026-09-12",
+  "status": "pre-execution",
+  "supersedes": "gate1b-pre-execution-2026-09-12",
+  "superseded_gate_status": "withdrawn-before-execution",
+  "expected_environment": {
+    "torch_version": "2.13.0+cu130",
+    "visible_gpu_count": 2,
+    "identical_gpu_models": true
+  },
+  "timing_seconds": {
+    "stack_capture": 20,
+    "process_group_timeout": 30,
+    "wall_bound": 45
+  },
+  "expected_mechanism": {
+    "control": "completed_symmetric_fp32",
+    "affected": "rank1_assertion_rank0_barrier_wait"
+  },
+  "expected_termination": {
+    "control": "normal_completion",
+    "affected": "wall_bound_rank1_teardown_wait"
+  },
+  "files": {
+    "GATE1C_PROTOCOL.md": "581de0ecb35d33cd5d1306e731ff187318d5276387742566f0af2e4f24587bac",
+    "gate1c_campaign.py": "aed80eeb39b4bc19dcb9af02f945b0e84b0fd54db3fabf3744bff070bd694075",
+    "gate1c_reproducer.py": "b27a0df5fac8c057956b22a69a5794845f943d558a52b472302d63ef6053ff11",
+    "normalize_flight_recorder.py": "43569fb021c8c3f1fb3b21abd9227bb4ad90dbaa4ef3c403db1a308bd18c06f6",
+    "process_lifecycle.py": "80d4e9f3e5f90a15c231745a1e9ea3bebc11002ab0ed74900c58c928d57bab14",
+    "verify_gate1c.py": "481ab78d3a92952fe9b720acd6bf3962cc6bb44a194fc51fca3c80d755290c25",
+    "verify_gate1c_freeze.py": "31e55b247ee7c17336c0aa7b41fde7213c3049befc139d5696b63c3759bbaf1c"
+  }
+}

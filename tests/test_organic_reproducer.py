@@ -66,6 +66,14 @@ class OrganicReproducerPreparationTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "source anchor"):
             module.disable_random_output("enable_random_output=True")
 
+    def test_dp_only_control_changes_only_topology(self) -> None:
+        module = load_preparer()
+        prepared = "        args=(4, 2, 2),"
+        controlled = module.use_dp_only_topology(prepared)
+        self.assertEqual("        args=(4, 4, 1),", controlled)
+        with self.assertRaisesRegex(ValueError, "source anchor"):
+            module.use_dp_only_topology("        args=(2, 2, 1),")
+
     def test_prepare_source_changes_only_declared_controls(self) -> None:
         module = load_preparer()
         source = (

@@ -1,0 +1,27 @@
+{
+  "freeze_id": "phase2-pre-execution-2026-09-12",
+  "status": "pre-execution",
+  "expected_torch_version": "2.13.0+cu130",
+  "files": {
+    "experiments/organic-hang/fetch_and_prepare_reproducer.py": "d05d18e0801061f3693ccfce32691cfcb79dc784e5abb0f162688eaaeb08da5f",
+    "experiments/pytorch-unused-grad-dtype/PHASE2_PROTOCOL.md": "13f1dfc52a81c965fe67ecd97ed67368f3bfe898860e88c6b3e560df06cfdade",
+    "experiments/pytorch-unused-grad-dtype/README.md": "df3eecc3cde2458420bf35c402cc4462dacb0d09a94563b385e17867ced9730b",
+    "experiments/pytorch-unused-grad-dtype/REVIEW_START_HERE_CN.md": "5b2ad43ca812a06592d6f54d7ef0f3eaea4902f6710ca94364dde5da6efdf8cf",
+    "experiments/pytorch-unused-grad-dtype/SOURCE_AUDIT.md": "e9259feeb3104e1ed265398cf7738a17bb891d4bde4b77a664ad7f46563a0cbc",
+    "experiments/pytorch-unused-grad-dtype/accumulation_reproducer.py": "76150b557334c15dc4b7864543242de5187537d8b877e647127ad242b1794e2c",
+    "experiments/pytorch-unused-grad-dtype/campaign.py": "6eb0b3c30925238f6e09289f80983685629211984c008fa6e3a0dd2364a47fe0",
+    "experiments/pytorch-unused-grad-dtype/dtype_probe_campaign.py": "6e6b3b1be654b23fb9e691981663447d41bc0617b55173375d70dc91ef90dfbb",
+    "experiments/pytorch-unused-grad-dtype/dtype_probe_reproducer.py": "8a7d2afdbf39c2a02d496de88b0ca5392dbcbc34388d5daea2ac182f539f3a46",
+    "experiments/pytorch-unused-grad-dtype/four_gpu_campaign.py": "e797cec30a59f30c5922431f367b18dcccc76f727cb980ada13f22448edde83e",
+    "experiments/pytorch-unused-grad-dtype/prepare_four_gpu_matrix.py": "077e60fd3c4a38f9389955cea9f960dd38eaa253aae92325b28bab543e2186a5",
+    "experiments/pytorch-unused-grad-dtype/reproducer.py": "a883752878bd2e2d6d008592f7f4dd18b0e6ab9e66137772e5bcd235ff272a3d",
+    "experiments/pytorch-unused-grad-dtype/verify_dtype_probe.py": "f91e94cc6de652975243003a4c767d619318db383cf254cf2477525e3764769a",
+    "experiments/pytorch-unused-grad-dtype/verify_four_gpu.py": "72ee2974d3d54aa65eb573b311ed32d07958c36c8d5f213a1e5a22311e3365a6",
+    "experiments/pytorch-unused-grad-dtype/verify_results.py": "b30ac6329a64cc707840e4da612ff4add8fbb2dd69c30103664a0cf13c5f64ee"
+  },
+  "prepared_four_gpu_sha256": {
+    "pp1-dp4-divergent": "5ced00d84f64cabdbb9503baf74de05ec294a592609a55b6066d506da72386eb",
+    "pp2-dp2-divergent": "430509263ad2c66786d63d0fa6936c0919bb45e8bf9984ffcb69fde5865c38d1",
+    "pp2-dp2-uniform": "25e84dae1e3514ada1b0047e855fb8c4ef4b08f4664b03f7f9e42d4cb95e5b1b"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "arm": "affected",
+  "assertion_marker_seen": false,
+  "classification": "completed",
+  "cuda_runtime_version": "13.0",
+  "cuda_visible_devices": 2,
+  "duration_seconds": 6.403,
+  "gpu_names": [
+    "NVIDIA GeForce RTX 4090",
+    "NVIDIA GeForce RTX 4090"
+  ],
+  "no_tracked_orphans": true,
+  "output_sha256": "649b0853f776835e3140aa4c6b4fc36e4fe2d69826ec5822beb3a9f1b58ad042",
+  "rank_identities_recorded": true,
+  "raw_output_persisted": false,
+  "reproducer_sha256": "a883752878bd2e2d6d008592f7f4dd18b0e6ab9e66137772e5bcd235ff272a3d",
+  "return_code": 0,
+  "schema_version": 1,
+  "steps_requested": 2,
+  "success_marker_seen": true,
+  "torch_git_version": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+  "torch_version": "2.13.0+cu130",
+  "trial": 1
+}

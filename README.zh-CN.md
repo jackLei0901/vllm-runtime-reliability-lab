@@ -62,15 +62,43 @@ attach 通常需要 root 或调整 `ptrace_scope`，Docker/Kubernetes 往往需�
 CUDA/native wait；真实的 unmatched NCCL collective 需要多 rank GPU 环境。
 权限拒绝、超时或 partial output 都是正常的明确结果，不能被当作 recorder 异常。
 
-### 1.2 为什么不直接使用 Prometheus
+### 1.2 为什么只看持续监控还不够
 
-Prometheus 和 OpenTelemetry 适合持续监控，本项目不替代它们。当前 recorder
-交付的是一个本地、触发时冻结、有大小上限且可以离线校验和分享的故障窗口，
-自动对齐少量 service、process 和 GPU 观察。
+vLLM 已经内置 Prometheus 指标（`vllm/v1/metrics/prometheus.py`）和
+OpenTelemetry trace（`vllm/tracing/otel.py`）。本项目不替代其中任何一个，并且
+把同一个 `/metrics` 端点作为自己的输入之一。它解决的是默认持续指标难以可靠
+保留的三类故障现场，而不是时间序列数据库完全无法表达的数据。
 
-如果现有监控系统已经可靠保留了同等分辨率的数据，并能在故障时自动形成
-可分享证据，那么本项目可能没有增量价值。后续必须通过 Prometheus 对照和
-unlinked-versus-linked 消融证明价值，不能把它作为前提。
+1. **最后一个采样间隔可能缺失。** Prometheus 按固定间隔拉取。进程一旦死亡就
+   不再响应，因此最后一次成功 scrape 到故障之间的活动可能没有进入时序存储。
+   本 recorder 在本地维护有界历史，并在外部条件触发时冻结。它没有消除采样
+   上限，但能在远端接口消失时保留观察边界上已经取得的样本。
+2. **诊断所需的数据是高基数的。** 判断 rank 在哪里发生分歧，可能需要
+   per-rank、per-collective 的 sequence number、input shape、dtype 和 stack
+   frame。把它们作为持续指标标签输出会产生明显的基数成本。一次性 artifact
+   避免的是持续基数成本，但仍受本项目 256 KiB 文件上限约束。
+3. **答案是一种关系，不是一个数值。** “rank 1 在本地抛出异常，而 rank 0 仍停在
+   collective 中”是关于两份独立记录在同一逻辑位置上对齐的陈述。per-target
+   指标本身不包含这种关系；当采样周期和时钟不确定性与事件间隔相近时，也不能
+   把 wall clock 当成可靠的全局顺序。因此关联设计优先使用 collective 的逻辑
+   位置，而不是按时间戳猜测先后。
+
+本仓库内的边界实验说明了这个缺口。Phase 2 Gate 1 的两 rank 任务触发了 60 秒
+wall timeout，但旧 runner 丢弃了逐 rank 输出，因此无法判断是一个 rank 先在本地
+assert、另一个随后等待，还是两个 rank 同时停滞。源码复核发现 Gate 1b 把预期
+CPU 等待点放错了位置；Gate 1c 的 wall bound 过紧，且停止规则把机制门与终止门
+错误地绑在一起，两者均已在执行前撤回。当前 Gate 1d 保留结构化逐 rank outcome、
+梯度 dtype family 以及有界 stack/Flight Recorder 证据，并把终止行为单独评分；
+它还没有执行，因此这里不把任何诊断结果写成既成事实。
+
+反向情形同样重要。在一例 health-green 停滞报告
+（[vLLM #52319](https://github.com/vllm-project/vllm/issues/52319)）中，`/health`
+和 `/metrics` 仍返回 HTTP 200，但生成吞吐降为零，等待请求继续累积。指标可以
+发现服务不再推进，却不能单独指出进度停止在哪个内部 rank 或执行位置。
+
+如果某个部署已经保留了同等的 per-rank、触发时数据，并能在故障时可靠打包成
+可分享证据，那么本项目没有增量价值。计划中的 Prometheus 对照和
+unlinked-versus-linked 消融是明确的产品验收项，不是前提。
 
 ### 1.3 当前 Alpha 与后续目标
 
@@ -100,6 +128,8 @@ unlinked-versus-linked 消融证明价值，不能把它作为前提。
 | 256 KiB 文件上限、最多保留四份、POSIX `0600` | 已完成 |
 | 写入失败不影响被观察服务 | 已完成并经过 GPU 冒烟验证 |
 | 正常 SIGTERM、EngineCore SIGKILL、受控 CUDA OOM | RTX 4090 已验证 |
+| 四卡 FSDP2 已知答案的 collective divergence 重建 | 已完成；仍缺同版本负对照 |
+| 两卡 unused-gradient dtype 机制 Gate 0 | 已完成；Gate 1d 尚未执行 |
 | 需求到测试用例的机器检查 | 已完成 |
 
 ### 尚未完成
@@ -108,7 +138,8 @@ unlinked-versus-linked 消融证明价值，不能把它作为前提。
 | --- | --- |
 | recorder 开关配对的性能实验 | 尚不能给出 CPU、RSS、TTFT、TPOT 和吞吐开销上界 |
 | 新一轮真实 KV pressure/preemption 实验 | 目前只有触发逻辑测试和历史实验，缺少 alpha.3 的完整实测 |
-| alpha.3 的 TP=2/DP/NCCL 验证 | 单卡结论不能外推到分布式拓扑 |
+| Gate 1d 逐 rank 机制、终止与采集验证 | 已冻结待执行，尚无 GPU 结果 |
+| vLLM TP=2 stall 和跨节点验证 | FSDP2/c10d 结果不能外推到 vLLM 热路径或多节点 |
 | 多版本兼容矩阵 | 尚未覆盖多个 vLLM release、指标名变化和不同 GPU 架构 |
 | 长时间运行与 crash-loop 测试 | 短期冒烟不能证明数天运行时的资源稳定性 |
 | systemd、容器和 Kubernetes 部署模板 | 当前仍以命令行实验工具为主 |
@@ -310,6 +341,26 @@ EngineCore 丢失和 CUDA OOM 中都只能得到外部 `health_lost`，无法恢
 
 - [`results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md`](results/gpu-20260909-alpha2/VALIDATION_SUMMARY.md)
 - [`TEST_PLAN.md`](TEST_PLAN.md)
+
+alpha.4 还包含一个四卡 PyTorch FSDP2 已知答案重建：三次 `DebugLevel.DETAIL`
+和三次自动 ProcessGroupNCCL Flight Recorder 试次都暴露了相同的
+`_REDUCE_SCATTER_BASE` input-shape mismatch。它证明已知答案可以由两条独立
+证据链重建，不代表发现了未知根因；同版本无分歧负对照仍未完成：
+
+- [`experiments/organic-hang/REVIEW_RESPONSE_2026-09-10.md`](experiments/organic-hang/REVIEW_RESPONSE_2026-09-10.md)
+- [`results/organic-hang-20260912/README.md`](results/organic-hang-20260912/README.md)
+
+两卡 dtype campaign 的 Gate 0 也已完成：普通 unused-parameter 组进入检查点的
+梯度均为 BF16，强制 mixed-gradient 对照则产生 BF16+FP32，并触发预期 PyTorch
+断言。之后的 accumulated-gradient 试次触发了 wall timeout，但旧 runner 没有
+保留足够的逐 rank 证据，不能据此判定机制。Gate 1b 因为把 CPU 等待点错误放在
+reduce-scatter 调用而在执行前撤回；Gate 1c 又因 wall bound 过紧和停止规则错误
+而撤回。当前 Gate 1d 把机制、终止和采集分开，已冻结但尚未运行：
+
+- [`experiments/pytorch-unused-grad-dtype/REVIEW_PHASE2_RESULTS_CN.md`](experiments/pytorch-unused-grad-dtype/REVIEW_PHASE2_RESULTS_CN.md)
+- [`experiments/pytorch-unused-grad-dtype/GATE1B_WITHDRAWAL.md`](experiments/pytorch-unused-grad-dtype/GATE1B_WITHDRAWAL.md)
+- [`experiments/pytorch-unused-grad-dtype/GATE1C_WITHDRAWAL.md`](experiments/pytorch-unused-grad-dtype/GATE1C_WITHDRAWAL.md)
+- [`experiments/pytorch-unused-grad-dtype/GATE1D_PROTOCOL.md`](experiments/pytorch-unused-grad-dtype/GATE1D_PROTOCOL.md)
 
 ## 11. 如何运行开发验证
 

@@ -66,19 +66,57 @@ attachment and CUDA/native waits; a real rank blocked in an unmatched NCCL
 collective requires a multi-rank GPU test. Capture denial, timeout or partial
 output is a normal explicit result, not a recorder failure.
 
-### This is not another Prometheus
+### Why continuous metrics are not enough for these incidents
 
-Prometheus and OpenTelemetry remain the right systems for continuous telemetry.
-This project targets a different output: one small, local, trigger-time incident
-window that correlates selected service, process and GPU observations and can be
-validated and shared offline. A future correlation manifest will reference
-existing producer artifacts rather than introduce a telemetry database, query
-engine or retention service.
+vLLM already exports Prometheus metrics (`vllm/v1/metrics/prometheus.py`) and
+OpenTelemetry traces (`vllm/tracing/otel.py`). This project replaces neither,
+and it consumes the same `/metrics` endpoint as one of its inputs. It exists
+because default continuous metrics alone do not reliably preserve three kinds
+of evidence needed after a fatal or stalled incident.
 
-If a deployment already retains equivalent high-resolution data and can package
-it reliably at failure time, this recorder may add no value. The planned
-Prometheus baseline and unlinked-versus-linked ablation are explicit product
-gates, not assumptions.
+**The final interval may be missing.** Prometheus pulls on an interval. A
+process that dies stops answering, so activity between the last successful
+scrape and the failure may never reach the time-series store. This recorder
+keeps a bounded local history and freezes it when an external trigger fires.
+It does not eliminate sampling limits, but it preserves the samples already
+held at the observation boundary when the remote endpoint disappears.
+
+**The diagnostic datum is high-cardinality.** Establishing where ranks diverged
+may require per-rank, per-collective records: sequence number, input shapes,
+dtypes and stack frames. Encoding those records as continuously exported metric
+labels creates an operational cardinality cost. A one-shot artifact avoids that
+continuous cost, while remaining bounded by this project's 256 KiB file cap.
+
+**The answer is a relation, not a value.** "Rank 1 raised locally while rank 0
+waited in the collective" is a statement about two independently produced
+records joined at a shared logical position. Per-target metric values do not by
+themselves encode that relation, and wall-clock timestamps are not a safe total
+order when sampling cadence and clock uncertainty are comparable to the event.
+The correlation design therefore prefers logical collective position over
+timestamp ordering.
+
+A boundary found in this repository makes the gap concrete. In the Phase 2
+Gate 1 run, a two-rank job reached a sixty-second wall timeout, but the original
+runner discarded the per-rank output needed to tell whether one rank asserted
+locally before its peer stalled or both ranks stalled. The original Gate 1b
+contract was withdrawn before execution after source review showed that it put
+the expected CPU wait at the wrong call site. Gate 1c was also withdrawn before
+execution because its wall bound was too tight and its stop rule coupled the
+mechanism and termination gates. Gate 1d retains structured per-rank outcomes,
+gradient dtype families and bounded stack/Flight Recorder evidence, while scoring
+termination separately. This remains an open test, not a claimed diagnosis.
+
+The inverse case matters as much. In a reported health-green stall
+([vLLM #52319](https://github.com/vllm-project/vllm/issues/52319)), `/health` and
+`/metrics` continued to return HTTP 200 while generation throughput fell to
+zero and waiting work accumulated. Metrics can detect the loss of progress;
+they do not, by themselves, identify the internal rank or execution point where
+progress stopped.
+
+If a deployment already retains equivalent per-rank, trigger-time data and can
+package it reliably at failure time, this recorder adds nothing. The planned
+Prometheus baseline and the unlinked-versus-linked ablation are explicit
+product gates, not assumptions.
 
 The design was informed by the investigation behind
 [vLLM #48966](https://github.com/vllm-project/vllm/issues/48966),
@@ -254,6 +292,18 @@ known-answer reconstruction, not root-cause discovery, and the campaign remains
 short of GO because a same-version no-divergence control is still required. See
 the [review entry](experiments/organic-hang/REVIEW_RESPONSE_2026-09-10.md) and
 [derived-only public evidence](results/organic-hang-20260912/README.md).
+
+A separate two-GPU dtype campaign has also completed its mechanism gate: the
+ordinary unused-parameter arm produced uniform BF16 gradient lists, while a
+forced mixed-gradient control produced BF16+FP32 and triggered the expected
+PyTorch assertion. A later accumulated-gradient trial reached the wall timeout,
+but its old runner did not retain enough per-rank evidence to classify the
+sequence. Gates 1b and 1c were withdrawn before execution. The current Gate 1d
+protocol separates the local assertion, the later barrier wait and process-group
+teardown, uses a 60-second wall bound and does not stop on a termination-only
+mismatch. No Gate 1d result is claimed. See the
+[review entry](experiments/pytorch-unused-grad-dtype/REVIEW_PHASE2_RESULTS_CN.md)
+and [current protocol](experiments/pytorch-unused-grad-dtype/GATE1D_PROTOCOL.md).
 
 The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 

@@ -1,0 +1,45 @@
+{
+  "assertion_marker_seen": false,
+  "case": "unused-parameter",
+  "classification": "completed_uniform_bf16",
+  "cuda_runtime_version": "13.0",
+  "cuda_visible_devices": 2,
+  "dtype_records": [
+    {
+      "grad_count": 4,
+      "grad_dtypes": [
+        "torch.bfloat16",
+        "torch.bfloat16",
+        "torch.bfloat16",
+        "torch.bfloat16"
+      ],
+      "rank": 0
+    },
+    {
+      "grad_count": 4,
+      "grad_dtypes": [
+        "torch.bfloat16",
+        "torch.bfloat16",
+        "torch.bfloat16",
+        "torch.bfloat16"
+      ],
+      "rank": 1
+    }
+  ],
+  "duration_seconds": 6.167,
+  "expected_classification": "completed_uniform_bf16",
+  "gpu_names": [
+    "NVIDIA GeForce RTX 4090",
+    "NVIDIA GeForce RTX 4090"
+  ],
+  "no_tracked_orphans": true,
+  "output_sha256": "ed7828aaaca803dcada0b89c2cbfe24e9fa987605ca324ee2f4eea174a5559e1",
+  "rank_identities_recorded": true,
+  "raw_output_persisted": false,
+  "reproducer_sha256": "8a7d2afdbf39c2a02d496de88b0ca5392dbcbc34388d5daea2ac182f539f3a46",
+  "return_code": 0,
+  "schema_version": 1,
+  "torch_git_version": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+  "torch_version": "2.13.0+cu130",
+  "trial": 3
+}
