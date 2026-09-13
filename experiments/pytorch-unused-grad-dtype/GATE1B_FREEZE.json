@@ -12,8 +12,8 @@
     "wall_timeout": 45
   },
   "files": {
-    "experiments/organic-hang/normalize_flight_recorder.py": "43569fb021c8c3f1fb3b21abd9227bb4ad90dbaa4ef3c403db1a308bd18c06f6",
-    "experiments/organic-hang/process_lifecycle.py": "80d4e9f3e5f90a15c231745a1e9ea3bebc11002ab0ed74900c58c928d57bab14",
+    "experiments/organic-hang/normalize_flight_recorder.py": "2a56065f105792889bfdf261295605e53e81f87e9f0892e18a503a35231a32d0",
+    "experiments/organic-hang/process_lifecycle.py": "01dfdfde715587b0c65ee37fd042abd3355ab3edc333e4f5b306bb9678667e2e",
     "experiments/pytorch-unused-grad-dtype/GATE1B_PROTOCOL.md": "5e6bb3a8dd9fa1b80d4d04ed29813e19dc9b33bb0525d2dc6aa2f532d6205bf0",
     "experiments/pytorch-unused-grad-dtype/gate1b_campaign.py": "2e53c8a51d7e35946efcf7c17c4d54a73712c19506afcdc07ccba58c11a5b58d",
     "experiments/pytorch-unused-grad-dtype/gate1b_reproducer.py": "f18ac0494e0b02550d6d6af225570f6fdc7598927c89c877ad102378d4260d5e",

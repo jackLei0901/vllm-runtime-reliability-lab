@@ -3,7 +3,7 @@
   "status": "pre-execution",
   "expected_torch_version": "2.13.0+cu130",
   "files": {
-    "experiments/organic-hang/fetch_and_prepare_reproducer.py": "d05d18e0801061f3693ccfce32691cfcb79dc784e5abb0f162688eaaeb08da5f",
+    "experiments/organic-hang/fetch_and_prepare_reproducer.py": "f17d7932056f388ad711cbcf5101f37f6c59793571dbbe0716b0149dd03b06f9",
     "experiments/pytorch-unused-grad-dtype/PHASE2_PROTOCOL.md": "13f1dfc52a81c965fe67ecd97ed67368f3bfe898860e88c6b3e560df06cfdade",
     "experiments/pytorch-unused-grad-dtype/README.md": "df3eecc3cde2458420bf35c402cc4462dacb0d09a94563b385e17867ced9730b",
     "experiments/pytorch-unused-grad-dtype/REVIEW_START_HERE_CN.md": "5b2ad43ca812a06592d6f54d7ef0f3eaea4902f6710ca94364dde5da6efdf8cf",

@@ -27,8 +27,8 @@
     "gate1c_campaign.py": "aed80eeb39b4bc19dcb9af02f945b0e84b0fd54db3fabf3744bff070bd694075",
     "gate1d_campaign.py": "092122c665555feaa91852dd5a4a110a0e9df100f1a420e8a3a6d4e56f1bcdc3",
     "gate1d_reproducer.py": "b4778465c896cc718527a6508c4d92da5bf5a375416e4aca702f3a31cfd6b252",
-    "normalize_flight_recorder.py": "43569fb021c8c3f1fb3b21abd9227bb4ad90dbaa4ef3c403db1a308bd18c06f6",
-    "process_lifecycle.py": "80d4e9f3e5f90a15c231745a1e9ea3bebc11002ab0ed74900c58c928d57bab14",
+    "normalize_flight_recorder.py": "2a56065f105792889bfdf261295605e53e81f87e9f0892e18a503a35231a32d0",
+    "process_lifecycle.py": "01dfdfde715587b0c65ee37fd042abd3355ab3edc333e4f5b306bb9678667e2e",
     "verify_gate1c.py": "481ab78d3a92952fe9b720acd6bf3962cc6bb44a194fc51fca3c80d755290c25",
     "verify_gate1d.py": "b9a775f158acc90bc0745c94a7fdf466f443f91aee9af06e285a2a988e4ca3c0",
     "verify_gate1d_freeze.py": "99d4897ef9877f96602296ba14af2208e0e8fb2ea975f8c011745affc5900f6b"

@@ -173,3 +173,9 @@ JSON 与 Flight Recorder pickle 仍只存在于临时目录。
 
 当前仍是 **pre-execution**。Gate 1d freeze 通过后才可租两卡运行；在该机制门完成
 前不进入四卡矩阵。
+
+2026-09-13 的首次 Linux 远端预检在 GPU trial 启动前发现，原冻结清单对三个复用
+文件记录的是 Windows CRLF 工作树哈希，而 Git 与 Linux checkout 使用 LF。此次只
+纠正这三个哈希并用 `.gitattributes` 固定 LF；协议、reproducer、预期和结果均未
+改动。完整审计见 `HASH_LINE_ENDING_CORRECTION_2026-09-13.md`。四套 freeze 必须在
+干净 Linux checkout 中重新通过后才能执行 Gate 1d。
