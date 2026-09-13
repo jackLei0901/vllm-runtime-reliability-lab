@@ -32,3 +32,5 @@ results/organic-hang-20260912/**/*.pyc
 !results/pytorch-unused-grad-dtype-20260912/*.json
 !results/pytorch-unused-grad-dtype-gate0-20260912/
 !results/pytorch-unused-grad-dtype-gate0-20260912/*.json
+!results/pytorch-unused-grad-dtype-gate1d-stop-20260913/
+!results/pytorch-unused-grad-dtype-gate1d-stop-20260913/*.json

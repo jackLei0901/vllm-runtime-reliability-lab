@@ -53,6 +53,9 @@ class UnusedGradientDtypeCampaignTest(unittest.TestCase):
         cls.gate1d_verifier = load_module(
             EXPERIMENT / "verify_gate1d.py", "gate1d_verifier_test"
         )
+        cls.gate1e_campaign = load_module(
+            EXPERIMENT / "gate1e_campaign.py", "gate1e_campaign_test"
+        )
 
     def test_classifier_requires_exact_assertion_marker(self) -> None:
         self.assertEqual(
@@ -430,6 +433,35 @@ class UnusedGradientDtypeCampaignTest(unittest.TestCase):
             path.write_text(json.dumps(record), encoding="utf-8")
             with self.assertRaisesRegex(AssertionError, "current source"):
                 self.gate1d_verifier.verify(root, trials=3)
+
+    def test_gate1e_parser_decodes_adjacent_rank_markers(self) -> None:
+        output = (
+            'DFX_RANK_PTRACE={"rank": 1, "mode": "yama_absent"}'
+            'DFX_RANK_PTRACE={"rank": 0, "mode": "yama_absent"}\n'
+        )
+        self.assertEqual(
+            [0, 1],
+            [
+                record["rank"]
+                for record in self.gate1e_campaign.parse_records(output, "ptrace")
+            ],
+        )
+
+    def test_gate1e_parser_rejects_malformed_marker(self) -> None:
+        with self.assertRaisesRegex(ValueError, "malformed ptrace marker"):
+            self.gate1e_campaign.parse_records('DFX_RANK_PTRACE={"rank": 0', "ptrace")
+
+    def test_gate1e_control_termination_mismatch_stops(self) -> None:
+        result = {
+            "mechanism_classification": "completed_symmetric_fp32",
+            "termination_prediction_matched": False,
+        }
+        self.assertEqual(
+            "control_termination_mismatch",
+            self.gate1e_campaign.stop_reason("control", result),
+        )
+        result["mechanism_classification"] = "rank1_assertion_rank0_barrier_wait"
+        self.assertIsNone(self.gate1e_campaign.stop_reason("affected", result))
 
     def test_verifier_accepts_complete_reproduced_matrix(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
