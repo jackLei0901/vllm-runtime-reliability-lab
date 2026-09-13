@@ -1,0 +1,157 @@
+{
+  "arm": "control",
+  "barrier_enter_records": [
+    {
+      "elapsed_seconds": 1.238187,
+      "rank": 0
+    },
+    {
+      "elapsed_seconds": 1.235638,
+      "rank": 1
+    }
+  ],
+  "barrier_return_records": [
+    {
+      "elapsed_seconds": 1.249519,
+      "rank": 0
+    },
+    {
+      "elapsed_seconds": 1.238661,
+      "rank": 1
+    }
+  ],
+  "configuration": {
+    "async_error_handling": 3,
+    "process_group_timeout_seconds": 30,
+    "stack_capture_after_seconds": 20,
+    "wall_timeout_seconds": 60
+  },
+  "cuda_runtime_version": "13.0",
+  "cuda_visible_devices": 2,
+  "duration_seconds": 6.017,
+  "expected_mechanism": "completed_symmetric_fp32",
+  "expected_termination": "normal_completion",
+  "flight_recorder": {
+    "file_count": 0,
+    "files": [],
+    "normalized": null,
+    "raw_persisted": false,
+    "strict_pending_reduce": {
+      "candidates": [],
+      "dump_ranks": [],
+      "missing_dump_ranks": [
+        0,
+        1
+      ],
+      "status": "incomplete_dump_set"
+    }
+  },
+  "gpu_names": [
+    "NVIDIA GeForce RTX 4090",
+    "NVIDIA GeForce RTX 4090"
+  ],
+  "mechanism_classification": "completed_symmetric_fp32",
+  "natural_return_code": 0,
+  "no_tracked_orphans": true,
+  "output_sha256": "3239ff774562c7a30f84b4a596b27948c21566b1cff360dfecc917602086d8b0",
+  "preflight": {
+    "effective_uid": 0,
+    "ptrace_mode": "pr_set_ptracer_parent",
+    "ptrace_scope": 1,
+    "py_spy_version_sha256": "7b669c1a24110a7df9080df9bf78685c08cb97e57ec471889f46a2126a6bdcaf"
+  },
+  "rank_identities_recorded": true,
+  "rank_outcomes": [
+    {
+      "elapsed_seconds": 1.249555,
+      "outcome": "completed",
+      "rank": 0
+    },
+    {
+      "elapsed_seconds": 1.2387,
+      "outcome": "completed",
+      "rank": 1
+    }
+  ],
+  "rank_ptrace_records": [
+    {
+      "mode": "pr_set_ptracer_parent",
+      "rank": 0
+    },
+    {
+      "mode": "pr_set_ptracer_parent",
+      "rank": 1
+    }
+  ],
+  "raw_output_persisted": false,
+  "reduce_records": [
+    {
+      "call_index": 1,
+      "elapsed_seconds": 1.221664,
+      "grad_count": 4,
+      "grad_dtypes": [
+        "torch.float32",
+        "torch.float32",
+        "torch.float32",
+        "torch.float32"
+      ],
+      "rank": 0
+    },
+    {
+      "call_index": 1,
+      "elapsed_seconds": 1.219374,
+      "grad_count": 4,
+      "grad_dtypes": [
+        "torch.float32",
+        "torch.float32",
+        "torch.float32",
+        "torch.float32"
+      ],
+      "rank": 1
+    }
+  ],
+  "reduce_return_records": [
+    {
+      "call_index": 1,
+      "elapsed_seconds": 1.227734,
+      "rank": 0
+    },
+    {
+      "call_index": 1,
+      "elapsed_seconds": 1.225412,
+      "rank": 1
+    }
+  ],
+  "reported_return_code": 0,
+  "reproducer_sha256": "b4778465c896cc718527a6508c4d92da5bf5a375416e4aca702f3a31cfd6b252",
+  "runner_error_type": null,
+  "schema_version": 3,
+  "stack_capture": [],
+  "teardown_enter_records": [
+    {
+      "elapsed_seconds": 1.249569,
+      "rank": 0
+    },
+    {
+      "elapsed_seconds": 1.238717,
+      "rank": 1
+    }
+  ],
+  "teardown_return_records": [
+    {
+      "elapsed_seconds": 1.548441,
+      "rank": 0
+    },
+    {
+      "elapsed_seconds": 1.540402,
+      "rank": 1
+    }
+  ],
+  "termination_classification": "normal_completion",
+  "termination_prediction_matched": true,
+  "timed_out": false,
+  "torch_git_version": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+  "torch_version": "2.13.0+cu130",
+  "trial": 3,
+  "watchdog_marker_seen": false
+}

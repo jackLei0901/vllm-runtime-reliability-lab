@@ -102,9 +102,10 @@ locally before its peer stalled or both ranks stalled. The original Gate 1b
 contract was withdrawn before execution after source review showed that it put
 the expected CPU wait at the wrong call site. Gate 1c was also withdrawn before
 execution because its wall bound was too tight and its stop rule coupled the
-mechanism and termination gates. Gate 1d retains structured per-rank outcomes,
-gradient dtype families and bounded stack/Flight Recorder evidence, while scoring
-termination separately. This remains an open test, not a claimed diagnosis.
+mechanism and termination gates. Gate 1d then stopped on a runner parsing defect.
+Gate 1e fixed that defect and reproduced the rank-local assertion plus peer wait
+three times. Both rank stacks were captured, but only rank 0 produced a Flight
+Recorder dump in every trial, so the strict correlation gate failed closed.
 
 The inverse case matters as much. In a reported health-green stall
 ([vLLM #52319](https://github.com/vllm-project/vllm/issues/52319)), `/health` and
@@ -298,12 +299,13 @@ ordinary unused-parameter arm produced uniform BF16 gradient lists, while a
 forced mixed-gradient control produced BF16+FP32 and triggered the expected
 PyTorch assertion. A later accumulated-gradient trial reached the wall timeout,
 but its old runner did not retain enough per-rank evidence to classify the
-sequence. Gates 1b and 1c were withdrawn before execution. The current Gate 1d
-protocol separates the local assertion, the later barrier wait and process-group
-teardown, uses a 60-second wall bound and does not stop on a termination-only
-mismatch. No Gate 1d result is claimed. See the
+sequence. Gates 1b and 1c were withdrawn before execution, and Gate 1d stopped on
+a runner parsing defect. Gate 1e then matched the frozen mechanism and termination
+predictions in all three affected trials, with both rank stacks and clean process
+lifecycle. It failed the strict capture gate because only rank 0 produced a Flight
+Recorder dump in every trial. See the
 [review entry](experiments/pytorch-unused-grad-dtype/REVIEW_PHASE2_RESULTS_CN.md)
-and [current protocol](experiments/pytorch-unused-grad-dtype/GATE1D_PROTOCOL.md).
+and [result](experiments/pytorch-unused-grad-dtype/GATE1E_RESULT_2026-09-13.md).
 
 The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 

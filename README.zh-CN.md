@@ -87,9 +87,9 @@ OpenTelemetry trace（`vllm/tracing/otel.py`）。本项目不替代其中任何
 wall timeout，但旧 runner 丢弃了逐 rank 输出，因此无法判断是一个 rank 先在本地
 assert、另一个随后等待，还是两个 rank 同时停滞。源码复核发现 Gate 1b 把预期
 CPU 等待点放错了位置；Gate 1c 的 wall bound 过紧，且停止规则把机制门与终止门
-错误地绑在一起，两者均已在执行前撤回。当前 Gate 1d 保留结构化逐 rank outcome、
-梯度 dtype family 以及有界 stack/Flight Recorder 证据，并把终止行为单独评分；
-它还没有执行，因此这里不把任何诊断结果写成既成事实。
+错误地绑在一起，两者均已在执行前撤回。Gate 1d 随后因 runner marker 解析缺陷停止。
+Gate 1e 修复该缺陷后，三次复现 rank-local assertion 与 peer wait，并取得两个 rank
+的 stack；但每次只有 rank 0 产生 Flight Recorder dump，因此严格关联门按规则失败。
 
 反向情形同样重要。在一例 health-green 停滞报告
 （[vLLM #52319](https://github.com/vllm-project/vllm/issues/52319)）中，`/health`
@@ -129,7 +129,7 @@ unlinked-versus-linked 消融是明确的产品验收项，不是前提。
 | 写入失败不影响被观察服务 | 已完成并经过 GPU 冒烟验证 |
 | 正常 SIGTERM、EngineCore SIGKILL、受控 CUDA OOM | RTX 4090 已验证 |
 | 四卡 FSDP2 已知答案的 collective divergence 重建 | 已完成；仍缺同版本负对照 |
-| 两卡 unused-gradient dtype 机制 Gate 0 | 已完成；Gate 1d 尚未执行 |
+| 两卡 unused-gradient dtype 机制 Gate 0 | 已完成；Gate 1e 机制 3/3 通过 |
 | 需求到测试用例的机器检查 | 已完成 |
 
 ### 尚未完成
@@ -138,7 +138,7 @@ unlinked-versus-linked 消融是明确的产品验收项，不是前提。
 | --- | --- |
 | recorder 开关配对的性能实验 | 尚不能给出 CPU、RSS、TTFT、TPOT 和吞吐开销上界 |
 | 新一轮真实 KV pressure/preemption 实验 | 目前只有触发逻辑测试和历史实验，缺少 alpha.3 的完整实测 |
-| Gate 1d 逐 rank 机制、终止与采集验证 | 已冻结待执行，尚无 GPU 结果 |
+| Gate 1e 严格双 rank Flight Recorder join | 每次缺 rank 1 dump，0/3，FAIL-CLOSED |
 | vLLM TP=2 stall 和跨节点验证 | FSDP2/c10d 结果不能外推到 vLLM 热路径或多节点 |
 | 多版本兼容矩阵 | 尚未覆盖多个 vLLM release、指标名变化和不同 GPU 架构 |
 | 长时间运行与 crash-loop 测试 | 短期冒烟不能证明数天运行时的资源稳定性 |
@@ -355,12 +355,15 @@ alpha.4 还包含一个四卡 PyTorch FSDP2 已知答案重建：三次 `DebugLe
 断言。之后的 accumulated-gradient 试次触发了 wall timeout，但旧 runner 没有
 保留足够的逐 rank 证据，不能据此判定机制。Gate 1b 因为把 CPU 等待点错误放在
 reduce-scatter 调用而在执行前撤回；Gate 1c 又因 wall bound 过紧和停止规则错误
-而撤回。当前 Gate 1d 把机制、终止和采集分开，已冻结但尚未运行：
+而撤回。Gate 1d 又因 runner 解析相邻 marker 失败而停止。Gate 1e 修复 runner 后，
+机制、终止与双 rank stack 均在三次 affected trial 中通过，但 Flight Recorder 每次
+只有 rank 0 dump，严格 join 0/3，因此总体按规则 FAIL-CLOSED：
 
 - [`experiments/pytorch-unused-grad-dtype/REVIEW_PHASE2_RESULTS_CN.md`](experiments/pytorch-unused-grad-dtype/REVIEW_PHASE2_RESULTS_CN.md)
 - [`experiments/pytorch-unused-grad-dtype/GATE1B_WITHDRAWAL.md`](experiments/pytorch-unused-grad-dtype/GATE1B_WITHDRAWAL.md)
 - [`experiments/pytorch-unused-grad-dtype/GATE1C_WITHDRAWAL.md`](experiments/pytorch-unused-grad-dtype/GATE1C_WITHDRAWAL.md)
-- [`experiments/pytorch-unused-grad-dtype/GATE1D_PROTOCOL.md`](experiments/pytorch-unused-grad-dtype/GATE1D_PROTOCOL.md)
+- [`experiments/pytorch-unused-grad-dtype/GATE1D_EXECUTION_STOP_2026-09-13.md`](experiments/pytorch-unused-grad-dtype/GATE1D_EXECUTION_STOP_2026-09-13.md)
+- [`experiments/pytorch-unused-grad-dtype/GATE1E_RESULT_2026-09-13.md`](experiments/pytorch-unused-grad-dtype/GATE1E_RESULT_2026-09-13.md)
 
 ## 11. 如何运行开发验证
 

@@ -1,6 +1,6 @@
 # Phase 2 GPU 结果：中文审核入口
 
-状态：**Gate 0 通过；Gate 1 证据不足；Gate 1b/1c 已撤回；Gate 1d 已冻结待执行。**
+状态：**Gate 0 通过；Gate 1 证据不足；Gate 1b/1c 已撤回；Gate 1d runner 停止；Gate 1e 严格采集门失败。**
 
 本文件是执行后的审核入口。实验前的预期、脚本和停止规则仍保存在
 PHASE2_FREEZE.json 所固定的 15 个文件中，没有根据结果改写。
@@ -179,3 +179,34 @@ JSON 与 Flight Recorder pickle 仍只存在于临时目录。
 纠正这三个哈希并用 `.gitattributes` 固定 LF；协议、reproducer、预期和结果均未
 改动。完整审计见 `HASH_LINE_ENDING_CORRECTION_2026-09-13.md`。四套 freeze 必须在
 干净 Linux checkout 中重新通过后才能执行 Gate 1d。
+
+## 八、Gate 1d 停止与 Gate 1e 结果
+
+Gate 1d 在 control trial 1 正常完成后，于 control trial 2 解析两个 rank 相邻写入的
+JSON marker 时触发 `JSONDecodeError: Extra data`。runner 自动停止，没有执行任何
+affected trial。该失败及唯一完整 control summary 已保留，不能算作机制结果。
+
+Gate 1e 只修复相邻 marker 的独立解码，并把 control 终止异常改为自动 fail-fast；
+机制矩阵、20/30/60 秒时序、reproducer、严格双 dump 门和解释边界均未改变。Linux
+干净 checkout 的五套 freeze 以 15/7/7/9/10 文件全部通过后，双 RTX 4090 正式执行：
+
+| 项目 | control | affected |
+| --- | --- | --- |
+| 重复次数 | 3 | 3 |
+| 机制 | 3/3 对称 fp32 并完成 | 3/3 rank 1 assertion、rank 0 barrier wait |
+| 终止 | 3/3 正常 | 3/3 frozen wall-bound path |
+| stack | 未要求 | 3/3 同时取得两个 rank |
+| Flight Recorder | 0，符合预期 | **每次只有 rank 0；双 dump 0/3** |
+| 生命周期 | 3/3 无孤儿 | 3/3 无孤儿 |
+
+因此机制门、终止门和 stack 子门通过，但严格 capture 门失败，总结论按预注册规则为
+**FAIL-CLOSED**。现有证据不能把“rank 1 没参与 collective”和“rank 1 的 dump 缺失”
+区分开，不能宣称完成跨 rank Flight Recorder join。三次缺失模式完全相同，不再用
+GPU 重复扩充样本。
+
+审核入口：
+
+1. `GATE1D_EXECUTION_STOP_2026-09-13.md`：Gate 1d runner 停止；
+2. `GATE1E_PROTOCOL.md` 与 `GATE1E_FREEZE.json`：Gate 1e 的预执行契约；
+3. `GATE1E_RESULT_2026-09-13.md`：结果、限制和下一步；
+4. `results/pytorch-unused-grad-dtype-gate1e-20260913/`：六份 allow-listed summary。
