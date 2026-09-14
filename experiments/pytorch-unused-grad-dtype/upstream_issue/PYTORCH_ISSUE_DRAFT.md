@@ -1,8 +1,9 @@
 # Flight Recorder misses a rank blocked in ProcessGroupNCCL teardown
 
-> **Draft status:** do not file yet. The inline reproducer has not been run as
-> committed. Replace the pending validation sections with its actual output and
-> `collect_env` output first.
+> **Draft status:** hold. The committed reproducer confirms the behavior on
+> PyTorch 2.13.0, but the same script does not reproduce the teardown stall on
+> the 2026-09-13 nightly. Before filing, determine whether maintainers want a
+> report or backport request for the supported 2.13 release.
 
 ## Describe the bug
 
@@ -112,17 +113,42 @@ ls -l /tmp/pgnccl-trace_*
 
 ## Observed behavior
 
-**Pending:** paste the actual rank-prefixed output from the standalone validation
-run. Confirm that only `/tmp/pgnccl-trace_0` exists; do not infer behavior after
-the 60-second external bound.
+The exact committed script (`e8af605`) reproduced the behavior on PyTorch
+`2.13.0+cu130` with NCCL `2.29.7`. Relevant rank-prefixed output:
 
-Expected lines to check, not yet reported as observations:
+```text
+rank 0: all-reduce enqueued; waiting
+rank 1: injecting local failure
+rank 1: destroy_process_group entered
+[rank1] ... Rank 1] Watchdog joined, destroying NCCL communicators.
+[rank0] ... [Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=2, OpType=ALLREDUCE, NumelIn=16, NumelOut=16, Timeout(ms)=30000) ran for 30005 milliseconds before timing out.
+[rank0] ... Rank 0] Broadcasting signal exception_dump to other ranks via TCPStore.
+[rank0] ... Rank 0] Flight Recorder trace successfully dumped.
+```
 
-- rank 1: `Watchdog joined, destroying NCCL communicators.`, without
-  `Destroy complete.` or `Observed flight recorder dump signal from another
-  rank via TCPStore.`;
-- rank 0: `Broadcasting signal exception_dump to other ranks via TCPStore.` and
-  `Flight Recorder trace successfully dumped.`
+There was no rank-1 `Destroy complete.`, no rank-1 `Observed flight recorder
+dump signal from another rank via TCPStore.`, and no rank-1 dump. After the
+external bound, the only dump file was `/tmp/pgnccl-trace_0` (1,428 bytes).
+The command exited with `timeout` status 124; no claim is made about behavior
+after that bound.
+
+### Nightly result
+
+The same script did **not** reproduce the teardown stall on
+`2.15.0.dev20260913+cu130` (git `13376c2070a764e25f67b2385c31358b325e8a1c`)
+with NCCL `2.30.7`:
+
+```text
+rank 1: destroy_process_group entered
+[rank0] ... Operation timed out after 30794 ms
+[rank0] ... Finished writing Flight Recorder debug info to /tmp/pgnccl-nightly-trace_0
+rank 1: destroy_process_group returned
+rank 0: destroy_process_group returned
+```
+
+The nightly job exited by itself with status 1 in about 35 seconds. This is a
+version boundary, not evidence that current nightly has the missing-responder
+gap.
 
 ## Expected behavior
 
@@ -134,15 +160,20 @@ should make the diagnostic limitation explicit.
 
 - PyTorch: `2.13.0+cu130`
 - PyTorch git revision: `cf30153c4c131c8164ee7798e5022d810682e2cb`
-- CUDA runtime: 13.0
+- PyTorch CUDA build: 13.0
+- system CUDA runtime reported by `collect_env`: 12.4.131
 - NCCL: 2.29.7
 - GPUs: 2 x NVIDIA GeForce RTX 4090
-- nightly: not tested; the bundled NCCL version may affect shutdown behavior
+- driver: 580.105.08
+- OS: Ubuntu 22.04.4, Linux 5.15.0-78-generic
+- Python: 3.12.3
+- nightly control: `2.15.0.dev20260913+cu130`, NCCL 2.30.7; did not reproduce
 
 ### `python -m torch.utils.collect_env`
 
 ```text
-PENDING: paste output from the standalone validation environment.
+The complete output is retained in the private validation record and must be
+pasted here if this draft is converted into an upstream report.
 ```
 
 ## Related issues
