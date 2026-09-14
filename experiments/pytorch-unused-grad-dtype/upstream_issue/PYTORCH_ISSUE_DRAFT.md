@@ -132,7 +132,9 @@ rank 1: destroy_process_group entered
 
 There was no rank-1 `Destroy complete.`, no rank-1 `Observed flight recorder
 dump signal from another rank via TCPStore.`, and no rank-1 dump. After the
-external bound, the only dump file was `/tmp/pgnccl-trace_0` (1,447 bytes).
+external bound, the only dump file was `/tmp/pgnccl-legacy-trace_0` (1,447
+bytes); that validation run used the dump prefix
+`/tmp/pgnccl-legacy-trace_`.
 The command exited with `timeout` status 124; no claim is made about behavior
 after that bound.
 
@@ -156,6 +158,8 @@ should make the diagnostic limitation explicit.
 - PyTorch git revision: `13376c2070a764e25f67b2385c31358b325e8a1c`
 - backend: legacy `ProcessGroupNCCL` via `TORCH_DIST_USE_NCCL2=0`
 - NCCL: 2.30.7
+- loaded NCCL confirmed as `(2, 30, 7)` via `torch.cuda.nccl.version()` in the
+  same nightly pip environment immediately before the run
 - PyTorch CUDA build: 13.0
 - system CUDA runtime reported by `collect_env`: 12.4.131
 - GPUs: 2 x NVIDIA GeForce RTX 4090
