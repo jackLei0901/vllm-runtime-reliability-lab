@@ -1,0 +1,51 @@
+{
+  "freeze_id": "gate1f-pre-execution-2026-09-13",
+  "status": "pre-execution",
+  "follows": "gate1e-failed-closed-2026-09-13",
+  "diagnostic_change": "TORCH_CPP_LOG_LEVEL=INFO",
+  "expected_nccl_version": [2, 29, 7],
+  "library_log_scan_error_policy": "retain-and-fail-closed",
+  "trials": {
+    "affected": 1,
+    "control": 0
+  },
+  "timing_seconds": {
+    "stack_capture": 20,
+    "process_group_timeout": 30,
+    "wall_bound": 60
+  },
+  "expected_rank1_library_log_flags": {
+    "shutdown_start": true,
+    "operations_flushed": true,
+    "watchdog_joined_destroying": true,
+    "destroy_complete": false,
+    "dump_signal_observed": false,
+    "dump_signal_broadcast": false,
+    "dump_signal_broadcast_failed": false,
+    "dump_success": false
+  },
+  "expected_rank0_library_log_flags": {
+    "shutdown_start": false,
+    "operations_flushed": false,
+    "watchdog_joined_destroying": false,
+    "destroy_complete": false,
+    "dump_signal_observed": false,
+    "dump_signal_broadcast": true,
+    "dump_signal_broadcast_failed": false,
+    "dump_success": true
+  },
+  "files": {
+    "GATE1F_PROTOCOL.md": "a45bd75fdc1e05f75ad7134676ea5766a2f9cdf0c80266565ed751b42a58b57e",
+    "gate1c_campaign.py": "aed80eeb39b4bc19dcb9af02f945b0e84b0fd54db3fabf3744bff070bd694075",
+    "gate1d_campaign.py": "092122c665555feaa91852dd5a4a110a0e9df100f1a420e8a3a6d4e56f1bcdc3",
+    "gate1d_reproducer.py": "b4778465c896cc718527a6508c4d92da5bf5a375416e4aca702f3a31cfd6b252",
+    "gate1e_campaign.py": "eaed549521613e6ca8ade7d1073a30bf87af6a20cd023319a366556bf3166a88",
+    "gate1f_campaign.py": "6114a2797b8023a17d14f5dd066df909eb3af40bbd1202330f40c9b7b529c2bb",
+    "normalize_flight_recorder.py": "2a56065f105792889bfdf261295605e53e81f87e9f0892e18a503a35231a32d0",
+    "process_lifecycle.py": "01dfdfde715587b0c65ee37fd042abd3355ab3edc333e4f5b306bb9678667e2e",
+    "verify_gate1c.py": "481ab78d3a92952fe9b720acd6bf3962cc6bb44a194fc51fca3c80d755290c25",
+    "verify_gate1d.py": "b9a775f158acc90bc0745c94a7fdf466f443f91aee9af06e285a2a988e4ca3c0",
+    "verify_gate1f.py": "58c8162d449a6ff57931e8503125f3e92566b92afff85afb3710913ec2abda15",
+    "verify_gate1f_freeze.py": "7dd9a94362a4841a2048547990c08f365ce02f6225a4e0d34b973c292d65d7f7"
+  }
+}

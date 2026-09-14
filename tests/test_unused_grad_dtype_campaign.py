@@ -56,6 +56,12 @@ class UnusedGradientDtypeCampaignTest(unittest.TestCase):
         cls.gate1e_campaign = load_module(
             EXPERIMENT / "gate1e_campaign.py", "gate1e_campaign_test"
         )
+        cls.gate1f_campaign = load_module(
+            EXPERIMENT / "gate1f_campaign.py", "gate1f_campaign_test"
+        )
+        cls.gate1f_verifier = load_module(
+            EXPERIMENT / "verify_gate1f.py", "gate1f_verifier_test"
+        )
 
     def test_classifier_requires_exact_assertion_marker(self) -> None:
         self.assertEqual(
@@ -463,6 +469,80 @@ class UnusedGradientDtypeCampaignTest(unittest.TestCase):
         result["mechanism_classification"] = "rank1_assertion_rank0_barrier_wait"
         self.assertIsNone(self.gate1e_campaign.stop_reason("affected", result))
 
+    def test_gate1f_scanner_attributes_allowlisted_messages_by_rank(self) -> None:
+        output = (
+            "[I] [PG ID 0 PG GUID 0(default_pg) Rank 1] "
+            "Starting to destroy process group, flushing operations.\n"
+            "[I] [PG ID 0 PG GUID 0(default_pg) Rank 1] "
+            "Operations flushed, joining watchdog thread."
+            "[I] [PG ID 0 PG GUID 0(default_pg) Rank 0] "
+            "Broadcasting signal exception_dump to other ranks via TCPStore."
+            "[I] [PG ID 0 PG GUID 0(default_pg) Rank 0] "
+            "Flight Recorder trace successfully dumped.\n"
+        )
+        flags = self.gate1f_campaign.scan_library_log_flags(output)
+        self.assertTrue(flags["1"]["shutdown_start"])
+        self.assertTrue(flags["1"]["operations_flushed"])
+        self.assertFalse(flags["1"]["dump_success"])
+        self.assertTrue(flags["0"]["dump_signal_broadcast"])
+        self.assertTrue(flags["0"]["dump_success"])
+
+    def test_gate1f_scanner_rejects_allowlisted_message_without_rank(self) -> None:
+        with self.assertRaisesRegex(ValueError, "missing_rank_prefix"):
+            self.gate1f_campaign.scan_library_log_flags(
+                "Operations flushed, joining watchdog thread."
+            )
+
+    def test_gate1f_safe_scanner_retains_bounded_error(self) -> None:
+        flags, error = self.gate1f_campaign.scan_library_log_flags_safe(
+            "Operations flushed, joining watchdog thread."
+        )
+        self.assertEqual("operations_flushed:missing_rank_prefix", error)
+        self.assertEqual(
+            self.gate1f_campaign.empty_library_log_flags(),
+            flags,
+        )
+
+    def test_gate1f_rank1_prediction_is_closed_and_boolean(self) -> None:
+        expected = self.gate1f_campaign.EXPECTED_RANK1_FLAGS
+        self.assertEqual(set(expected), set(self.gate1f_campaign.LOG_MESSAGES))
+        self.assertTrue(all(isinstance(value, bool) for value in expected.values()))
+        self.assertFalse(expected["destroy_complete"])
+        self.assertFalse(expected["dump_signal_observed"])
+        rank0 = self.gate1f_campaign.EXPECTED_RANK0_FLAGS
+        self.assertEqual(set(rank0), set(self.gate1f_campaign.LOG_MESSAGES))
+        self.assertTrue(rank0["dump_signal_broadcast"])
+        self.assertFalse(rank0["dump_signal_broadcast_failed"])
+        self.assertTrue(rank0["dump_success"])
+
+    def test_gate1f_verifier_accepts_frozen_diagnostic(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._write_gate1f_result(root)
+            self.gate1f_verifier.verify(root)
+
+    def test_gate1f_verifier_rejects_rank1_stage_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._write_gate1f_result(root)
+            path = root / "affected-trial-1.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["library_log_flags"]["1"]["destroy_complete"] = True
+            path.write_text(json.dumps(record), encoding="utf-8")
+            with self.assertRaisesRegex(AssertionError, "shutdown-stage prediction"):
+                self.gate1f_verifier.verify(root)
+
+    def test_gate1f_verifier_rejects_retained_scanner_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self._write_gate1f_result(root)
+            path = root / "affected-trial-1.json"
+            record = json.loads(path.read_text(encoding="utf-8"))
+            record["library_log_scan_error"] = "dump_success:ambiguous_rank"
+            path.write_text(json.dumps(record), encoding="utf-8")
+            with self.assertRaisesRegex(AssertionError, "scan failed closed"):
+                self.gate1f_verifier.verify(root)
+
     def test_verifier_accepts_complete_reproduced_matrix(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -818,6 +898,40 @@ class UnusedGradientDtypeCampaignTest(unittest.TestCase):
                 record["stack_capture"][0]["project_frames"][0]["line"] = barrier_line
                 record["stack_capture"][1]["project_frames"][0]["line"] = teardown_line
             path.write_text(json.dumps(record), encoding="utf-8")
+
+    @classmethod
+    def _write_gate1f_result(cls, root: Path) -> None:
+        cls._write_gate1d_matrix(root)
+        target = root / "affected-trial-1.json"
+        for path in root.glob("*.json"):
+            if path != target:
+                path.unlink()
+        record = json.loads(target.read_text(encoding="utf-8"))
+        record["schema_version"] = 4
+        record["diagnostic_change"] = "TORCH_CPP_LOG_LEVEL=INFO"
+        record["preflight"]["nccl_version"] = [2, 29, 7]
+        record["library_log_flags"] = {
+            "0": dict(cls.gate1f_campaign.EXPECTED_RANK0_FLAGS),
+            "1": dict(cls.gate1f_campaign.EXPECTED_RANK1_FLAGS),
+        }
+        record["library_log_scan_error"] = None
+        record["expected_rank0_library_log_flags"] = dict(
+            cls.gate1f_campaign.EXPECTED_RANK0_FLAGS
+        )
+        record["expected_rank1_library_log_flags"] = dict(
+            cls.gate1f_campaign.EXPECTED_RANK1_FLAGS
+        )
+        record["rank0_library_log_prediction_matched"] = True
+        record["rank1_library_log_prediction_matched"] = True
+        record["flight_recorder"]["file_count"] = 1
+        record["flight_recorder"]["files"] = [{"rank": 0, "decoded": True}]
+        record["flight_recorder"]["strict_pending_reduce"] = {
+            "status": "incomplete_dump_set",
+            "dump_ranks": [0],
+            "missing_dump_ranks": [1],
+            "candidates": [],
+        }
+        target.write_text(json.dumps(record), encoding="utf-8")
 
     @classmethod
     def _write_probe_matrix(cls, root: Path) -> None:

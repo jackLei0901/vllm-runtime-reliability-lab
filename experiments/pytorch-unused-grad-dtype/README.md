@@ -1,7 +1,7 @@
 # Two-rank FSDP2 unused-gradient dtype experiment
 
-Status: **first GPU lane complete; the predeclared reproduction hypothesis was
-not supported.**
+Status: **mechanism isolated; Gate 1e strict capture failed closed; Gate 1f
+shutdown-stage diagnostic frozen but not executed.**
 
 This experiment tests whether a simplified two-rank unused-parameter case is
 sufficient to reproduce the mixed-gradient-dtype assertion observed during the
@@ -42,6 +42,14 @@ The frozen next-step order is documented in `PHASE2_PROTOCOL.md`. Its Gate 0
 observes the exact gradient dtype list entering `foreach_reduce` and includes a
 known mixed-dtype positive control. Accumulation and four-GPU runners are
 prepared but must not run unless the preceding gate justifies them.
+
+Gate 0 later confirmed that the ordinary unused-parameter path is uniformly
+BF16 and that the probe detects a forced BF16+FP32 list. Gate 1e then reproduced
+the accumulated-gradient rank-local assertion plus peer wait in three trials,
+but only rank 0 produced a Flight Recorder dump. The strict two-rank capture
+gate therefore failed closed. Gate 1f is a one-trial, pre-frozen diagnostic that
+retains only allow-listed per-rank shutdown-stage flags and records the NCCL
+version; it does not reinterpret Gate 1e. See `REVIEW_PHASE2_RESULTS_CN.md`.
 
 ## Environment
 

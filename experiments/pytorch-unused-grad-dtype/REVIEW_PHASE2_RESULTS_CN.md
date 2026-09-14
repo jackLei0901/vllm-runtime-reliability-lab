@@ -1,6 +1,6 @@
 # Phase 2 GPU 结果：中文审核入口
 
-状态：**Gate 0 通过；Gate 1 证据不足；Gate 1b/1c 已撤回；Gate 1d runner 停止；Gate 1e 严格采集门失败。**
+状态：**Gate 0 通过；Gate 1 证据不足；Gate 1b/1c 已撤回；Gate 1d runner 停止；Gate 1e 严格采集门失败；Gate 1f 已冻结、未执行。**
 
 本文件是执行后的审核入口。实验前的预期、脚本和停止规则仍保存在
 PHASE2_FREEZE.json 所固定的 15 个文件中，没有根据结果改写。
@@ -171,14 +171,15 @@ JSON 与 Flight Recorder pickle 仍只存在于临时目录。
 6. `verify_gate1d.py`：含 reproducer hash 前置检查的独立验证；
 7. `GATE1D_FREEZE.json` 与 `verify_gate1d_freeze.py`：当前预执行冻结。
 
-当前仍是 **pre-execution**。Gate 1d freeze 通过后才可租两卡运行；在该机制门完成
-前不进入四卡矩阵。
+本节记录的是 **Gate 1d 执行前** 的冻结状态。随后 Gate 1d 已启动并因 runner
+解析问题停止，Gate 1e 也已完成；当前结果见下一节。在该机制门完成前不进入四卡
+矩阵的约束，仍是当时正确的执行边界。
 
 2026-09-13 的首次 Linux 远端预检在 GPU trial 启动前发现，原冻结清单对三个复用
 文件记录的是 Windows CRLF 工作树哈希，而 Git 与 Linux checkout 使用 LF。此次只
 纠正这三个哈希并用 `.gitattributes` 固定 LF；协议、reproducer、预期和结果均未
 改动。完整审计见 `HASH_LINE_ENDING_CORRECTION_2026-09-13.md`。四套 freeze 必须在
-干净 Linux checkout 中重新通过后才能执行 Gate 1d。
+干净 Linux checkout 中重新通过后，Gate 1d 才于 2026-09-13 开始执行。
 
 ## 八、Gate 1d 停止与 Gate 1e 结果
 
@@ -210,3 +211,33 @@ GPU 重复扩充样本。
 2. `GATE1E_PROTOCOL.md` 与 `GATE1E_FREEZE.json`：Gate 1e 的预执行契约；
 3. `GATE1E_RESULT_2026-09-13.md`：结果、限制和下一步；
 4. `results/pytorch-unused-grad-dtype-gate1e-20260913/`：六份 allow-listed summary。
+
+## 九、Gate 1f：定位 rank 1 dump 缺失发生在哪个 shutdown 阶段
+
+Gate 1e 的三次重复已经证明缺失模式稳定，不再重复同一测量。源码复核给出一个更窄、
+尚未证实的解释：在 PyTorch 2.13.0+cu130 所带 NCCL 2.29.7 上，rank 1 可能先完成
+`finalize()`、停止 heartbeat monitor，随后停在 communicator destruction。这样 rank 0
+约 30 秒后广播 dump 请求时，rank 1 已没有存活的 Flight Recorder responder。
+
+Gate 1f 只执行一次 affected trial，并声明唯一诊断改动
+`TORCH_CPP_LOG_LEVEL=INFO`。runner 不保留原始日志，只把八条固定 PyTorch library
+消息压缩成逐 rank 布尔值，同时在 preflight 中记录 `torch.cuda.nccl.version()`。
+rank 前缀缺失或含糊时不抛出并丢失整次试验，而是写入有界
+`library_log_scan_error`，保留其他结构化证据后由验证器失败关闭；不根据时间戳猜测
+消息归属。
+
+预注册的 rank 1 序列是：开始 shutdown、完成 flush、watchdog 已 join 且开始销毁
+communicator 三项为 true；`Destroy complete.`、收到远端 dump signal、dump 成功三项
+为 false。即使完全匹配，也只能支持该 shutdown-stage 解释，不能直接证明阻塞发生在
+`ncclCommDestroy` 内部，更不能把 Gate 1e 的严格双 dump 失败改判为通过。
+
+rank 0 也有冻结判据：成功广播 `exception_dump` 为 true、广播失败为 false、dump 成功
+为 true，四个 shutdown 阶段均为 false。它既证明 dump 请求确实发给其他 rank，也让
+`dump_success` 有正对照，并用 shutdown 阶段的全 false 防止 rank 归属颠倒。
+
+审核入口：
+
+1. `GATE1F_PROTOCOL.md`：诊断改动、固定消息白名单和解释边界；
+2. `gate1f_campaign.py`：逐 rank 消息归属、NCCL 版本记录和单次 runner；
+3. `verify_gate1f.py`：独立重算机制、终止、stack、dump-set 与阶段预测；
+4. `GATE1F_FREEZE.json` 与 `verify_gate1f_freeze.py`：12 个运行依赖的预执行冻结。

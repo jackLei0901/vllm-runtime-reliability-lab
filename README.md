@@ -106,6 +106,9 @@ mechanism and termination gates. Gate 1d then stopped on a runner parsing defect
 Gate 1e fixed that defect and reproduced the rank-local assertion plus peer wait
 three times. Both rank stacks were captured, but only rank 0 produced a Flight
 Recorder dump in every trial, so the strict correlation gate failed closed.
+Gate 1f is frozen but not executed: one affected trial will retain only six
+allow-listed per-rank PyTorch shutdown-stage flags and the NCCL version to test
+why rank 1 could no longer answer the dump request.
 
 The inverse case matters as much. In a reported health-green stall
 ([vLLM #52319](https://github.com/vllm-project/vllm/issues/52319)), `/health` and
@@ -306,6 +309,8 @@ lifecycle. It failed the strict capture gate because only rank 0 produced a Flig
 Recorder dump in every trial. See the
 [review entry](experiments/pytorch-unused-grad-dtype/REVIEW_PHASE2_RESULTS_CN.md)
 and [result](experiments/pytorch-unused-grad-dtype/GATE1E_RESULT_2026-09-13.md).
+The pre-execution Gate 1f shutdown-stage diagnostic is documented in
+[`GATE1F_PROTOCOL.md`](experiments/pytorch-unused-grad-dtype/GATE1F_PROTOCOL.md).
 
 The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
