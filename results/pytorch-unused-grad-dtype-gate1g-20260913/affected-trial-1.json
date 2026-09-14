@@ -1,0 +1,191 @@
+{
+  "allreduce_enqueued_records": [
+    {
+      "elapsed_seconds": 0.591692,
+      "rank": 0
+    }
+  ],
+  "allreduce_return_records": [],
+  "arm": "affected",
+  "configuration": {
+    "async_error_handling": 3,
+    "process_group_timeout_seconds": 30,
+    "stack_capture_after_seconds": 20,
+    "wall_timeout_seconds": 60,
+    "work_wait_timeout_seconds": 180
+  },
+  "cuda_runtime_version": "13.0",
+  "cuda_visible_devices": 2,
+  "duration_seconds": 60.661,
+  "expected_mechanism": "rank1_failure_rank0_all_reduce_wait",
+  "expected_termination": "wall_bound_rank1_teardown_wait",
+  "flight_recorder": {
+    "file_count": 1,
+    "files": [
+      {
+        "decoded": true,
+        "rank": 0,
+        "sha256": "77f7bd44f3c7eb632bcb6fc57f0f477a9bd8514fffe21a906d291a7fea6518a2",
+        "size_bytes": 1493
+      }
+    ],
+    "rank0_pending_all_reduce": {
+      "candidates": [
+        {
+          "group_members": [
+            0,
+            1
+          ],
+          "observed_rank": 0,
+          "operation": "ALL_REDUCE",
+          "sequence_number": 2,
+          "state": "scheduled"
+        }
+      ],
+      "dump_ranks": [
+        0
+      ],
+      "peer_participation_inferred": false,
+      "status": "matched"
+    },
+    "raw_persisted": false
+  },
+  "gpu_names": [
+    "NVIDIA GeForce RTX 4090",
+    "NVIDIA GeForce RTX 4090"
+  ],
+  "library_log_flags": {
+    "0": {
+      "destroy_complete": false,
+      "dump_signal_broadcast": true,
+      "dump_signal_broadcast_failed": false,
+      "dump_signal_observed": false,
+      "dump_success": true,
+      "operations_flushed": false,
+      "shutdown_start": false,
+      "watchdog_joined_destroying": false
+    },
+    "1": {
+      "destroy_complete": false,
+      "dump_signal_broadcast": false,
+      "dump_signal_broadcast_failed": false,
+      "dump_signal_observed": false,
+      "dump_success": false,
+      "operations_flushed": true,
+      "shutdown_start": true,
+      "watchdog_joined_destroying": true
+    }
+  },
+  "library_log_scan_error": null,
+  "marker_parse_errors": {},
+  "mechanism_classification": "rank1_failure_rank0_all_reduce_wait",
+  "natural_return_code": null,
+  "no_tracked_orphans": true,
+  "output_sha256": "ed17782418ca98a15adb0f57d604786dee5a3a04ebaebf214270582f1e22871b",
+  "preflight": {
+    "effective_uid": 0,
+    "nccl_version": [
+      2,
+      29,
+      7
+    ],
+    "ptrace_mode": "pr_set_ptracer_parent",
+    "ptrace_scope": 1,
+    "py_spy_version_sha256": "7b669c1a24110a7df9080df9bf78685c08cb97e57ec471889f46a2126a6bdcaf"
+  },
+  "rank_identities_recorded": true,
+  "rank_outcomes": [
+    {
+      "elapsed_seconds": 0.587318,
+      "outcome": "injected_rank_failure",
+      "rank": 1
+    }
+  ],
+  "rank_ptrace_records": [
+    {
+      "mode": "pr_set_ptracer_parent",
+      "rank": 0
+    },
+    {
+      "mode": "pr_set_ptracer_parent",
+      "rank": 1
+    }
+  ],
+  "raw_output_persisted": false,
+  "ready_observed_records": [
+    {
+      "elapsed_seconds": 0.587291,
+      "rank": 1
+    }
+  ],
+  "reported_return_code": 124,
+  "reproducer_sha256": "1f7cc26809f79fdc9088e95305f747d053154b027c2efba467e8b76d2280fcc7",
+  "runner_error_type": null,
+  "schema_version": 5,
+  "stack_capture": [
+    {
+      "elapsed_seconds": 0.45,
+      "project_frames": [
+        {
+          "function": "run_all_reduce",
+          "line": 80
+        }
+      ],
+      "rank": 0,
+      "raw_persisted": false,
+      "raw_sha256": "c4c3b1cc33fc13c91936d98852c1a93a3cca939ed922bbfc14dc652d054df442",
+      "return_code": 0,
+      "status": "captured",
+      "thread_count": 1
+    },
+    {
+      "elapsed_seconds": 0.842,
+      "project_frames": [
+        {
+          "function": "main",
+          "line": 169
+        }
+      ],
+      "rank": 1,
+      "raw_persisted": false,
+      "raw_sha256": "dae82ed75741c5c4ed1e411621070d39af3b9a642d275aa5dd0052351b121d14",
+      "return_code": 0,
+      "status": "captured",
+      "thread_count": 1
+    }
+  ],
+  "teardown_enter_records": [
+    {
+      "elapsed_seconds": 0.587336,
+      "rank": 1
+    }
+  ],
+  "teardown_return_records": [],
+  "termination_classification": "wall_bound_rank1_teardown_wait",
+  "termination_prediction_matched": true,
+  "timed_out": true,
+  "torch_git_version": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+  "torch_version": "2.13.0+cu130",
+  "trial": 1,
+  "warmup_enter_records": [
+    {
+      "elapsed_seconds": 0.292334,
+      "rank": 0
+    },
+    {
+      "elapsed_seconds": 0.309721,
+      "rank": 1
+    }
+  ],
+  "warmup_return_records": [
+    {
+      "elapsed_seconds": 0.591334,
+      "rank": 0
+    },
+    {
+      "elapsed_seconds": 0.577026,
+      "rank": 1
+    }
+  ],
+  "watchdog_marker_seen": true
+}

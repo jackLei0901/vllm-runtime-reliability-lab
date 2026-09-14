@@ -301,4 +301,27 @@ collective。
 5. `verify_gate1g.py`：独立结果验证器；
 6. `GATE1G_FREEZE.json` 与 `verify_gate1g_freeze.py`：运行依赖哈希冻结。
 
-本节为 **pre-execution** 状态。未租卡、未产生 Gate 1g 结果。
+### Gate 1g 实测结果
+
+Gate 1g 从精确 commit `9f1c72e01616c0a59748e0b91690371da99fb3fd` 的归档树
+运行；归档 SHA-256 为
+`a05bbfd50ce8921f1de76002d1bd0a4ac62d2ff9472617389d9a41fb804dacd2`。
+执行前七套 freeze 以 15/7/7/9/10/12/11 文件全部通过。环境为双 RTX 4090、
+PyTorch `2.13.0+cu130`、NCCL 2.29.7 和 py-spy 0.4.2。
+
+control 中两个 rank 完成 warm-up、正式 all-reduce 和正常 teardown，进程退出 0，
+没有 stack 或 Flight Recorder dump。affected 中两个 rank 先完成 warm-up；rank 0
+随后排队正式 all-reduce 并停在显式 180 秒 `work.wait()`，rank 1 观察到原子标记后
+注入本地异常，并停在 `destroy_process_group()`。进程达到 60 秒外部边界。
+
+rank 0 成功广播 dump 请求并生成本地 dump。该 dump 中恰好一个 group `[0, 1]` 的
+本地 `ALL_REDUCE` 处于 `scheduled`；候选构造没有读取 rank 1 数据，也没有推断其是否
+参与。rank 1 记录 shutdown 开始、operations flushed、watchdog 已 join 并开始销毁
+communicator，但没有 `Destroy complete.`、没有收到稍后的 dump 请求、也没有生成
+dump。逐 rank stack、library flags、解析、生命周期和隐私合同全部通过独立 verifier。
+
+因此 Gate 1g 在去掉 FSDP、模型、混合精度、unused-gradient 和 accumulation 后，仍
+复现了 Gate 1f 的 missing-rank dump 缺口。该结论仅适用于固定版本和本次边界实验；
+不能直接证明 NCCL 内部的具体阻塞调用，也没有验证修复方案。完整结果见
+`GATE1G_RESULT_2026-09-13.md` 和
+`results/pytorch-unused-grad-dtype-gate1g-20260913/`。

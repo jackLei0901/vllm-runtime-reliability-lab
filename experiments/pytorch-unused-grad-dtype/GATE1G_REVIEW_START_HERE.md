@@ -1,6 +1,10 @@
 # Gate 1g review entry
 
-Status: **frozen locally; not executed; no GPU result exists**
+Status: **executed after freeze; independent verifier PASS**
+
+The pre-execution contract below was committed before GPU execution. Review the
+retained result in `GATE1G_RESULT_2026-09-13.md` and the two allow-listed JSON
+summaries under `results/pytorch-unused-grad-dtype-gate1g-20260913/`.
 
 ## Review question
 
@@ -87,5 +91,5 @@ consistent with `.gitattributes` and the earlier correction record.
 6. Is one control plus one affected trial sufficient for this narrow boundary
    check after Gate 1e repeated the original pattern three times?
 
-Do not review this file as a result report. No Gate 1g trial has run yet, and no
-outcome may be added to the frozen prediction after GPU execution begins.
+The frozen protocol and manifest remain unchanged after execution. Outcome
+claims belong in the separate result report, not in the pre-execution contract.
