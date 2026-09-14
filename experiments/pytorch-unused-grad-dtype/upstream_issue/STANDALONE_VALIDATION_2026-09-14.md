@@ -1,7 +1,7 @@
 # Standalone ProcessGroupNCCL validation
 
-Status: **PyTorch 2.13 legacy ProcessGroupNCCL reproduces; nightly legacy
-ProcessGroupNCCL not yet tested**
+Status: **PASS: the selectable legacy ProcessGroupNCCL gap reproduces on current
+nightly**
 
 The standalone script from commit
 `e8af6054fb519d12b353399efdab3b6b6e1a7af0` was run unchanged on the same two
@@ -80,23 +80,42 @@ Private audit hashes:
 - rank-0 dump:
   `231cb39042b74e6cd73b9af77b80e83d5bbfecb5dad906183fd2b94dbd8a9b1f`.
 
+## Nightly legacy-backend result
+
+The exact script was run a third time with the same nightly wheel and NCCL
+version, plus the pre-registered backend selector
+`TORCH_DIST_USE_NCCL2=0`. The legacy backend reproduced the gap:
+
+```text
+rank 1: destroy_process_group entered
+[rank1] ... Rank 1] Watchdog joined, destroying NCCL communicators.
+[rank0] ... Rank 0] Watchdog caught collective operation timeout: WorkNCCL(SeqNum=2, OpType=ALLREDUCE, NumelIn=16, NumelOut=16, Timeout(ms)=30000) ran for 30028 milliseconds before timing out.
+[rank0] ... Rank 0] Broadcasting signal exception_dump to other ranks via TCPStore.
+[rank0] ... Rank 0] Flight Recorder trace successfully dumped.
+```
+
+Rank 1 logged neither `Destroy complete.` nor `Observed flight recorder dump
+signal`. The run reached the 60-second external bound with status 124. After
+stale files were removed before launch, only
+`/tmp/pgnccl-legacy-trace_0` existed (1,447 bytes).
+
+Private audit hashes:
+
+- raw launcher log:
+  `ede66b3dc52ad4e218b3100f7d14acddf47806a0cf353d9f22cd73553bf23b36`;
+- rank-0 dump:
+  `131c1c000a02d62fe4b34a0b29f404fd9aa8c3f507e779b2697fa7e902fd7901`.
+
 ## Interpretation
 
-The standalone validation closes the script-provenance gap: the exact script in
-the draft reproduces the PyTorch 2.13 legacy-backend behavior. The first nightly
-run changed both version and backend, so it is not a valid version comparison.
+The standalone validation closes the script-provenance gap and the backend
+confound. The exact script reproduces on both PyTorch 2.13 and the selectable
+legacy backend in current nightly. The default `nccl2` run is a separate
+observation and is not used to claim that the gap is fixed or present there.
 
-Before running nightly with `TORCH_DIST_USE_NCCL2=0`, the outcomes are fixed:
-
-- if the stall and missing rank-1 dump reproduce, file against the selectable
-  legacy backend on current nightly and identify the default `nccl2` result as a
-  separate observation;
-- if they do not reproduce, record that the legacy behavior changed between
-  2.13 and nightly and do not file.
-
-The next run must check rank 0's `Broadcasting signal exception_dump`, rank 1's
-`Watchdog joined, destroying NCCL communicators.`, and the absence on rank 1 of
-both `Destroy complete.` and `Observed flight recorder dump signal`.
+The pre-registered positive outcome was met, so the result now supports filing
+an issue against current nightly's legacy backend. The exact NCCL blocking call
+and a safe shutdown-ordering fix remain outside the evidence.
 
 Raw logs, dumps and environment output are retained outside the public repository
 and are not committed.
