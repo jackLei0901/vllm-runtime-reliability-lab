@@ -77,6 +77,21 @@ The exact NCCL internal blocking call remains an inference. This experiment does
 not establish behavior on other PyTorch/NCCL versions and does not validate a
 fix.
 
+## Post-review correction: watchdog marker
+
+`watchdog_marker_seen` is not a valid timeout discriminator in Gate 1g. With
+`TORCH_CPP_LOG_LEVEL=INFO`, its broad `"NCCL watchdog"` substring also matches
+the normal teardown message `ProcessGroupNCCL watchdog thread joined.`; the
+control arm therefore records the marker too. The frozen campaign and verifier
+are left unchanged as an executed audit record.
+
+This correction does not change the PASS. The timeout-triggered diagnostic path
+is established independently by rank 0's successful cross-rank dump-signal
+broadcast and its decodable Flight Recorder dump, while the external 60-second
+wall bound establishes that the affected job remained alive. Future gates must
+match the exact per-rank error message `Watchdog caught collective operation
+timeout` instead of the broad substring.
+
 ## Timing note
 
 The atomic file establishes that rank 0 returned from local enqueue before rank

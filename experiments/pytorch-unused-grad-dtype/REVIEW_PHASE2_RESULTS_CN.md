@@ -325,3 +325,10 @@ dump。逐 rank stack、library flags、解析、生命周期和隐私合同全�
 不能直接证明 NCCL 内部的具体阻塞调用，也没有验证修复方案。完整结果见
 `GATE1G_RESULT_2026-09-13.md` 和
 `results/pytorch-unused-grad-dtype-gate1g-20260913/`。
+
+审核后发现 `watchdog_marker_seen` 不能作为 Gate 1g 的 timeout 判据：INFO 日志中的正常
+退出消息 `ProcessGroupNCCL watchdog thread joined.` 也会命中宽泛的
+`"NCCL watchdog"` 子串，control 因此同样为 true。已执行的冻结代码保留不动。该修正
+不改变 PASS，因为 rank 0 成功广播 dump 请求并产生可解码 dump，且 affected 达到外部
+60 秒边界；后续试验改为逐 rank 精确匹配
+`Watchdog caught collective operation timeout`。
