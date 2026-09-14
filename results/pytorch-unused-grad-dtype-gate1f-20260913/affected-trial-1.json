@@ -1,0 +1,254 @@
+{
+  "arm": "affected",
+  "barrier_enter_records": [
+    {
+      "elapsed_seconds": 1.292286,
+      "rank": 0
+    }
+  ],
+  "barrier_return_records": [],
+  "configuration": {
+    "async_error_handling": 3,
+    "process_group_timeout_seconds": 30,
+    "stack_capture_after_seconds": 20,
+    "wall_timeout_seconds": 60
+  },
+  "cuda_runtime_version": "13.0",
+  "cuda_visible_devices": 2,
+  "diagnostic_change": "TORCH_CPP_LOG_LEVEL=INFO",
+  "duration_seconds": 60.689,
+  "expected_mechanism": "rank1_assertion_rank0_barrier_wait",
+  "expected_rank0_library_log_flags": {
+    "destroy_complete": false,
+    "dump_signal_broadcast": true,
+    "dump_signal_broadcast_failed": false,
+    "dump_signal_observed": false,
+    "dump_success": true,
+    "operations_flushed": false,
+    "shutdown_start": false,
+    "watchdog_joined_destroying": false
+  },
+  "expected_rank1_library_log_flags": {
+    "destroy_complete": false,
+    "dump_signal_broadcast": false,
+    "dump_signal_broadcast_failed": false,
+    "dump_signal_observed": false,
+    "dump_success": false,
+    "operations_flushed": true,
+    "shutdown_start": true,
+    "watchdog_joined_destroying": true
+  },
+  "expected_termination": "wall_bound_rank1_teardown_wait",
+  "flight_recorder": {
+    "file_count": 1,
+    "files": [
+      {
+        "decoded": true,
+        "rank": 0,
+        "sha256": "78b78986e6674c05d5e6b686e3a2e6814ad968f9c0bca202b5b051c33007c148",
+        "size_bytes": 2922
+      }
+    ],
+    "normalized": {
+      "completed_collective_entries": 2,
+      "normalized_fingerprint": "4474c1aa554543ca77d083057c3d056a96a5fe2953d173639455cb9a508b0b67",
+      "primary_divergence": null,
+      "secondary_divergences": [
+        {
+          "group_members": [
+            0,
+            1
+          ],
+          "is_p2p": false,
+          "present_ranks": [
+            0
+          ],
+          "reason": "missing_member",
+          "sequence_number": 1
+        },
+        {
+          "group_members": [
+            0,
+            1
+          ],
+          "is_p2p": false,
+          "present_ranks": [
+            0
+          ],
+          "reason": "missing_member",
+          "sequence_number": 2
+        },
+        {
+          "group_members": [
+            0,
+            1
+          ],
+          "is_p2p": false,
+          "present_ranks": [
+            0
+          ],
+          "reason": "missing_member",
+          "sequence_number": 3
+        }
+      ]
+    },
+    "raw_persisted": false,
+    "strict_pending_reduce": {
+      "candidates": [],
+      "dump_ranks": [
+        0
+      ],
+      "missing_dump_ranks": [
+        1
+      ],
+      "status": "incomplete_dump_set"
+    }
+  },
+  "gpu_names": [
+    "NVIDIA GeForce RTX 4090",
+    "NVIDIA GeForce RTX 4090"
+  ],
+  "library_log_flags": {
+    "0": {
+      "destroy_complete": false,
+      "dump_signal_broadcast": true,
+      "dump_signal_broadcast_failed": false,
+      "dump_signal_observed": false,
+      "dump_success": true,
+      "operations_flushed": false,
+      "shutdown_start": false,
+      "watchdog_joined_destroying": false
+    },
+    "1": {
+      "destroy_complete": false,
+      "dump_signal_broadcast": false,
+      "dump_signal_broadcast_failed": false,
+      "dump_signal_observed": false,
+      "dump_success": false,
+      "operations_flushed": true,
+      "shutdown_start": true,
+      "watchdog_joined_destroying": true
+    }
+  },
+  "library_log_scan_error": null,
+  "mechanism_classification": "rank1_assertion_rank0_barrier_wait",
+  "natural_return_code": null,
+  "no_tracked_orphans": true,
+  "output_sha256": "96222c43dfb83f4e61e8d3569c3d43f64f80b925886bcadc247ae98aa16d42a5",
+  "preflight": {
+    "effective_uid": 0,
+    "nccl_version": [
+      2,
+      29,
+      7
+    ],
+    "ptrace_mode": "pr_set_ptracer_parent",
+    "ptrace_scope": 1,
+    "py_spy_version_sha256": "7b669c1a24110a7df9080df9bf78685c08cb97e57ec471889f46a2126a6bdcaf"
+  },
+  "rank0_library_log_prediction_matched": true,
+  "rank1_library_log_prediction_matched": true,
+  "rank_identities_recorded": true,
+  "rank_outcomes": [
+    {
+      "elapsed_seconds": 1.26902,
+      "exception_type": "AssertionError",
+      "outcome": "local_uniformity_assertion",
+      "rank": 1
+    }
+  ],
+  "rank_ptrace_records": [
+    {
+      "mode": "pr_set_ptracer_parent",
+      "rank": 0
+    },
+    {
+      "mode": "pr_set_ptracer_parent",
+      "rank": 1
+    }
+  ],
+  "raw_output_persisted": false,
+  "reduce_records": [
+    {
+      "call_index": 1,
+      "elapsed_seconds": 1.274777,
+      "grad_count": 4,
+      "grad_dtypes": [
+        "torch.float32",
+        "torch.float32",
+        "torch.float32",
+        "torch.float32"
+      ],
+      "rank": 0
+    },
+    {
+      "call_index": 1,
+      "elapsed_seconds": 1.266802,
+      "grad_count": 4,
+      "grad_dtypes": [
+        "torch.float32",
+        "torch.float32",
+        "torch.bfloat16",
+        "torch.bfloat16"
+      ],
+      "rank": 1
+    }
+  ],
+  "reduce_return_records": [
+    {
+      "call_index": 1,
+      "elapsed_seconds": 1.281005,
+      "rank": 0
+    }
+  ],
+  "reported_return_code": 124,
+  "reproducer_sha256": "b4778465c896cc718527a6508c4d92da5bf5a375416e4aca702f3a31cfd6b252",
+  "runner_error_type": null,
+  "schema_version": 4,
+  "stack_capture": [
+    {
+      "elapsed_seconds": 0.899,
+      "project_frames": [
+        {
+          "function": "main",
+          "line": 171
+        }
+      ],
+      "rank": 0,
+      "raw_persisted": false,
+      "raw_sha256": "2bb447fa583142f19b97ef0d0f9b66260a1a17138011bfe77eeab4d7e844065f",
+      "return_code": 0,
+      "status": "captured",
+      "thread_count": 3
+    },
+    {
+      "elapsed_seconds": 0.897,
+      "project_frames": [
+        {
+          "function": "main",
+          "line": 197
+        }
+      ],
+      "rank": 1,
+      "raw_persisted": false,
+      "raw_sha256": "5f5717dc0bb7467f79e571f433083bf8bb8c91f2ed40059c98e76669fe70950e",
+      "return_code": 0,
+      "status": "captured",
+      "thread_count": 3
+    }
+  ],
+  "teardown_enter_records": [
+    {
+      "elapsed_seconds": 1.26964,
+      "rank": 1
+    }
+  ],
+  "teardown_return_records": [],
+  "termination_classification": "wall_bound_rank1_teardown_wait",
+  "termination_prediction_matched": true,
+  "timed_out": true,
+  "torch_git_version": "cf30153c4c131c8164ee7798e5022d810682e2cb",
+  "torch_version": "2.13.0+cu130",
+  "trial": 1,
+  "watchdog_marker_seen": true
+}

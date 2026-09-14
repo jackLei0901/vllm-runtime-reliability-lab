@@ -1,6 +1,6 @@
 # Phase 2 GPU 结果：中文审核入口
 
-状态：**Gate 0 通过；Gate 1 证据不足；Gate 1b/1c 已撤回；Gate 1d runner 停止；Gate 1e 严格采集门失败；Gate 1f 已冻结、未执行。**
+状态：**Gate 0 通过；Gate 1 证据不足；Gate 1b/1c 已撤回；Gate 1d runner 停止；Gate 1e 严格采集门失败；Gate 1f shutdown-stage 诊断通过。**
 
 本文件是执行后的审核入口。实验前的预期、脚本和停止规则仍保存在
 PHASE2_FREEZE.json 所固定的 15 个文件中，没有根据结果改写。
@@ -241,3 +241,26 @@ rank 0 也有冻结判据：成功广播 `exception_dump` 为 true、广播失�
 2. `gate1f_campaign.py`：逐 rank 消息归属、NCCL 版本记录和单次 runner；
 3. `verify_gate1f.py`：独立重算机制、终止、stack、dump-set 与阶段预测；
 4. `GATE1F_FREEZE.json` 与 `verify_gate1f_freeze.py`：12 个运行依赖的预执行冻结。
+
+### Gate 1f 实测结果
+
+唯一一次 affected trial 在 commit `6db7069e916571a4e9a5f213bf63f881929a53a1`
+的精确归档树上运行。六套 freeze 先以 15/7/7/9/10/12 文件全部通过。环境为双
+RTX 4090、PyTorch `2.13.0+cu130`、NCCL 2.29.7 和 py-spy 0.4.2。
+
+rank 0 成功广播 `exception_dump`、广播失败为 false、本地 dump 成功，四个 shutdown
+阶段均为 false。rank 1 则依次记录 shutdown 开始、operations flushed、watchdog 已
+join 并开始销毁 communicator；`Destroy complete.`、观察到远端 dump signal 和 dump
+成功均为 false。`library_log_scan_error` 为 null，两侧冻结预测完全匹配。
+
+机制仍为 rank 1 本地 dtype assertion、rank 0 barrier wait；终止仍达到 60 秒外部边界。
+外部 stack 取得两个 rank，Flight Recorder 仍只有 rank 0 dump，生命周期无孤儿，原始
+输出未保留。独立 verifier 通过。
+
+因此可以确认：rank 0 的跨 rank dump 请求确实发出；rank 1 在停止 heartbeat monitor
+之后、communicator destruction 完成之前停滞，无法响应稍后的请求。这支持提出一个
+限定于 PyTorch 2.13.0+cu130 / NCCL 2.29.7 的 diagnosability issue，但没有直接证明
+具体阻塞点一定是 `ncclCommDestroy`。Gate 1e 的严格双 dump 结论仍是 FAIL-CLOSED。
+
+完整结果见 `GATE1F_RESULT_2026-09-13.md` 和
+`results/pytorch-unused-grad-dtype-gate1f-20260913/affected-trial-1.json`。

@@ -90,8 +90,10 @@ CPU 等待点放错了位置；Gate 1c 的 wall bound 过紧，且停止规则�
 错误地绑在一起，两者均已在执行前撤回。Gate 1d 随后因 runner marker 解析缺陷停止。
 Gate 1e 修复该缺陷后，三次复现 rank-local assertion 与 peer wait，并取得两个 rank
 的 stack；但每次只有 rank 0 产生 Flight Recorder dump，因此严格关联门按规则失败。
-Gate 1f 已冻结但尚未执行：它只运行一次 affected trial，保留六项白名单逐 rank
-shutdown-stage 布尔值和 NCCL 版本，用于检验 rank 1 为何无法响应 dump 请求。
+Gate 1f 随后按冻结协议执行了一次 affected trial，保留八项白名单逐 rank shutdown
+阶段布尔值。rank 0 成功广播 dump 请求并写出本地 dump；rank 1 已停止 heartbeat
+monitor、进入 communicator destruction，但既未完成 destroy，也未观察到请求。
+诊断门通过，Gate 1e 的严格关联门仍保持失败关闭。
 
 反向情形同样重要。在一例 health-green 停滞报告
 （[vLLM #52319](https://github.com/vllm-project/vllm/issues/52319)）中，`/health`
@@ -367,6 +369,7 @@ reduce-scatter 调用而在执行前撤回；Gate 1c 又因 wall bound 过紧和
 - [`experiments/pytorch-unused-grad-dtype/GATE1D_EXECUTION_STOP_2026-09-13.md`](experiments/pytorch-unused-grad-dtype/GATE1D_EXECUTION_STOP_2026-09-13.md)
 - [`experiments/pytorch-unused-grad-dtype/GATE1E_RESULT_2026-09-13.md`](experiments/pytorch-unused-grad-dtype/GATE1E_RESULT_2026-09-13.md)
 - [`experiments/pytorch-unused-grad-dtype/GATE1F_PROTOCOL.md`](experiments/pytorch-unused-grad-dtype/GATE1F_PROTOCOL.md)
+- [`experiments/pytorch-unused-grad-dtype/GATE1F_RESULT_2026-09-13.md`](experiments/pytorch-unused-grad-dtype/GATE1F_RESULT_2026-09-13.md)
 
 ## 11. 如何运行开发验证
 
