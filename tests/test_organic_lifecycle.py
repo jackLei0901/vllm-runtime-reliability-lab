@@ -8,7 +8,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "experiments" / "organic-hang" / "process_lifecycle.py"
+# Version 1 is retained byte-for-byte for the frozen Gate 1b-1g evidence.
+SCRIPT = ROOT / "experiments" / "organic-hang" / "process_lifecycle_v2.py"
 
 
 def load_module():
@@ -115,6 +116,32 @@ time.sleep(60)
                     module._signal_if_same(identity, module.TERM_SIGNAL, root)
                 )
             kill.assert_not_called()
+
+    def test_process_exit_between_identity_check_and_signal_is_benign(self) -> None:
+        module = load_module()
+        identity = module.ProcessIdentity(pid=50, start_time_ticks=100)
+        with (
+            patch.object(module, "identity_is_live", return_value=True),
+            patch.object(module.os, "kill", side_effect=ProcessLookupError),
+        ):
+            self.assertFalse(
+                module._signal_if_same(identity, module.TERM_SIGNAL, Path("/proc"))
+            )
+
+    def test_group_exit_between_identity_check_and_signal_is_benign(self) -> None:
+        module = load_module()
+        identity = module.ProcessIdentity(pid=60, start_time_ticks=100)
+        with (
+            patch.object(module, "identity_is_live", return_value=True),
+            patch.object(
+                module.os, "killpg", side_effect=ProcessLookupError, create=True
+            ),
+        ):
+            self.assertFalse(
+                module._signal_group_if_same(
+                    identity, module.TERM_SIGNAL, Path("/proc")
+                )
+            )
 
     def test_cleanup_skips_reused_parent_and_rank(self) -> None:
         module = load_module()
