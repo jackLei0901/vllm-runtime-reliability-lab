@@ -314,6 +314,10 @@ and [result](experiments/pytorch-unused-grad-dtype/GATE1E_RESULT_2026-09-13.md).
 The Gate 1f shutdown-stage diagnostic is documented in its
 [`protocol`](experiments/pytorch-unused-grad-dtype/GATE1F_PROTOCOL.md) and
 [`result`](experiments/pytorch-unused-grad-dtype/GATE1F_RESULT_2026-09-13.md).
+An FSDP-free, two-rank ProcessGroupNCCL boundary experiment is now frozen but
+not yet executed. Gate 1g tests whether the missing-rank dump behavior survives
+after model, gradient and FSDP variables are removed; see its
+[`protocol`](experiments/pytorch-unused-grad-dtype/GATE1G_PROTOCOL.md).
 
 The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 

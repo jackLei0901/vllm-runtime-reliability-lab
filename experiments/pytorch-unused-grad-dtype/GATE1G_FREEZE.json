@@ -1,0 +1,35 @@
+{
+  "freeze_id": "gate1g-pre-execution-2026-09-13",
+  "status": "pre-execution",
+  "follows": "gate1f-confirmed-2026-09-13",
+  "scope": "fsdp-free-process-group-nccl",
+  "expected_torch": "2.13.0+cu130",
+  "expected_nccl_version": [2, 29, 7],
+  "trials": {
+    "affected": 1,
+    "control": 1
+  },
+  "timing_seconds": {
+    "stack_capture": 20,
+    "process_group_timeout": 30,
+    "wall_bound": 60,
+    "work_wait_timeout": 180
+  },
+  "communicator_precondition": "two-rank-all-reduce-plus-cuda-synchronize",
+  "pending_all_reduce_candidates": "exactly-one-rank0-local",
+  "raw_retention": "derived-summaries-only",
+  "peer_participation_inference": "forbidden",
+  "files": {
+    "GATE1G_PROTOCOL.md": "446b08b90f66cbd8254366771b0949c569187d8a24be9d061e2186ab4b0163d4",
+    "gate1c_campaign.py": "aed80eeb39b4bc19dcb9af02f945b0e84b0fd54db3fabf3744bff070bd694075",
+    "gate1d_campaign.py": "092122c665555feaa91852dd5a4a110a0e9df100f1a420e8a3a6d4e56f1bcdc3",
+    "gate1e_campaign.py": "eaed549521613e6ca8ade7d1073a30bf87af6a20cd023319a366556bf3166a88",
+    "gate1f_campaign.py": "6114a2797b8023a17d14f5dd066df909eb3af40bbd1202330f40c9b7b529c2bb",
+    "gate1g_campaign.py": "c1cfde718dd4de86939b738d1eef2eb213224b982d3b9e653d5952ec99725f1c",
+    "gate1g_reproducer.py": "1f7cc26809f79fdc9088e95305f747d053154b027c2efba467e8b76d2280fcc7",
+    "normalize_flight_recorder.py": "2a56065f105792889bfdf261295605e53e81f87e9f0892e18a503a35231a32d0",
+    "process_lifecycle.py": "01dfdfde715587b0c65ee37fd042abd3355ab3edc333e4f5b306bb9678667e2e",
+    "verify_gate1g.py": "395b37f6e4aaf78017ce1726bd9d533d0580abfe188995262e511e5420ae2d05",
+    "verify_gate1g_freeze.py": "7c1b2873bd2ceeaf0442babf79831043d258f9a72b9086a8f69ed20a71ad8847"
+  }
+}

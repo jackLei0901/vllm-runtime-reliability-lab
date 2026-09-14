@@ -264,3 +264,41 @@ join 并开始销毁 communicator；`Destroy complete.`、观察到远端 dump s
 
 完整结果见 `GATE1F_RESULT_2026-09-13.md` 和
 `results/pytorch-unused-grad-dtype-gate1f-20260913/affected-trial-1.json`。
+
+## 十、Gate 1g：去掉 FSDP 后验证问题边界
+
+Gate 1f 的结果仍含 FSDP、混合精度和 unused-gradient 路径。Gate 1g 不再扩充同一
+FSDP 试验，而是构造一个独立的两 rank ProcessGroupNCCL 最小复现，回答更窄的问题：
+当 rank 0 已经排队并等待异步 `all_reduce` 时，rank 1 发生本地异常并按文档进入
+`destroy_process_group()`，相同的 dump-responder 缺口是否仍会出现。
+
+两个 arm 都先由双 rank 完成一次同尺寸 warm-up all-reduce，并执行
+`torch.cuda.synchronize()`，确保 communicator 及连接在分岔前已创建。affected arm
+随后用原子文件在用户空间建立明确顺序：rank 0 先记录正式 all-reduce 已排队，再以
+180 秒显式超时进入 `work.wait()`；rank 1 观察到该标记后才注入异常。这个标记只证明
+本地事件顺序，不推断 rank 1 已参与正式 collective。control arm 则由两个 rank 正常
+完成相同 all-reduce 和 teardown。
+
+预注册期望沿用 Gate 1f 已验证的 20/30/60 秒节奏和逐 rank library-log 判据。affected
+arm 预期 rank 0 stack 位于 `work.wait()`、rank 1 位于
+`destroy_process_group()`；Flight Recorder 仍只有 rank 0 dump。新增的本地摘要只允许
+声明“rank 0 的 dump 含 group `[0, 1]` 上恰好一个未完成的 ALLREDUCE”。warm-up 条目
+必须已完成；零个或多个 pending 候选都失败关闭。候选构造只读取 rank 0 artifact，并
+记录 `peer_participation_inferred: false`，不能用单 rank dump 声称另一 rank 参与了
+collective。
+
+本轮只安排 1 次 control 和 1 次 affected。任何 marker 或 library-log 解析问题均先
+写入有界错误码再失败关闭；原始 torchrun、py-spy 与 Flight Recorder 内容不持久化。
+若结果完全匹配，才具备把问题作为通用 ProcessGroupNCCL diagnosability gap 报告上游
+的条件；仍不主张具体 NCCL 内部阻塞点，也不提出未经验证的修复方案。
+
+执行前审核入口：
+
+1. `GATE1G_REVIEW_START_HERE.md`：英文审核入口、已完成检查和待确认问题；
+2. `GATE1G_PROTOCOL.md`：问题、受控改动、冻结预测和解释边界；
+3. `gate1g_reproducer.py`：无 FSDP 的最小两 rank 复现；
+4. `gate1g_campaign.py`：采集、清理、隐私边界和本地 FR 摘要；
+5. `verify_gate1g.py`：独立结果验证器；
+6. `GATE1G_FREEZE.json` 与 `verify_gate1g_freeze.py`：运行依赖哈希冻结。
+
+本节为 **pre-execution** 状态。未租卡、未产生 Gate 1g 结果。
