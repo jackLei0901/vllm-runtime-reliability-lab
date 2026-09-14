@@ -40,6 +40,8 @@ def main() -> None:
     torch.cuda.set_device(local_rank)
     dist.init_process_group("nccl", timeout=datetime.timedelta(seconds=30))
 
+    if rank == 0:
+        marker.unlink(missing_ok=True)
     tensor = torch.ones(16, device=f"cuda:{local_rank}")
     dist.all_reduce(tensor)
     torch.cuda.synchronize()
