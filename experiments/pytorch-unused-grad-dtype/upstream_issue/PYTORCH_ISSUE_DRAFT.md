@@ -1,9 +1,9 @@
 # Flight Recorder misses a rank blocked in ProcessGroupNCCL teardown
 
 > **Draft status:** hold. The committed reproducer confirms the behavior on
-> PyTorch 2.13.0, but the same script does not reproduce the teardown stall on
-> the 2026-09-13 nightly. Before filing, determine whether maintainers want a
-> report or backport request for the supported 2.13 release.
+> PyTorch 2.13.0's legacy `ProcessGroupNCCL`. The first nightly run selected the
+> new default `nccl2` backend and is not a legacy-backend comparison. Run nightly
+> once with `TORCH_DIST_USE_NCCL2=0` before deciding whether to file.
 
 ## Describe the bug
 
@@ -132,11 +132,12 @@ external bound, the only dump file was `/tmp/pgnccl-trace_0` (1,428 bytes).
 The command exited with `timeout` status 124; no claim is made about behavior
 after that bound.
 
-### Nightly result
+### Nightly backend note
 
-The same script did **not** reproduce the teardown stall on
+The first nightly run did **not** reproduce the teardown stall on
 `2.15.0.dev20260913+cu130` (git `13376c2070a764e25f67b2385c31358b325e8a1c`)
-with NCCL `2.30.7`:
+with NCCL `2.30.7`, but `backend="nccl"` selected the new default `nccl2`
+implementation rather than legacy `ProcessGroupNCCL`:
 
 ```text
 rank 1: destroy_process_group entered
@@ -146,9 +147,11 @@ rank 1: destroy_process_group returned
 rank 0: destroy_process_group returned
 ```
 
-The nightly job exited by itself with status 1 in about 35 seconds. This is a
-version boundary, not evidence that current nightly has the missing-responder
-gap.
+The nightly job exited by itself with status 1 in about 35 seconds. This result
+does not establish a version boundary: `nccl2` uses different timeout, shutdown
+and Flight Recorder paths, and its rank-1 return neither proves nor disproves
+the legacy missing-responder gap. Nightly's legacy backend remains to be tested
+with `TORCH_DIST_USE_NCCL2=0`.
 
 ## Expected behavior
 
@@ -167,7 +170,8 @@ should make the diagnostic limitation explicit.
 - driver: 580.105.08
 - OS: Ubuntu 22.04.4, Linux 5.15.0-78-generic
 - Python: 3.12.3
-- nightly control: `2.15.0.dev20260913+cu130`, NCCL 2.30.7; did not reproduce
+- nightly default-backend observation: `2.15.0.dev20260913+cu130`, NCCL 2.30.7,
+  `nccl2`; not a legacy-backend test
 
 ### `python -m torch.utils.collect_env`
 
