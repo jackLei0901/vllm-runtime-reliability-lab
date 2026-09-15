@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "experiments" / "organic-hang" / "fetch_and_prepare_reproducer.py"
 ORACLE_SCRIPT = SCRIPT.with_name("parse_detail_oracle.py")
 FLIGHT_SCRIPT = SCRIPT.with_name("normalize_flight_recorder.py")
+FLIGHT_V2_SCRIPT = SCRIPT.with_name("normalize_flight_recorder_v2.py")
 STACK_SCRIPT = SCRIPT.with_name("stack_thread_join.py")
 VERIFIER_SCRIPT = SCRIPT.with_name("verify_organic_results.py")
 FIXTURE_DIR = ROOT / "tests" / "fixtures" / "organic-hang"
@@ -372,6 +373,89 @@ ModuleT = TypeVar('ModuleT', bound=nn.Module)
             )
         result = module.normalize_rank_artifacts(artifacts)
         self.assertIsNone(result["primary_divergence"])
+
+    def test_flight_v2_distinguishes_missing_producer(self) -> None:
+        module = load_module(FLIGHT_V2_SCRIPT, "organic_flight_v2_producer")
+        artifacts = [self._flight_v2_artifact(rank=0, include_entry=True)]
+
+        result = module.normalize_rank_artifacts(
+            artifacts, expected_producer_ranks=[0, 1]
+        )
+
+        self.assertEqual([1], result["missing_producer_ranks"])
+        divergence = result["secondary_divergences"][0]
+        self.assertEqual("producer_missing", divergence["reason"])
+        self.assertEqual([1], divergence["missing_producer_ranks"])
+        self.assertEqual([], divergence["missing_member_ranks"])
+
+    def test_flight_v2_distinguishes_missing_collective_member(self) -> None:
+        module = load_module(FLIGHT_V2_SCRIPT, "organic_flight_v2_member")
+        artifacts = [
+            self._flight_v2_artifact(rank=0, include_entry=True),
+            self._flight_v2_artifact(rank=1, include_entry=False),
+        ]
+
+        result = module.normalize_rank_artifacts(
+            artifacts, expected_producer_ranks=[0, 1]
+        )
+
+        self.assertEqual([], result["missing_producer_ranks"])
+        divergence = result["secondary_divergences"][0]
+        self.assertEqual("member_missing", divergence["reason"])
+        self.assertEqual([], divergence["missing_producer_ranks"])
+        self.assertEqual([1], divergence["missing_member_ranks"])
+
+    def test_flight_v2_keeps_both_absence_classes(self) -> None:
+        module = load_module(FLIGHT_V2_SCRIPT, "organic_flight_v2_both")
+        artifact = self._flight_v2_artifact(
+            rank=0, include_entry=True, members=[0, 1, 2]
+        )
+        rank_one = self._flight_v2_artifact(
+            rank=1, include_entry=False, members=[0, 1, 2]
+        )
+
+        result = module.normalize_rank_artifacts(
+            [artifact, rank_one], expected_producer_ranks=[0, 1, 2]
+        )
+
+        divergence = result["secondary_divergences"][0]
+        self.assertEqual("producer_and_member_missing", divergence["reason"])
+        self.assertEqual([2], divergence["missing_producer_ranks"])
+        self.assertEqual([1], divergence["missing_member_ranks"])
+
+    def test_flight_v2_requires_explicit_unique_producers(self) -> None:
+        module = load_module(FLIGHT_V2_SCRIPT, "organic_flight_v2_contract")
+        artifact = self._flight_v2_artifact(rank=0, include_entry=True)
+
+        with self.assertRaisesRegex(ValueError, "non-empty and unique"):
+            module.normalize_rank_artifacts([artifact], expected_producer_ranks=[0, 0])
+
+    @staticmethod
+    def _flight_v2_artifact(
+        *, rank: int, include_entry: bool, members: list[int] | None = None
+    ) -> dict:
+        group_members = members or [0, 1]
+        entries = []
+        if include_entry:
+            entries.append(
+                {
+                    "pg_id": "3",
+                    "is_p2p": False,
+                    "collective_seq_id": 7,
+                    "record_id": 1,
+                    "profiling_name": "nccl:all_reduce",
+                    "input_sizes": [[8]],
+                    "input_dtypes": ["Float"],
+                    "output_sizes": [[8]],
+                    "output_dtypes": ["Float"],
+                    "state": "scheduled",
+                }
+            )
+        return {
+            "rank": rank,
+            "pg_config": {"3": {"ranks": group_members}},
+            "entries": entries,
+        }
 
     def test_verifier_matches_detail_local_ranks_to_fr_global_group(self) -> None:
         module = load_module(VERIFIER_SCRIPT, "organic_verifier_semantics")

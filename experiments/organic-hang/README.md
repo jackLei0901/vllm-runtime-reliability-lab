@@ -75,3 +75,16 @@ entry remains [`REVIEW_START_HERE_CN.md`](REVIEW_START_HERE_CN.md). Read
 `SOURCE_AUDIT.md` and `EXPERIMENT_PROTOCOL.md` before interpreting the result.
 The exact environment pair, preflight commands, arm order and cleanup contract
 are collected in [`GPU_RUNBOOK.md`](GPU_RUNBOOK.md).
+
+## Flight Recorder normalizer versions
+
+`normalize_flight_recorder.py` is retained byte-for-byte as normalizer v1
+because the Gate 1b-1g freeze records include its hash. New integrations should
+use `normalize_flight_recorder_v2.py` and explicitly supply the ranks expected
+to produce artifacts.
+
+Normalizer v2 records producer coverage at the top level. For each collective
+it then distinguishes `producer_missing` (the rank produced no artifact) from
+`member_missing` (the rank produced an artifact but that artifact has no entry
+for the joined group and sequence). It never treats an absent dump as evidence
+that the rank did not participate in a collective.
