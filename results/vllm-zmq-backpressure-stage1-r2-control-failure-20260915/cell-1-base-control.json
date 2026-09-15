@@ -1,0 +1,50 @@
+{
+  "build_identity_sha256": "8fc6d1677b78f98ec04ea1fc796b1871ea3a36ed54807ef5b6422d3315b81ad4",
+  "campaign_error_kind": null,
+  "cell_index": 1,
+  "classification": "server_not_ready",
+  "cleanup": {
+    "engine_core_gone": null,
+    "process_group_gone": true,
+    "termination": "exited"
+  },
+  "environment": {
+    "cuda": "13.0",
+    "cuda_available": true,
+    "gpu_capability": [
+      8,
+      9
+    ],
+    "gpu_count": 1,
+    "gpu_name": "NVIDIA GeForce RTX 4090",
+    "import_matches_tree": true,
+    "kv_events_relative_file": "vllm/distributed/kv_events.py",
+    "kv_events_sha256": "de08f01e8736881560256c350a3b6418999dd4aa30f9c6ec9159527f7ed6899a",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130",
+    "tree_kv_events_sha256": "de08f01e8736881560256c350a3b6418999dd4aa30f9c6ec9159527f7ed6899a",
+    "vllm": "0.1.dev1+g9935dfceb",
+    "vllm_relative_file": "vllm/__init__.py"
+  },
+  "hook_error_kind": null,
+  "hook_instance_count": 0,
+  "implementation_sha256": {
+    "campaign": "436ad809444c97711198701eb0cc939c392d16cc86cb3e17072d6fad1704e36f",
+    "contract": "8788b28f5f10c242110f36038a3bea59147f7f1f991307c7caa5e98a412c31a5",
+    "plugin": "f0eb0be92d85f6d6eb6c3cea83b1a0879508cdb21e4ae815878eb7d8f327763c",
+    "plugin_package": "110d7ec8a67867bf820a6b46bdb4f0ff4d7ba12cdafbbfee3491e29e32032367",
+    "protocol": "9dd48269e5e425e7819ad9b26f79b0205de5de2b519e4ab0cd46129561903686"
+  },
+  "private_server_log_sha256": "258595ebe3d9a3dc16da89b72f66adfee4551b5d5442883af6ae0e88cabbc0a5",
+  "request_sha256": "7c03c12789e99f1758885199fc8ac71a237f1abbfa5303146700821582ca05da",
+  "schema_version": 1,
+  "server_command_sha256": "7adc634e069b9d3740b075cef3bd7cfabdc4abf24ea27b62f90b8d6f35123853",
+  "source": {
+    "base_commit": "22258a26bc090bccf5473cf681bbe9bac41bd035",
+    "fix_head": "1a2b85306b6d13033bbecc693e6cb776acb4bcaa",
+    "fix_patch_sha256": "ebf0e35f53e6e3a74c79d608f6a2656d3f7537bcb3c648ce6885a8eac3423dfc",
+    "tree": "b7061e73a6ed4773e16bd2ae3acf47aebfd1342d"
+  },
+  "source_arm": "base",
+  "trigger": "control"
+}

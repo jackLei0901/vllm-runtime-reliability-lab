@@ -52,4 +52,6 @@ results/organic-hang-20260912/**/*.pyc
 !results/vllm-zmq-backpressure-stage1a-r2-20260915/*.json
 !results/vllm-zmq-backpressure-stage1-r1-control-failure-20260915/
 !results/vllm-zmq-backpressure-stage1-r1-control-failure-20260915/*.json
+!results/vllm-zmq-backpressure-stage1-r2-control-failure-20260915/
+!results/vllm-zmq-backpressure-stage1-r2-control-failure-20260915/*.json
 experiments/vllm-zmq-event-backpressure/.stage1-private/
