@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "case_id": "vllm-53859-stage0",
+  "verdict": "PASS",
+  "executed_at": "2026-09-15",
+  "source": {
+    "base_commit": "22258a26bc090bccf5473cf681bbe9bac41bd035",
+    "base_tree": "b7061e73a6ed4773e16bd2ae3acf47aebfd1342d",
+    "base_tree_matches_github": true,
+    "fix_pr": 53883,
+    "fix_head": "1a2b85306b6d13033bbecc693e6cb776acb4bcaa",
+    "fix_patch_sha256": "ebf0e35f53e6e3a74c79d608f6a2656d3f7537bcb3c648ce6885a8eac3423dfc",
+    "fix_tree": "46bc6e191b14ce12a04827454b4588ea5d3a435f",
+    "fix_changed_files": [
+      "tests/distributed/test_events.py",
+      "vllm/distributed/kv_events.py"
+    ]
+  },
+  "protocol": {
+    "sha256": "b5bdd7a18fdceb1663c570ebb98e8de744f61280964efb90cd31b0676de795f4",
+    "executed_script": "stage0_backpressure_executed.py",
+    "script_sha256": "a1c02070304c83e3fc33d8db79853f7648058d3fa0d11031af3e722178d08560",
+    "hardened_script": "stage0_backpressure.py",
+    "hardened_script_sha256": "4fd1d16f82a46fc474dd8268e9a765628158a5194a41fb078e14a1df9dd864a4",
+    "queue_size": 1,
+    "observation_seconds": 1.0,
+    "base_hold_seconds": 20.0
+  },
+  "environment": {
+    "python": "3.12.3",
+    "msgspec": "0.21.1",
+    "pyzmq": "27.1.0",
+    "gpu_present": false,
+    "yama_ptrace_scope": 1,
+    "observer_authorization": "pr_set_ptracer_parent"
+  },
+  "arms": {
+    "base": {
+      "return_code": 0,
+      "consumer_paused": true,
+      "second_publish_returned_inside_bound": false,
+      "first_batch_retained_before_release": true,
+      "recovered_after_release": true,
+      "second_publish_completed_after_release": true,
+      "queue_drained_after_release": true,
+      "stack_observed": true,
+      "stack_call_chain_outer_to_inner": [
+        "publish_second (stage0_backpressure.py)",
+        "publish (vllm/distributed/kv_events.py)",
+        "put (queue.py)",
+        "wait (threading.py)"
+      ],
+      "private_raw_sha256": {
+        "stdout": "c51e8f6f8341d778fdc94503b7e009728556b4d549a91c775e5be6a9cd884f60",
+        "stderr": "f6a2c7eb94a6032f118a42a941c4180004fe8f6df0d589129320335ef62628b6",
+        "stack": "9c49eeef2d6767208298bf19133390d6234b69ee27f17ba1bff39f4444745b65"
+      }
+    },
+    "fix": {
+      "return_code": 0,
+      "consumer_paused": true,
+      "second_publish_returned_inside_bound": true,
+      "first_batch_retained_before_release": true,
+      "new_batch_dropped": true,
+      "queue_full_warning_observed": true,
+      "queue_drained_after_release": true,
+      "private_raw_sha256": {
+        "stdout": "bdc31f9248b6d4260beb6b207d13a2a39d96d1c8258336b9d29e557047d93656",
+        "stderr": "a2a1cec394920680ecddef7321a65bf4fcb7c2f261ea6ddb68e19d61d51e966f"
+      }
+    }
+  },
+  "evidence_provenance": {
+    "runner_output": [
+      "consumer_paused",
+      "second_publish_returned_inside_bound",
+      "first_batch_retained_before_release",
+      "recovered_after_release",
+      "queue_drained_after_release",
+      "return_code"
+    ],
+    "captured_logger_output": [
+      "queue_full_warning_observed"
+    ],
+    "external_py_spy_observation": [
+      "stack_observed",
+      "stack_call_chain_outer_to_inner"
+    ],
+    "constraint_derived": {
+      "new_batch_dropped": "The one-slot queue still contained the first object after the error-free second publish returned.",
+      "second_publish_completed_after_release": "The runner emitted recovered_after_release=true only after joining the second publisher thread."
+    },
+    "verifier_boundary": "The public verifier checks the reviewed summary against the frozen contract and file hashes; it does not reconstruct the summary from private raw files."
+  },
+  "excluded_attempt": {
+    "pre_correction_protocol_sha256": "c436462305d582e18c4d10fd7705d330e747e008877e092e26fd5472d88db23c",
+    "pre_correction_runner_sha256": "db6fee77c88466cd9d4a20d255e4fb10f216c846cee1b00afa431bb8fa79c4f1",
+    "changes_before_scored_run": [
+      "Added scoped PR_SET_PTRACER authorization for the declared observer parent.",
+      "Terminated the isolated probe's ZMQ context after production shutdown."
+    ],
+    "unchanged": [
+      "predictions",
+      "queue_size",
+      "observation_bound",
+      "hold_bound",
+      "source_arms"
+    ]
+  },
+  "post_run_hardening": {
+    "rerun_performed": false,
+    "changes": [
+      "A missing release now raises in the consumer thread instead of returning silently after 300 seconds.",
+      "The result now emits second_publish_completed_after_release explicitly."
+    ],
+    "executed_bytes_retained_as": "stage0_backpressure_executed.py"
+  },
+  "interpretation": {
+    "supported": [
+      "The blocking Queue.put path is observable under deterministic publisher backpressure.",
+      "Releasing the consumer restores the blocked base call.",
+      "The ported PR 53883 change preserves caller liveness by dropping the new batch when the queue is full."
+    ],
+    "not_supported": [
+      "Stage 0 does not establish EngineCore, API health, or data-parallel behavior.",
+      "Stage 0 does not establish reliable event delivery or replay recovery.",
+      "A dropped batch has no publisher sequence number, so subscribers cannot detect this loss as a sequence gap."
+    ]
+  }
+}
