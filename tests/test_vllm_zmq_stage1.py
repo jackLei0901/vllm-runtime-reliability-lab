@@ -171,6 +171,7 @@ class Stage1ContractTest(unittest.TestCase):
                     {
                         "authorization": "yama_absent",
                         "kv_events_sha256": "b" * 64,
+                        "mapped_worktree_binaries": {},
                         "pid": 42,
                         "plugin_sha256": "a" * 64,
                         "plugin_version": 1,
@@ -352,6 +353,7 @@ class Stage1VerifierTest(unittest.TestCase):
         offsets = [0.1, 0.2, 10.3] if pause_base else [0.1, 0.2, 0.3]
         return {
             "accepted_batch_count": 1,
+            "build_identity_sha256": "9" * 64,
             "campaign_error_kind": None,
             "cell_index": index,
             "classification": "pass",
@@ -359,6 +361,7 @@ class Stage1VerifierTest(unittest.TestCase):
             "dropped_batch_count": 1 if pause_fix else 0,
             "engine_core_bound": True,
             "engine_core_kv_events_sha256": "e" * 64,
+            "engine_core_mapped_worktree_binaries": {"vllm/_C.abi3.so": "8" * 64},
             "environment": {
                 "cuda": "13.0",
                 "cuda_available": True,
@@ -369,7 +372,7 @@ class Stage1VerifierTest(unittest.TestCase):
                 "kv_events_relative_file": "vllm/distributed/kv_events.py",
                 "kv_events_sha256": "e" * 64,
                 "python": "3.12.0",
-                "torch": "test",
+                "torch": "2.13.0+cu130",
                 "tree_kv_events_sha256": "e" * 64,
                 "vllm": "test",
                 "vllm_relative_file": "vllm/__init__.py",
@@ -496,9 +499,10 @@ class Stage1aVerifierTest(unittest.TestCase):
             "counts_after_release": counts_after,
             "counts_before_release": counts_before,
             "engine_core_kv_events_sha256": "a" * 64,
+            "engine_core_mapped_worktree_binaries": {},
             "environment": {
                 "python": "3.12",
-                "torch": "test",
+                "torch": "2.13.0+cu130",
                 "cuda": None,
                 "cuda_available": False,
                 "gpu_count": 0,
@@ -559,8 +563,8 @@ class Stage1BuildIdentityVerifierTest(unittest.TestCase):
             "stage1_build_verifier_test",
             EXPERIMENT / "verify_stage1_build_identity.py",
         )
-        cls.result_dir = ROOT / "results" / (
-            "vllm-zmq-backpressure-stage1-build-20260915"
+        cls.result_dir = (
+            ROOT / "results" / ("vllm-zmq-backpressure-stage1-build-20260915")
         )
 
     def record(self, arm: str):
@@ -568,14 +572,23 @@ class Stage1BuildIdentityVerifierTest(unittest.TestCase):
         return json.loads(path.read_text(encoding="utf-8"))
 
     def test_verifier_accepts_both_exact_build_identities(self) -> None:
-        for arm in ("base", "fix"):
-            self.verifier.verify(self.record(arm), arm)
+        records = {arm: self.record(arm) for arm in ("base", "fix")}
+        for arm, record in records.items():
+            self.verifier.verify(record, arm)
+        self.verifier.verify_pair(records)
 
     def test_verifier_rejects_a_different_wheel(self) -> None:
         record = self.record("base")
         record["wheel_sha256"] = "f" * 64
         with self.assertRaisesRegex(AssertionError, "wheel hash"):
             self.verifier.verify(record, "base")
+
+    def test_verifier_rejects_a_cross_arm_dependency_change(self) -> None:
+        records = {arm: self.record(arm) for arm in ("base", "fix")}
+        records["fix"]["distributions"]["aiohttp"]["version"] = "unexpected"
+        with self.assertRaisesRegex(AssertionError, "dependency manifest"):
+            self.verifier.verify_pair(records)
+
 
 class Stage1PluginTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -613,6 +626,10 @@ class Stage1PluginTest(unittest.TestCase):
             root = Path(temporary)
             kv_events_path = root / "kv_events.py"
             kv_events_path.write_text("# test module\n", encoding="utf-8")
+            vllm_init = root / "vllm" / "__init__.py"
+            vllm_init.parent.mkdir()
+            vllm_init.write_text("# test package\n", encoding="utf-8")
+            modules["vllm"].__file__ = str(vllm_init)
             modules["vllm.distributed.kv_events"].__file__ = str(kv_events_path)
             environment = {
                 self.plugin.ENABLE_ENV: "1",

@@ -78,6 +78,7 @@ def load_ready(path: Path) -> dict[str, Any]:
         "plugin_sha256",
         "plugin_version",
         "kv_events_sha256",
+        "mapped_worktree_binaries",
         "start_time_ticks",
         "state",
         "yama_ptrace_scope",
@@ -95,6 +96,23 @@ def load_ready(path: Path) -> dict[str, Any]:
             or any(character not in "0123456789abcdef" for character in value)
         ):
             raise ValueError(f"invalid {name}")
+    binaries = record["mapped_worktree_binaries"]
+    if not isinstance(binaries, dict) or len(binaries) > 64:
+        raise ValueError("invalid mapped-worktree binary set")
+    for relative, digest in binaries.items():
+        if not isinstance(relative, str):
+            raise ValueError("invalid mapped-worktree binary identity")
+        path = Path(relative)
+        if (
+            path.is_absolute()
+            or ".." in path.parts
+            or not relative.startswith("vllm/")
+            or ".so" not in path.name
+            or not isinstance(digest, str)
+            or len(digest) != 64
+            or any(character not in "0123456789abcdef" for character in digest)
+        ):
+            raise ValueError("invalid mapped-worktree binary identity")
     if (
         not isinstance(record["start_time_ticks"], int)
         or isinstance(record["start_time_ticks"], bool)

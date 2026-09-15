@@ -572,6 +572,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--server-workdir", type=Path, required=True)
     parser.add_argument("--server-command-json", type=Path, required=True)
     parser.add_argument("--request-json", type=Path, required=True)
+    parser.add_argument("--build-identity-json", type=Path, required=True)
     parser.add_argument("--health-url", required=True)
     parser.add_argument("--stream-url", required=True)
     parser.add_argument("--private-dir", type=Path, required=True)
@@ -598,6 +599,13 @@ def main() -> int:
         raise SystemExit("server command must start with its Python interpreter")
     validate_server_command(command)
     runtime_environment = probe_environment(command[0], args.server_workdir)
+    build_identity_bytes = args.build_identity_json.read_bytes()
+    build_identity = json.loads(build_identity_bytes)
+    if build_identity.get("source_tree") != actual_tree:
+        raise SystemExit("build identity source tree mismatch")
+    wheel_binaries = build_identity.get("installed_wheel_binaries")
+    if not isinstance(wheel_binaries, dict) or not wheel_binaries:
+        raise SystemExit("build identity has no installed wheel binaries")
     request_bytes = args.request_json.read_bytes()
     validate_request(request_bytes)
     args.private_dir.mkdir(mode=0o700, parents=True, exist_ok=False)
@@ -640,6 +648,7 @@ def main() -> int:
             },
             "implementation_sha256": implementation,
             "environment": runtime_environment,
+            "build_identity_sha256": sha256_bytes(build_identity_bytes),
             "server_command_sha256": sha256_file(args.server_command_json),
             "request_sha256": sha256_bytes(request_bytes),
         }
@@ -689,6 +698,15 @@ def main() -> int:
                     raise RuntimeError(
                         "EngineCore kv_events bytes do not match the source tree"
                     )
+                mapped_binaries = ready["mapped_worktree_binaries"]
+                if not mapped_binaries:
+                    raise RuntimeError("EngineCore mapped no worktree binaries")
+                if any(
+                    relative not in wheel_binaries
+                    or wheel_binaries[relative].get("sha256") != digest
+                    for relative, digest in mapped_binaries.items()
+                ):
+                    raise RuntimeError("EngineCore mapped binary identity mismatch")
                 identity_bound = identity_is_live(
                     ready["pid"], ready["start_time_ticks"]
                 )
@@ -806,9 +824,8 @@ def main() -> int:
                         "completion_tokens": observer.completion_tokens,
                         "dropped_batch_count": counts["dropped_batch_count"],
                         "engine_core_bound": identity_bound,
-                        "engine_core_kv_events_sha256": ready[
-                            "kv_events_sha256"
-                        ],
+                        "engine_core_kv_events_sha256": ready["kv_events_sha256"],
+                        "engine_core_mapped_worktree_binaries": mapped_binaries,
                         "health_during_stall": health_during_stall,
                         "hook_ready": True,
                         "observer_authorization": ready["authorization"],

@@ -17,6 +17,7 @@ SUMMARY_KEYS = {
     "counts_after_release",
     "counts_before_release",
     "engine_core_kv_events_sha256",
+    "engine_core_mapped_worktree_binaries",
     "environment",
     "implementation_sha256",
     "ready_authorization",
@@ -119,6 +120,10 @@ def verify_record(record: dict[str, Any], source_arm: str) -> None:
 
     environment = record["environment"]
     require(
+        environment["torch"] == "2.13.0+cu130",
+        f"{source_arm}: Stage 1 runtime torch mismatch",
+    )
+    require(
         environment["import_matches_tree"] is True, f"{source_arm}: import mismatch"
     )
     require(
@@ -126,9 +131,12 @@ def verify_record(record: dict[str, Any], source_arm: str) -> None:
         f"{source_arm}: imported kv_events mismatch",
     )
     require(
-        record["engine_core_kv_events_sha256"]
-        == environment["tree_kv_events_sha256"],
+        record["engine_core_kv_events_sha256"] == environment["tree_kv_events_sha256"],
         f"{source_arm}: EngineCore kv_events mismatch",
+    )
+    require(
+        isinstance(record["engine_core_mapped_worktree_binaries"], dict),
+        f"{source_arm}: mapped binary evidence is invalid",
     )
 
 

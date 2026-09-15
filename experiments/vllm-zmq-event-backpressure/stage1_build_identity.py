@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Record a closed build identity for one vLLM #53859 Stage 1 arm."""
+"""Record a closed build and dependency identity for one Stage 1 arm."""
 
 from __future__ import annotations
 
@@ -7,43 +7,43 @@ import argparse
 import email
 import hashlib
 import importlib.metadata as metadata
-import importlib.util
 import json
 import os
+import re
 import subprocess
+import sys
+import sysconfig
 import tempfile
 import zipfile
 from pathlib import Path
+from typing import Any
 
-EXTENSIONS = (
-    "vllm._C_stable_libtorch",
-    "vllm._moe_C_stable_libtorch",
-    "vllm.vllm_flash_attn._vllm_fa2_C",
-    "vllm.vllm_flash_attn._vllm_fa3_C",
-)
 BASE_COMMIT_PREFIX = "22258a26b"
+POOL_PTH_NAME = "stage1-dependency-pool.pth"
 
 
 def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def sha256_bytes(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
+
+
 def command(*args: str, cwd: Path | None = None) -> str:
     return subprocess.run(
-        args,
-        cwd=cwd,
-        check=True,
-        capture_output=True,
-        text=True,
+        args, cwd=cwd, check=True, capture_output=True, text=True
     ).stdout.strip()
+
+
+def canonical_name(value: str) -> str:
+    return re.sub(r"[-_.]+", "-", value).lower()
 
 
 def wheel_version(path: Path) -> str:
     with zipfile.ZipFile(path) as archive:
         names = [
-            name
-            for name in archive.namelist()
-            if name.endswith(".dist-info/METADATA")
+            name for name in archive.namelist() if name.endswith(".dist-info/METADATA")
         ]
         if len(names) != 1:
             raise RuntimeError("wheel must contain exactly one METADATA file")
@@ -54,26 +54,73 @@ def wheel_version(path: Path) -> str:
     return version
 
 
-def extension_identity(worktree: Path, wheel: Path) -> dict[str, dict[str, str]]:
-    records: dict[str, dict[str, str]] = {}
+def wheel_binary_identity(worktree: Path, wheel: Path) -> dict[str, dict[str, Any]]:
+    records: dict[str, dict[str, Any]] = {}
     with zipfile.ZipFile(wheel) as archive:
-        names = set(archive.namelist())
-        for module in EXTENSIONS:
-            spec = importlib.util.find_spec(module)
-            if spec is None or spec.origin is None:
-                raise RuntimeError(f"extension unavailable: {module}")
-            path = Path(spec.origin).resolve()
-            if not path.is_relative_to(worktree):
-                raise RuntimeError(f"extension outside source tree: {module}")
-            relative = path.relative_to(worktree).as_posix()
-            if relative not in names:
-                raise RuntimeError(f"extension absent from wheel: {relative}")
-            loaded_hash = sha256(path)
-            wheel_hash = hashlib.sha256(archive.read(relative)).hexdigest()
-            if loaded_hash != wheel_hash:
-                raise RuntimeError(f"loaded extension differs from wheel: {module}")
-            records[module] = {"relative_file": relative, "sha256": loaded_hash}
-    return records
+        for member in archive.infolist():
+            mode = (member.external_attr >> 16) & 0o777
+            is_binary = ".so" in Path(member.filename).name or bool(mode & 0o111)
+            if member.is_dir() or not is_binary:
+                continue
+            installed = worktree / member.filename
+            if not installed.is_file():
+                raise RuntimeError(f"wheel binary not installed: {member.filename}")
+            installed_hash = sha256(installed)
+            wheel_hash = sha256_bytes(archive.read(member.filename))
+            if installed_hash != wheel_hash:
+                raise RuntimeError(f"installed binary differs: {member.filename}")
+            records[member.filename] = {
+                "executable": bool(mode & 0o111),
+                "sha256": installed_hash,
+            }
+    if not records:
+        raise RuntimeError("wheel has no binary members")
+    return dict(sorted(records.items()))
+
+
+def dependency_pool_attachment(pool: Path) -> dict[str, str]:
+    site_packages = Path(sysconfig.get_paths()["purelib"]).resolve()
+    pth = site_packages / POOL_PTH_NAME
+    if not pth.is_file():
+        raise RuntimeError(f"missing dependency-pool attachment: {pth}")
+    lines = [line for line in pth.read_text(encoding="utf-8").splitlines() if line]
+    if lines != [str(pool)]:
+        raise RuntimeError("dependency-pool .pth must contain exactly its path")
+    return {
+        "mechanism": "site-packages-pth",
+        "pth_relative_file": pth.relative_to(Path(sys.prefix)).as_posix(),
+        "pth_sha256": sha256(pth),
+        "value_sha256": sha256_bytes(str(pool).encode()),
+    }
+
+
+def distribution_identity(pool: Path) -> dict[str, dict[str, str]]:
+    site_packages = Path(sysconfig.get_paths()["purelib"]).resolve()
+    result: dict[str, dict[str, str]] = {}
+    for distribution in metadata.distributions():
+        name = distribution.metadata.get("Name")
+        if not name:
+            raise RuntimeError("visible distribution has no Name")
+        key = canonical_name(name)
+        raw_path = Path(distribution._path).absolute()  # type: ignore[attr-defined]
+        if raw_path.is_relative_to(site_packages):
+            source = "arm"
+        elif raw_path.is_relative_to(pool):
+            source = "pool"
+        else:
+            raise RuntimeError(f"distribution outside arm and pool: {name}")
+        record_file = raw_path / "RECORD"
+        if not record_file.is_file():
+            raise RuntimeError(f"distribution has no RECORD: {name}")
+        if key in result:
+            raise RuntimeError(f"duplicate visible distribution: {key}")
+        result[key] = {
+            "name": name,
+            "record_sha256": sha256(record_file),
+            "source": source,
+            "version": distribution.version,
+        }
+    return dict(sorted(result.items()))
 
 
 def atomic_json(path: Path, value: dict[str, object]) -> None:
@@ -97,12 +144,17 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--worktree", type=Path, required=True)
     parser.add_argument("--wheel", type=Path, required=True)
+    parser.add_argument("--dependency-pool", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
     worktree = args.worktree.resolve()
     wheel = args.wheel.resolve()
+    pool = args.dependency_pool.resolve()
+    if not pool.is_dir():
+        raise RuntimeError("dependency pool is missing")
     tree = command("git", "rev-parse", "HEAD^{tree}", cwd=worktree)
+    head = command("git", "rev-parse", "HEAD", cwd=worktree)
     if command("git", "status", "--porcelain", cwd=worktree):
         raise RuntimeError("source worktree is not clean")
 
@@ -120,10 +172,9 @@ def main() -> int:
         for entry in metadata.entry_points(group="vllm.general_plugins")
         if entry.name == "dfx_stage1_backpressure"
     ]
-    expected_entry_points = [
+    if entry_points != [
         ("dfx_stage1_backpressure", "dfx_stage1_backpressure:register")
-    ]
-    if entry_points != expected_entry_points:
+    ]:
         raise RuntimeError("Stage 1 plugin entry point is missing or duplicated")
     if torch.__version__ != "2.13.0+cu130" or torch.version.cuda != "13.0":
         raise RuntimeError("runtime does not match the pinned torch/CUDA pair")
@@ -137,13 +188,16 @@ def main() -> int:
     ).split(", ")
     record: dict[str, object] = {
         "cuda_variant": "cu130",
+        "dependency_pool_attachment": dependency_pool_attachment(pool),
+        "distributions": distribution_identity(pool),
         "driver_version": driver,
-        "extensions": extension_identity(worktree, wheel),
         "generator_sha256": sha256(Path(__file__).resolve()),
         "gpu_capability": capability,
         "gpu_name": gpu_name,
-        "python": ".".join(map(str, __import__("sys").version_info[:3])),
-        "schema_version": 1,
+        "installed_wheel_binaries": wheel_binary_identity(worktree, wheel),
+        "local_head_commit": head,
+        "python": ".".join(map(str, sys.version_info[:3])),
+        "schema_version": 2,
         "source_tree": tree,
         "torch": torch.__version__,
         "torch_cuda": torch.version.cuda,

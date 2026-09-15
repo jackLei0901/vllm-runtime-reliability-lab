@@ -52,8 +52,9 @@ whose bytes differ from the pinned baseline tree. Import success would not
 establish source/build compatibility.
 
 The exact baseline wheel was downloaded and installed into two separate arm
-environments with pinned PyTorch 2.13. The wheel, driver and four loaded
-extension hashes match across arms, and both Git trees remain clean. See
+environments with pinned PyTorch 2.13. The wheel, driver, dependency manifests
+and all 19 installed wheel-binary hashes match across arms; both Git trees
+remain clean. See
 `STAGE1_BUILD_IDENTITY_RESULT_2026-09-15.md` for the result and the disclosed
 disk-saving environment construction. Formal execution remains on hold until
 that construction is reviewed and the campaign is frozen.

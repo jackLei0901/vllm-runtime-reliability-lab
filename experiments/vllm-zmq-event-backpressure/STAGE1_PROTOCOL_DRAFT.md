@@ -23,10 +23,18 @@ data-parallel `shm_broadcast` consequence.
   scored run.
 
 Both arms must also pass `verify_stage1_build_identity.py`. That record pins
-the exact baseline wheel, PyTorch/CUDA pair, driver/GPU identity and four loaded
-extension hashes. Every loaded extension must reside in its selected source
-tree and match the corresponding member inside the wheel. The two arms must
-have identical binary identities.
+the exact baseline wheel, PyTorch/CUDA pair, driver/GPU identity, dependency
+manifest and every binary or executable member installed from the wheel. Each
+installed binary must reside in its selected source tree and match the wheel
+member byte for byte. The two arms must have identical binary identities.
+
+Non-core packages are exposed through one reviewed
+`stage1-dependency-pool.pth` file in each arm environment. Its sole line is the
+absolute read-only pool path. The build record hashes both the file and its
+value. For every visible distribution it records the normalized name, version,
+SHA-256 of `RECORD`, and whether its metadata came from the arm environment or
+the pool. Duplicate normalized names fail generation. The two manifests must
+match except for `vllm` and the test plugin.
 
 ## Fault hook
 
@@ -59,6 +67,12 @@ The ready record also carries the SHA-256 of the EngineCore process's imported
 `vllm.distributed.kv_events` file. It must equal the selected source tree's Git
 blob before the request starts. This is independent of the campaign process's
 import probe.
+
+At ready time the hook also reads EngineCore's `/proc/self/maps` and retains
+only source-tree-relative paths and hashes for mapped `.so` files. Formal Stage
+1 requires a non-empty mapped set and requires every item to match the complete
+installed-wheel binary identity. This distinguishes installation-time location
+from actual load-time identity without retaining machine paths.
 
 The campaign creates a fresh control directory per trial. A pre-existing
 release file is therefore impossible. The control arm creates the release file
@@ -135,6 +149,8 @@ Retain:
 
 - source, patch, protocol, plugin and runner hashes;
 - paired exact-wheel build-identity hashes;
+- the dependency-pool attachment hash and per-distribution manifest;
+- all installed wheel binary hashes and the EngineCore-mapped subset;
 - Python, vLLM, CUDA and GPU identity;
 - the imported vLLM and `kv_events.py` paths relative to the source tree, and a
   byte hash proving imported `kv_events.py` matches that Git tree;

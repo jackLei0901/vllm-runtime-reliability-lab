@@ -14,12 +14,10 @@ model was loaded. GPU memory usage was 0 MiB after the run.
 - Base tree: `b7061e73a6ed4773e16bd2ae3acf47aebfd1342d`
 - Same-base #53883 tree: `46bc6e191b14ce12a04827454b4588ea5d3a435f`
 - Python: 3.12.3
-- PyTorch: `2.11.0+cu130`
-- The pinned vLLM baseline requires PyTorch `2.13.0`; this preflight therefore
-  covers the source-tree Python bytes, queue behavior and ptrace mechanics, not
-  the formal model-serving runtime.
-- vLLM reported version `dev` because the source-tree Python package was loaded
-  without its compiled extensions.
+- PyTorch: `2.13.0+cu130`, the same pinned runtime as formal Stage 1
+- CUDA reported by PyTorch: 13.0
+- vLLM versions: `0.1.dev1+g9935dfceb` on base and
+  `0.1.dev2+g6bf585185` on fix
 - Yama `ptrace_scope`: 1
 - Observer authorization: `pr_set_ptracer_observer`
 - Both imported `kv_events.py` files matched their respective Git blobs.
@@ -27,6 +25,9 @@ model was loaded. GPU memory usage was 0 MiB after the run.
   both hashes matched the corresponding source-tree blobs.
 - Both runs used identical hashes for the plugin, preflight, campaign helpers
   and scoring contract.
+- The preflight loads no model and maps no source-tree `.so`; both ready records
+  therefore contain an empty mapped-binary set. Formal Stage 1 requires that
+  set to be non-empty and match the build identity.
 
 The preflight was repeated after the Stage 1 campaign file changed. Only the
 second pair is retained; this keeps the recorded dependency hashes equal to the
@@ -67,9 +68,9 @@ serving load.
 ## Integrity
 
 - `stage1a-base.json` SHA-256:
-  `dc57603436cea59c3c06f67367c72ed9ea0a682fba405ccb945bc5945f333b31`
+  `b435b955c3e7506f201a46ed5de9664666999dd6bcd8b6fe7ea366423aaa57a4`
 - `stage1a-fix.json` SHA-256:
-  `2e912ae51a4d39df7b787719944ea8bd33d662a8785644aab80a0c8ce23d2fb2`
+  `e2f57a1fbab066ad386069b3dd149df355b94ab6a3aa3445214ebc25996df49c`
 - Independent verifier result:
   `PASS: Stage 1a real plugin/publisher preflight verified on both trees`
 

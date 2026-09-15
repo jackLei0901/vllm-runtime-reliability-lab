@@ -67,6 +67,26 @@ def _kv_events_sha256() -> str:
     return hashlib.sha256(source.read_bytes()).hexdigest()
 
 
+def _mapped_worktree_binaries() -> dict[str, str]:
+    import vllm
+
+    worktree = Path(vllm.__file__).resolve().parent.parent
+    records: dict[str, str] = {}
+    maps = Path("/proc/self/maps")
+    if not maps.is_file():
+        return records
+    for line in maps.read_text(encoding="utf-8").splitlines():
+        fields = line.split(maxsplit=5)
+        if len(fields) != 6 or not fields[5].startswith("/"):
+            continue
+        mapped = Path(fields[5].removesuffix(" (deleted)")).resolve()
+        if ".so" not in mapped.name or not mapped.is_relative_to(worktree):
+            continue
+        relative = mapped.relative_to(worktree).as_posix()
+        records[relative] = hashlib.sha256(mapped.read_bytes()).hexdigest()
+    return dict(sorted(records.items()))
+
+
 def _authorize_observer() -> tuple[str, int | None]:
     if not YAMA_SCOPE.exists():
         return "yama_absent", None
@@ -167,6 +187,7 @@ def register() -> None:
                 {
                     "authorization": authorization,
                     "kv_events_sha256": _kv_events_sha256(),
+                    "mapped_worktree_binaries": _mapped_worktree_binaries(),
                     "pid": pid,
                     "plugin_sha256": _plugin_sha256(),
                     "plugin_version": PLUGIN_VERSION,

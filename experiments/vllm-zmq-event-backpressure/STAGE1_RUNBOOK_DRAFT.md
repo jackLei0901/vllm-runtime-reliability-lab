@@ -21,6 +21,13 @@ upstream precompiled wheel for commit `22258a26` and pinned `torch==2.13.0`.
 Their recorded identities are under
 `results/vllm-zmq-backpressure-stage1-build-20260915/`.
 
+Each arm has a file named `stage1-dependency-pool.pth` in its own
+`site-packages`. The file contains exactly one absolute path:
+`/root/stage1-runtime/dependency-pool`. The pool contains only symlinks to the
+shared non-core dependencies. It excludes vLLM, torch, Triton, NVIDIA packages,
+the test plugin, editable-install helpers and all source `.pth` files. Do not
+attach the pool with an additional `PYTHONPATH` or `sitecustomize` entry.
+
 The expected upstream wheel filename is:
 
 ```text
@@ -40,10 +47,12 @@ implementation scripts. The values are recorded but not frozen yet.
 
 ## Plugin installation
 
-Install the test hook into each vLLM environment without dependencies:
+Install the test hook into each vLLM environment without dependencies. Do not
+use editable mode: it exposes both source `egg-info` and environment
+`dist-info`, defeating the no-duplicate-distribution rule.
 
 ```bash
-python -m pip install --no-deps -e \
+python -m pip install --no-deps --no-build-isolation \
   experiments/vllm-zmq-event-backpressure/stage1_plugin
 ```
 
@@ -79,6 +88,7 @@ python experiments/vllm-zmq-event-backpressure/stage1_campaign.py \
   --server-workdir /absolute/path/to/base \
   --server-command-json /absolute/path/to/server-command.json \
   --request-json /absolute/path/to/request.json \
+  --build-identity-json /reviewed/results/stage1-build-base.json \
   --health-url http://127.0.0.1:8000/health \
   --stream-url http://127.0.0.1:8000/v1/completions \
   --private-dir /private/unique/base-control \

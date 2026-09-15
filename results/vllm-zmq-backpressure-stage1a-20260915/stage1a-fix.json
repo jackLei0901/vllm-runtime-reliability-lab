@@ -13,6 +13,7 @@
     "dropped_batch_count": 1
   },
   "engine_core_kv_events_sha256": "15c3038f1bf97e785c3f1960451e10b54bfa3d87ab456ce2550a2fe98ba1b49a",
+  "engine_core_mapped_worktree_binaries": {},
   "environment": {
     "cuda": "13.0",
     "cuda_available": true,
@@ -26,16 +27,16 @@
     "kv_events_relative_file": "vllm/distributed/kv_events.py",
     "kv_events_sha256": "15c3038f1bf97e785c3f1960451e10b54bfa3d87ab456ce2550a2fe98ba1b49a",
     "python": "3.12.3",
-    "torch": "2.11.0+cu130",
+    "torch": "2.13.0+cu130",
     "tree_kv_events_sha256": "15c3038f1bf97e785c3f1960451e10b54bfa3d87ab456ce2550a2fe98ba1b49a",
-    "vllm": "dev",
+    "vllm": "0.1.dev2+g6bf585185",
     "vllm_relative_file": "vllm/__init__.py"
   },
   "implementation_sha256": {
-    "campaign": "98d2529b63f1cacf5f598572f3ade814170adbbb29ae880a533fa556691e684a",
-    "contract": "a5c78d2cccb610689b1365a7eebb104fe7d0fbc46020a05000745ee8101f6bee",
-    "plugin": "90d1dfea4876e620aad3aa4bcd64a32d7d07a574e73ca602121a8765a84e3f98",
-    "preflight": "20e6c91ff596f0f8202a00c669d137636046b4808ea70f66626ee54563153d55"
+    "campaign": "436ad809444c97711198701eb0cc939c392d16cc86cb3e17072d6fad1704e36f",
+    "contract": "8788b28f5f10c242110f36038a3bea59147f7f1f991307c7caa5e98a412c31a5",
+    "plugin": "f0eb0be92d85f6d6eb6c3cea83b1a0879508cdb21e4ae815878eb7d8f327763c",
+    "preflight": "3c1d79fab1cc92118c24a8b57b32b32d2671c20bbd59007d7f2cecd17bba7d25"
   },
   "ready_authorization": "pr_set_ptracer_observer",
   "schema_version": 1,

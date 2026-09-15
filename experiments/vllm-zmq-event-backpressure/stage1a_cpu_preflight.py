@@ -207,10 +207,7 @@ def run(args: argparse.Namespace) -> int:
             expected_plugin_hash = sha256_file(plugin_path)
             if ready["plugin_sha256"] != expected_plugin_hash:
                 raise RuntimeError("loaded plugin bytes do not match the lab plugin")
-            if (
-                ready["kv_events_sha256"]
-                != environment_record["tree_kv_events_sha256"]
-            ):
+            if ready["kv_events_sha256"] != environment_record["tree_kv_events_sha256"]:
                 raise RuntimeError("EngineCore kv_events bytes do not match the tree")
             engine_identity = (ready["pid"], ready["start_time_ticks"])
             if not identity_is_live(*engine_identity):
@@ -261,6 +258,9 @@ def run(args: argparse.Namespace) -> int:
                 },
                 "ready_authorization": ready["authorization"],
                 "engine_core_kv_events_sha256": ready["kv_events_sha256"],
+                "engine_core_mapped_worktree_binaries": ready[
+                    "mapped_worktree_binaries"
+                ],
                 "yama_ptrace_scope": ready["yama_ptrace_scope"],
                 "counts_before_release": counts_before,
                 "counts_after_release": counts_after,

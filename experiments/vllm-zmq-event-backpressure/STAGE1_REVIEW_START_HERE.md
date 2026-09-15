@@ -2,8 +2,8 @@
 
 Date: 2026-09-15
 
-Status: **Stage 1a passed after the EngineCore-side import-hash contract
-change; formal Stage 1 is not frozen**
+Status: **Stage 1a passed in both formal arm environments; paired build and
+dependency identity passed; formal Stage 1 is not frozen**
 
 ## Review order
 
@@ -35,6 +35,8 @@ Stage 0 is already committed evidence and is not being revised by this work.
   stack and cleans up the server process group.
 - Import binding that requires the loaded `kv_events.py` bytes to equal the
   selected source tree's blob.
+- A closed per-arm dependency manifest and complete installed-wheel binary
+  identity, plus EngineCore-local mapped-binary evidence for the formal run.
 - A pure scoring contract with closed hook-file shapes and no response-content
   retention.
 - CPU tests for the cross-process file release, drop counter, progress rules,
@@ -46,8 +48,9 @@ Stage 0 is already committed evidence and is not being revised by this work.
 - The exact model, launch command and synthetic request are drafted and pass
   the local contract, but are not frozen.
 - The installed vLLM 0.20.1 wheel was rejected. Both arms now use the same
-  exact-commit precompiled wheel and pinned PyTorch 2.13; the disclosed
-  hard-link and dependency-pool environment construction still awaits review.
+  exact-commit precompiled wheel and pinned PyTorch 2.13. The read-only pool is
+  attached through one hashed `.pth` file, and all 188 visible distributions
+  are recorded with version, `RECORD` hash and source.
 - No GPU result or Stage 1 verdict exists.
 - This does not test data parallelism or `shm_broadcast`.
 
@@ -59,7 +62,7 @@ two prior chunks, and recovery needs a later chunk plus clean completion. Hook
 failures have a bounded separate record. Cleanup verifies both the process
 group and EngineCore PID/start-time identity are gone.
 
-Stage 1a passed on both source trees after the plugin, contract and campaign
-change; see `STAGE1A_RESULT_2026-09-15.md`. The paired exact-commit build
-identity also passed. Review of the disclosed environment construction is the
-remaining gate before freezing.
+Stage 1a passed on both source trees in the same PyTorch 2.13 arm environments
+prepared for formal execution; see `STAGE1A_RESULT_2026-09-15.md`. The paired
+build/dependency verifier also passed, covering 19 installed wheel binaries.
+Review of this revised evidence is the remaining gate before freezing.

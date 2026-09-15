@@ -36,6 +36,7 @@ HASHED_IMPLEMENTATION = {
 }
 SUMMARY_KEYS = {
     "accepted_batch_count",
+    "build_identity_sha256",
     "campaign_error_kind",
     "cell_index",
     "classification",
@@ -43,6 +44,7 @@ SUMMARY_KEYS = {
     "dropped_batch_count",
     "engine_core_bound",
     "engine_core_kv_events_sha256",
+    "engine_core_mapped_worktree_binaries",
     "environment",
     "health_during_stall",
     "hook_ready",
@@ -178,6 +180,10 @@ def verify_cell(record: dict[str, Any], index: int) -> None:
     )
     require(is_sha256(record["request_sha256"]), f"{label}: request hash invalid")
     require(
+        is_sha256(record["build_identity_sha256"]),
+        f"{label}: build identity hash invalid",
+    )
+    require(
         is_sha256(record["server_command_sha256"]),
         f"{label}: command hash invalid",
     )
@@ -265,9 +271,17 @@ def verify_cell(record: dict[str, Any], index: int) -> None:
         f"{label}: imported kv_events hash mismatch",
     )
     require(
-        record["engine_core_kv_events_sha256"]
-        == environment["tree_kv_events_sha256"],
+        record["engine_core_kv_events_sha256"] == environment["tree_kv_events_sha256"],
         f"{label}: EngineCore kv_events hash mismatch",
+    )
+    mapped = record["engine_core_mapped_worktree_binaries"]
+    require(isinstance(mapped, dict) and mapped, f"{label}: no mapped binaries")
+    require(
+        all(
+            isinstance(path, str) and path.startswith("vllm/") and is_sha256(digest)
+            for path, digest in mapped.items()
+        ),
+        f"{label}: mapped binary identity invalid",
     )
 
     progress = record["progress"]
@@ -380,6 +394,15 @@ def main() -> int:
     }
     require(len(shared_environments) == 1, "runtime environment changed across cells")
     for source_arm in ("base", "fix"):
+        build_identities = {
+            record["build_identity_sha256"]
+            for record in records
+            if record["source_arm"] == source_arm
+        }
+        require(
+            len(build_identities) == 1,
+            f"{source_arm} build identity changed across cells",
+        )
         source_environments = {
             json.dumps(record["environment"], sort_keys=True)
             for record in records
