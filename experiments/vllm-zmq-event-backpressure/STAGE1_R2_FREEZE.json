@@ -1,0 +1,38 @@
+{
+  "freeze_id": "vllm-zmq-stage1-r2-pre-execution-2026-09-15",
+  "status": "pre-execution",
+  "supersedes": "vllm-zmq-stage1-pre-execution-2026-09-15",
+  "change_scope": "add-nvidia-ml-py-runtime-dependency",
+  "cell_order": [
+    "base/control",
+    "fix/control",
+    "base/pause",
+    "fix/pause"
+  ],
+  "build_checkpoint_policy": "byte-identical-before-first-and-after-last",
+  "private_inputs": {
+    "request.json": "7c03c12789e99f1758885199fc8ac71a237f1abbfa5303146700821582ca05da",
+    "server-command.json": "7adc634e069b9d3740b075cef3bd7cfabdc4abf24ea27b62f90b8d6f35123853"
+  },
+  "files": {
+    "experiments/vllm-zmq-event-backpressure/STAGE1_FREEZE.json": "2cbc67b38d06c88cc30c3b1293eccefc0bafca4d4e68f77aa4c1571d994754f7",
+    "experiments/vllm-zmq-event-backpressure/STAGE1_PROTOCOL_DRAFT.md": "9dd48269e5e425e7819ad9b26f79b0205de5de2b519e4ab0cd46129561903686",
+    "experiments/vllm-zmq-event-backpressure/STAGE1_R1_CONTROL_FAILURE_2026-09-15.md": "2a53068f2dadb662e46521765895c3559f8692ef06fec56662fa76f86cc008c9",
+    "experiments/vllm-zmq-event-backpressure/STAGE1_R2_RUNBOOK.md": "347f1c7c289bbdd59f9919e2fc76c224dc85aa06eb5d526ccdc5dae44f2b328d",
+    "experiments/vllm-zmq-event-backpressure/stage1_build_identity.py": "70cc5c128283a023733f06495058fb74391201580fb9efcd55d06b0fb7ea221d",
+    "experiments/vllm-zmq-event-backpressure/stage1_campaign.py": "436ad809444c97711198701eb0cc939c392d16cc86cb3e17072d6fad1704e36f",
+    "experiments/vllm-zmq-event-backpressure/stage1_contract.py": "8788b28f5f10c242110f36038a3bea59147f7f1f991307c7caa5e98a412c31a5",
+    "experiments/vllm-zmq-event-backpressure/stage1_plugin/pyproject.toml": "110d7ec8a67867bf820a6b46bdb4f0ff4d7ba12cdafbbfee3491e29e32032367",
+    "experiments/vllm-zmq-event-backpressure/stage1_plugin/src/dfx_stage1_backpressure/__init__.py": "f0eb0be92d85f6d6eb6c3cea83b1a0879508cdb21e4ae815878eb7d8f327763c",
+    "experiments/vllm-zmq-event-backpressure/stage1a_cpu_preflight.py": "3c1d79fab1cc92118c24a8b57b32b32d2671c20bbd59007d7f2cecd17bba7d25",
+    "experiments/vllm-zmq-event-backpressure/verify_stage1_build_identity.py": "4bf8da0d4b8e711703ff7865e8773d1fbac0e82478b9300e7a2477e7fa7368a1",
+    "experiments/vllm-zmq-event-backpressure/verify_stage1_r2_freeze.py": "a7822de111e38a2e51ed0770a5c21274f6eb585d010b212f8f9437348fb6f5a0",
+    "experiments/vllm-zmq-event-backpressure/verify_stage1_results.py": "8f8a1f821b9aa08b72eef3ff01d240c54b26f61da1c27e12fd14bbf53384c72c",
+    "experiments/vllm-zmq-event-backpressure/verify_stage1a.py": "e1a64ce5f9306931d38babacec69af5d9425cd4422f3fcb9d57bb85e951aba3a",
+    "results/vllm-zmq-backpressure-stage1-build-r2-20260915/stage1-build-base.json": "8fc6d1677b78f98ec04ea1fc796b1871ea3a36ed54807ef5b6422d3315b81ad4",
+    "results/vllm-zmq-backpressure-stage1-build-r2-20260915/stage1-build-fix.json": "06540c4c027fa468095ee9c0abbea23b4810752fafa0643a5f2920de169376a8",
+    "results/vllm-zmq-backpressure-stage1-r1-control-failure-20260915/cell-1-base-control.json": "3d74e47b38911128d35a30ab319a26f5911463f4bd848fb269ac32e5628b8bee",
+    "results/vllm-zmq-backpressure-stage1a-r2-20260915/stage1a-base.json": "760e339edfbc5c35cbfd20506de6ef58023481ac25aa72242721db085e8cadaf",
+    "results/vllm-zmq-backpressure-stage1a-r2-20260915/stage1a-fix.json": "e2f57a1fbab066ad386069b3dd149df355b94ab6a3aa3445214ebc25996df49c"
+  }
+}

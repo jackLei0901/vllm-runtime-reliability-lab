@@ -1,0 +1,54 @@
+{
+  "cleanup": {
+    "engine_core_gone": true,
+    "process_group_gone": true,
+    "termination": "exited"
+  },
+  "counts_after_release": {
+    "accepted_batch_count": 1,
+    "dropped_batch_count": 1
+  },
+  "counts_before_release": {
+    "accepted_batch_count": 1,
+    "dropped_batch_count": 1
+  },
+  "engine_core_kv_events_sha256": "15c3038f1bf97e785c3f1960451e10b54bfa3d87ab456ce2550a2fe98ba1b49a",
+  "engine_core_mapped_worktree_binaries": {},
+  "environment": {
+    "cuda": "13.0",
+    "cuda_available": true,
+    "gpu_capability": [
+      8,
+      9
+    ],
+    "gpu_count": 1,
+    "gpu_name": "NVIDIA GeForce RTX 4090",
+    "import_matches_tree": true,
+    "kv_events_relative_file": "vllm/distributed/kv_events.py",
+    "kv_events_sha256": "15c3038f1bf97e785c3f1960451e10b54bfa3d87ab456ce2550a2fe98ba1b49a",
+    "python": "3.12.3",
+    "torch": "2.13.0+cu130",
+    "tree_kv_events_sha256": "15c3038f1bf97e785c3f1960451e10b54bfa3d87ab456ce2550a2fe98ba1b49a",
+    "vllm": "0.1.dev2+g6bf585185",
+    "vllm_relative_file": "vllm/__init__.py"
+  },
+  "implementation_sha256": {
+    "campaign": "436ad809444c97711198701eb0cc939c392d16cc86cb3e17072d6fad1704e36f",
+    "contract": "8788b28f5f10c242110f36038a3bea59147f7f1f991307c7caa5e98a412c31a5",
+    "plugin": "f0eb0be92d85f6d6eb6c3cea83b1a0879508cdb21e4ae815878eb7d8f327763c",
+    "preflight": "3c1d79fab1cc92118c24a8b57b32b32d2671c20bbd59007d7f2cecd17bba7d25"
+  },
+  "ready_authorization": "pr_set_ptracer_observer",
+  "schema_version": 1,
+  "source_arm": "fix",
+  "source_tree": "46bc6e191b14ce12a04827454b4588ea5d3a435f",
+  "stack": {
+    "available": null,
+    "match": null,
+    "raw_sha256": null
+  },
+  "stack_attempt_count": 0,
+  "subject_return_code": 0,
+  "verdict": "PASS",
+  "yama_ptrace_scope": 1
+}
