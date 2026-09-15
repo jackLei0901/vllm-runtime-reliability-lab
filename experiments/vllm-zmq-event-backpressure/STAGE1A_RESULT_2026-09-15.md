@@ -33,9 +33,10 @@ model was loaded. GPU memory usage was 0 MiB after the run.
   worktree `.so` files; torch, Triton, NVIDIA libraries and pooled packages are
   covered by the per-file `RECORD` verification in the build identity.
 
-The preflight was repeated after the Stage 1 campaign file changed. Only the
-second pair is retained; this keeps the recorded dependency hashes equal to the
-current reviewed files.
+The preflight was repeated after the dependency-pool cleanup. Only the final
+pair is retained. It uses the cleaned pool whose build records verify every
+hashed `RECORD` entry and reject unowned top-level entries. The retained
+implementation hashes still equal the current reviewed files.
 
 ## Observations
 
@@ -72,7 +73,7 @@ serving load.
 ## Integrity
 
 - `stage1a-base.json` SHA-256:
-  `b435b955c3e7506f201a46ed5de9664666999dd6bcd8b6fe7ea366423aaa57a4`
+  `7021dafad135a8d54dd4ce2a057f3e829acd3beb5ce410fbbb4d3d28c6bdaa2a`
 - `stage1a-fix.json` SHA-256:
   `e2f57a1fbab066ad386069b3dd149df355b94ab6a3aa3445214ebc25996df49c`
 - Independent verifier result:

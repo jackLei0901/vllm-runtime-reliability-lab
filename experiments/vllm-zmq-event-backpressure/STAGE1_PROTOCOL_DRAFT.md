@@ -2,7 +2,7 @@
 
 Date: 2026-09-15
 
-Status: **pre-execution draft; no GPU result exists**
+Status: **frozen before execution; no GPU result exists**
 
 ## Objective
 
@@ -37,6 +37,17 @@ came from the arm environment or the pool. Every hashed `RECORD` entry is
 verified against its installed bytes. Duplicate normalized names fail
 generation. Every pool top-level entry must be owned by a distribution
 `RECORD`. The two manifests must match except for `vllm` and the test plugin.
+
+Immediately before the first scored cell, regenerate both build records from
+the installed environments. They must be byte-identical to the frozen records.
+Regenerate them again after the final cell and apply the same requirement. A
+mismatch invalidates the campaign even if all four cell outcomes otherwise
+pass.
+
+The public verifier can validate only the retained records because the
+installed files remain on the rented machine. The generator performs the
+per-file content checks while those files are present; its own hash is frozen
+with the records.
 
 ## Fault hook
 

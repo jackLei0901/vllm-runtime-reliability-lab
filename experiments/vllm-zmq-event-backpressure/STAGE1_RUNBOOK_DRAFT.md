@@ -1,6 +1,6 @@
 # Stage 1 runbook draft
 
-Status: **review only; do not execute yet**
+Status: **frozen pre-execution runbook**
 
 ## Required environment
 
@@ -42,8 +42,8 @@ VLLM_PRECOMPILED_WHEEL_LOCATION=/absolute/path/to/vllm-22258a26.whl \
 uv pip install --python /absolute/path/to/arm/bin/python -e /absolute/worktree
 ```
 
-The formal freeze must include both build-identity JSON hashes and both
-implementation scripts. The values are recorded but not frozen yet.
+The formal freeze includes both build-identity JSON hashes and the build
+generator and verifier.
 
 ## Plugin installation
 
@@ -123,5 +123,30 @@ git -C /absolute/path/to/base rev-parse HEAD^{tree}
 git -C /absolute/path/to/fix rev-parse HEAD^{tree}
 ```
 
-The future freeze verifier must pass on the rented machine before any server is
+The freeze verifier must pass on the rented machine before any server is
 started.
+
+Then regenerate the two build records into a fresh private directory and
+compare them byte for byte with the frozen public records:
+
+```bash
+CHECKPOINT=/root/stage1-runtime/build-checkpoint-before
+rm -rf "$CHECKPOINT"
+mkdir -p "$CHECKPOINT"
+
+for arm in base fix; do
+  /root/stage1-runtime/$arm-env/bin/python \
+    experiments/vllm-zmq-event-backpressure/stage1_build_identity.py \
+    --worktree /root/stage0-53859/$arm \
+    --wheel /root/stage1-runtime/vllm-0.1.1.dev19+g22258a26b-cp38-abi3-manylinux_2_28_x86_64.whl \
+    --dependency-pool /root/stage1-runtime/dependency-pool \
+    --output "$CHECKPOINT/stage1-build-$arm.json"
+  cmp \
+    "$CHECKPOINT/stage1-build-$arm.json" \
+    "results/vllm-zmq-backpressure-stage1-build-20260915/stage1-build-$arm.json"
+done
+```
+
+All commands above must return zero. Repeat the same block after the fourth
+cell with `CHECKPOINT=/root/stage1-runtime/build-checkpoint-after`. Preserve
+the four generated JSON files privately until the result has been reviewed.

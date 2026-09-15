@@ -1,0 +1,34 @@
+{
+  "freeze_id": "vllm-zmq-stage1-pre-execution-2026-09-15",
+  "status": "pre-execution",
+  "cell_order": [
+    "base/control",
+    "fix/control",
+    "base/pause",
+    "fix/pause"
+  ],
+  "build_checkpoint_policy": "byte-identical-before-first-and-after-last",
+  "installed_file_verification": "generator-side-on-rented-machine",
+  "source_trees": {
+    "base": "b7061e73a6ed4773e16bd2ae3acf47aebfd1342d",
+    "fix": "46bc6e191b14ce12a04827454b4588ea5d3a435f"
+  },
+  "private_inputs": {
+    "request.json": "7c03c12789e99f1758885199fc8ac71a237f1abbfa5303146700821582ca05da",
+    "server-command.json": "7adc634e069b9d3740b075cef3bd7cfabdc4abf24ea27b62f90b8d6f35123853"
+  },
+  "files": {
+    "experiments/vllm-zmq-event-backpressure/STAGE1_PROTOCOL_DRAFT.md": "9dd48269e5e425e7819ad9b26f79b0205de5de2b519e4ab0cd46129561903686",
+    "experiments/vllm-zmq-event-backpressure/STAGE1_RUNBOOK_DRAFT.md": "491bf9a9c4bf272f926c0ce501dbb3b14589f93290114c842e16a8c815a113ab",
+    "experiments/vllm-zmq-event-backpressure/stage1_build_identity.py": "70cc5c128283a023733f06495058fb74391201580fb9efcd55d06b0fb7ea221d",
+    "experiments/vllm-zmq-event-backpressure/stage1_campaign.py": "436ad809444c97711198701eb0cc939c392d16cc86cb3e17072d6fad1704e36f",
+    "experiments/vllm-zmq-event-backpressure/stage1_contract.py": "8788b28f5f10c242110f36038a3bea59147f7f1f991307c7caa5e98a412c31a5",
+    "experiments/vllm-zmq-event-backpressure/stage1_plugin/pyproject.toml": "110d7ec8a67867bf820a6b46bdb4f0ff4d7ba12cdafbbfee3491e29e32032367",
+    "experiments/vllm-zmq-event-backpressure/stage1_plugin/src/dfx_stage1_backpressure/__init__.py": "f0eb0be92d85f6d6eb6c3cea83b1a0879508cdb21e4ae815878eb7d8f327763c",
+    "experiments/vllm-zmq-event-backpressure/verify_stage1_build_identity.py": "4bf8da0d4b8e711703ff7865e8773d1fbac0e82478b9300e7a2477e7fa7368a1",
+    "experiments/vllm-zmq-event-backpressure/verify_stage1_freeze.py": "0ca21a639ff5781f1b6405c359e65b9ff7b726b9bb12226eefb71a5ccd04dad1",
+    "experiments/vllm-zmq-event-backpressure/verify_stage1_results.py": "8f8a1f821b9aa08b72eef3ff01d240c54b26f61da1c27e12fd14bbf53384c72c",
+    "results/vllm-zmq-backpressure-stage1-build-20260915/stage1-build-base.json": "df3f19764bc70097d6c412599051741ccdb198f538e637fd41b01108624d4aa8",
+    "results/vllm-zmq-backpressure-stage1-build-20260915/stage1-build-fix.json": "5b74a42eab28493512e75230075712d0388682ca18e978b4c3c9917e430b2685"
+  }
+}
