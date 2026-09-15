@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vllm-dfx-stage1-backpressure-hook"
+version = "0.0.1"
+description = "Test-only EngineCore backpressure hook for a lab protocol"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.entry-points."vllm.general_plugins"]
+dfx_stage1_backpressure = "dfx_stage1_backpressure:register"
+
+[tool.setuptools.packages.find]
+where = ["src"]

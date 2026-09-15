@@ -42,3 +42,8 @@ results/organic-hang-20260912/**/*.pyc
 !results/pytorch-unused-grad-dtype-gate1g-20260913/*.json
 !results/vllm-zmq-backpressure-stage0-20260915/
 !results/vllm-zmq-backpressure-stage0-20260915/*.json
+!results/vllm-zmq-backpressure-stage1a-20260915/
+!results/vllm-zmq-backpressure-stage1a-20260915/*.json
+!results/vllm-zmq-backpressure-stage1-build-20260915/
+!results/vllm-zmq-backpressure-stage1-build-20260915/*.json
+experiments/vllm-zmq-event-backpressure/.stage1-private/

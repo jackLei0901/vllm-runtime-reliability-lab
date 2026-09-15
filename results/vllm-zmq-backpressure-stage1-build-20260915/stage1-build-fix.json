@@ -1,0 +1,35 @@
+{
+  "cuda_variant": "cu130",
+  "driver_version": "580.105.08",
+  "extensions": {
+    "vllm._C_stable_libtorch": {
+      "relative_file": "vllm/_C_stable_libtorch.abi3.so",
+      "sha256": "0086011da596463c9e1d2ee8c591e9d7a9522737f29455d62fc34d8ec9b3f980"
+    },
+    "vllm._moe_C_stable_libtorch": {
+      "relative_file": "vllm/_moe_C_stable_libtorch.abi3.so",
+      "sha256": "bbf2462d63bac8de096d1cd1f48a979f5b39cb394238e4c8a7aebc179b13b7f7"
+    },
+    "vllm.vllm_flash_attn._vllm_fa2_C": {
+      "relative_file": "vllm/vllm_flash_attn/_vllm_fa2_C.abi3.so",
+      "sha256": "f49b6ac53ef96d5bc457ef231b7cef46c8aff833431d820c2a27463a14c82dcf"
+    },
+    "vllm.vllm_flash_attn._vllm_fa3_C": {
+      "relative_file": "vllm/vllm_flash_attn/_vllm_fa3_C.abi3.so",
+      "sha256": "8759be32480e0a4b0d964bd880da8b108d5647f6a46ff00472597f700d70c70e"
+    }
+  },
+  "generator_sha256": "b0214eb7f561f1b197b44e12818d46df38d885ed3aca5693a75096570fd30ef1",
+  "gpu_capability": "8.9",
+  "gpu_name": "NVIDIA GeForce RTX 4090",
+  "python": "3.12.3",
+  "schema_version": 1,
+  "source_tree": "46bc6e191b14ce12a04827454b4588ea5d3a435f",
+  "torch": "2.13.0+cu130",
+  "torch_cuda": "13.0",
+  "vllm_distribution_version": "0.1.dev2+g6bf585185.precompiled",
+  "vllm_relative_file": "vllm/__init__.py",
+  "wheel_filename": "vllm-0.1.1.dev19+g22258a26b-cp38-abi3-manylinux_2_28_x86_64.whl",
+  "wheel_sha256": "1d7b69a0bc85dacd9722e2af896b6a1b602e6b4712e1ea9e81b4b4ea9fcab978",
+  "wheel_version": "0.1.1.dev19+g22258a26b"
+}

@@ -111,7 +111,8 @@ Pre-register:
 - applying #53883 removes the stall under the same trigger;
 - with #53883 applied, progress continues during the same pause and a hook-owned
   counter records dropped batches;
-- request output correctness is compared only for completed requests.
+- request completion and usage token counts are compared; generated content is
+  not retained.
 
 Stage 1 may need one GPU for an end-to-end server, but it does not need the
 field report's DP=8 setup. The exposed queue-size configuration and controlled
@@ -171,6 +172,11 @@ waits until the experiment has produced evidence.
 recovered after release. The same-base #53883 arm returned while retaining the
 old batch and dropping the new one. See `STAGE0_RESULT_2026-09-15.md`.
 
-The next step is to prepare the Stage 1 EngineCore-local hook and external
-progress oracle. GPU rental is not justified until those pieces and their
-pre-registered verifier are ready.
+Stage 1a passed on both source trees using the real plugin loader, publisher
+objects, queue counters and a real `py-spy` attach under Yama scope 1. The
+rerun also confirmed that each EngineCore-side `kv_events.py` hash matched its
+source-tree blob. The exact launch and request pass the local contract and have
+been reviewed. A formal GPU run remains blocked until the pinned source
+baseline has a hash-recorded, compatible binary-extension build; the unrelated
+installed vLLM wheel is not accepted as evidence merely because its extensions
+can be imported.
