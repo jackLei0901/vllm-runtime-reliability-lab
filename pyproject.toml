@@ -42,6 +42,8 @@ extend-exclude = [
   "experiments/pytorch-unused-grad-dtype/upstream_dtype_issue/PYTORCH_ISSUE_BODY_READY.md",
   "experiments/pytorch-unused-grad-dtype/upstream_dtype_issue/PYTORCH_ISSUE_DRAFT.md",
   "experiments/pytorch-unused-grad-dtype/upstream_dtype_issue/reproducer.py",
+  # Immutable Stage 0 evidence: its SHA-256 is checked by the verifier.
+  "experiments/vllm-zmq-event-backpressure/stage0_backpressure_executed.py",
 ]
 
 [tool.ruff.lint]

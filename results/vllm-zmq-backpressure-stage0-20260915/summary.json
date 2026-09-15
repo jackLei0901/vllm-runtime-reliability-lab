@@ -21,7 +21,7 @@
     "executed_script": "stage0_backpressure_executed.py",
     "script_sha256": "a1c02070304c83e3fc33d8db79853f7648058d3fa0d11031af3e722178d08560",
     "hardened_script": "stage0_backpressure.py",
-    "hardened_script_sha256": "4fd1d16f82a46fc474dd8268e9a765628158a5194a41fb078e14a1df9dd864a4",
+    "hardened_script_sha256": "35af99def477c87b7383d5ad4a9b36dae6bd0553a2534ef6607a0a1e053b861d",
     "queue_size": 1,
     "observation_seconds": 1.0,
     "base_hold_seconds": 20.0

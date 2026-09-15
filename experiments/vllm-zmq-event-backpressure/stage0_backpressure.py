@@ -62,9 +62,7 @@ def queued_object(publisher: PausedZmqEventPublisher) -> Any:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--expect", choices=("blocking", "nonblocking"), required=True
-    )
+    parser.add_argument("--expect", choices=("blocking", "nonblocking"), required=True)
     parser.add_argument("--observation-seconds", type=float, default=1.0)
     parser.add_argument("--hold-seconds", type=float, default=20.0)
     return parser.parse_args()
@@ -132,7 +130,10 @@ def main() -> int:
         recovered_after_release = not caller.is_alive() and not second_error
 
         drain_deadline = time.monotonic() + 5
-        while publisher._event_queue.unfinished_tasks and time.monotonic() < drain_deadline:
+        while (
+            publisher._event_queue.unfinished_tasks
+            and time.monotonic() < drain_deadline
+        ):
             time.sleep(0.01)
         queue_drained_after_release = publisher._event_queue.unfinished_tasks == 0
 
