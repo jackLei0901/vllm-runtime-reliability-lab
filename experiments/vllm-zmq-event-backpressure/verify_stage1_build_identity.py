@@ -32,6 +32,7 @@ EXPECTED_KEYS = {
     "installed_wheel_binaries",
     "local_head_commit",
     "python",
+    "pool_ownership",
     "schema_version",
     "source_tree",
     "torch",
@@ -105,11 +106,35 @@ def verify(record: dict[str, Any], arm: str) -> None:
     for name, value in distributions.items():
         require(
             isinstance(value, dict)
-            and set(value) == {"name", "record_sha256", "source", "version"},
+            and set(value)
+            == {
+                "name",
+                "record_sha256",
+                "source",
+                "verified_file_count",
+                "version",
+            },
             f"{arm}: invalid distribution {name}",
         )
         require(value["source"] in {"arm", "pool"}, f"{arm}: source {name}")
         require(is_hash(value["record_sha256"]), f"{arm}: RECORD {name}")
+        require(
+            isinstance(value["verified_file_count"], int)
+            and not isinstance(value["verified_file_count"], bool)
+            and value["verified_file_count"] > 0,
+            f"{arm}: no installed files verified for {name}",
+        )
+
+    ownership = record["pool_ownership"]
+    require(
+        isinstance(ownership, dict)
+        and set(ownership) == {"distribution_count", "owned_top_level_entry_count"}
+        and all(
+            isinstance(value, int) and not isinstance(value, bool) and value > 0
+            for value in ownership.values()
+        ),
+        f"{arm}: pool ownership evidence invalid",
+    )
 
     binaries = record["installed_wheel_binaries"]
     require(isinstance(binaries, dict) and binaries, f"{arm}: wheel binaries")
@@ -140,6 +165,7 @@ def verify_pair(records: dict[str, dict[str, Any]]) -> None:
         "gpu_name",
         "installed_wheel_binaries",
         "python",
+        "pool_ownership",
         "torch",
         "torch_cuda",
         "wheel_filename",

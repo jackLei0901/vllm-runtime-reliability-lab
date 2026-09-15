@@ -49,8 +49,9 @@ Stage 0 is already committed evidence and is not being revised by this work.
   the local contract, but are not frozen.
 - The installed vLLM 0.20.1 wheel was rejected. Both arms now use the same
   exact-commit precompiled wheel and pinned PyTorch 2.13. The read-only pool is
-  attached through one hashed `.pth` file, and all 188 visible distributions
-  are recorded with version, `RECORD` hash and source.
+  attached through one hashed `.pth` file. Every visible distribution is
+  recorded with version, `RECORD` hash, verified installed-file count and
+  source. The final strict manifest contains 187 distributions per arm.
 - No GPU result or Stage 1 verdict exists.
 - This does not test data parallelism or `shm_broadcast`.
 

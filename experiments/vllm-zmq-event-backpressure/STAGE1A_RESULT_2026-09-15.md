@@ -27,7 +27,11 @@ model was loaded. GPU memory usage was 0 MiB after the run.
   and scoring contract.
 - The preflight loads no model and maps no source-tree `.so`; both ready records
   therefore contain an empty mapped-binary set. Formal Stage 1 requires that
-  set to be non-empty and match the build identity.
+  set to be non-empty and match the build identity. The `/proc/self/maps`
+  parser's non-empty path will therefore first be exercised in a scored GPU
+  cell and fails closed if it cannot produce evidence. This check covers only
+  worktree `.so` files; torch, Triton, NVIDIA libraries and pooled packages are
+  covered by the per-file `RECORD` verification in the build identity.
 
 The preflight was repeated after the Stage 1 campaign file changed. Only the
 second pair is retained; this keeps the recorded dependency hashes equal to the

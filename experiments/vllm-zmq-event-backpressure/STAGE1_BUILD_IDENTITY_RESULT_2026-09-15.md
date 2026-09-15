@@ -54,10 +54,12 @@ It explicitly excluded vLLM, torch, Triton, NVIDIA packages, the experiment
 plugin, editable-install files and all `.pth` files.
 
 The replacement record hashes the `.pth` attachment and produces a manifest of
-every visible distribution: normalized name, version, `RECORD` hash, and
-whether it came from the arm or pool. Duplicate distribution names fail rather
-than relying on import order. The paired verifier requires those manifests to
-match except for vLLM and the experiment plugin.
+every visible distribution: normalized name, version, `RECORD` hash, verified
+file count, and whether it came from the arm or pool. Every `sha256=` entry in
+every `RECORD` is checked against the installed file. Missing files, changed
+bytes, duplicate distribution names, and unsupported hash algorithms fail.
+The paired verifier requires the manifests to match except for vLLM and the
+experiment plugin.
 
 Each arm exposes exactly one vLLM distribution, and its imported
 `vllm/__init__.py` came from the corresponding source tree. The old local vLLM
@@ -77,17 +79,25 @@ The version-string difference is an editable-build consequence and an explicit
 cross-arm difference. With eager execution it is not expected to affect the
 tested path; source identity is enforced by the two Git tree hashes.
 
-The final manifests contain 188 visible distributions per arm. Their entries
-match after excluding vLLM and the test plugin. Build-only packages that had
+The final manifests contain 187 visible distributions per arm: 42 from each
+arm environment and 145 from the pool. They verify 49,632 hashed installed
+files per arm and match after excluding vLLM and the test plugin. The pool's
+291 top-level entries are all owned by at least one distribution `RECORD`.
+Build-only packages that had
 been introduced asymmetrically while preparing the editable installs were
 removed before generation; neither arm depends on them at runtime.
+
+The stricter pass found two setup defects rather than hiding them. FlashInfer
+and an obsolete Torch 2.4--2.9 DLPack extension both claimed a different
+`build_backend.py`; the obsolete extension was removed from the pool. Six
+unowned pool entries, including an exploratory `example.py`, were also removed.
 
 ## Integrity
 
 - `stage1-build-base.json` SHA-256:
-  `2994accfdddb56c0112e2c2a2849f16561425071797eb03c842114648270e92b`
+  `df3f19764bc70097d6c412599051741ccdb198f538e637fd41b01108624d4aa8`
 - `stage1-build-fix.json` SHA-256:
-  `5efa1e1b3097a934e99a301dabb2bf70b12597dcd3ddb1adf824968dc6c0f682`
+  `5b74a42eab28493512e75230075712d0388682ca18e978b4c3c9917e430b2685`
 - Independent verifier:
   `PASS: paired Stage 1 build and dependency identities verified`
 

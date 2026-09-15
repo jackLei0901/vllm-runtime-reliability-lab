@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import hashlib
 import importlib.util
 import json
 import os
@@ -563,6 +565,10 @@ class Stage1BuildIdentityVerifierTest(unittest.TestCase):
             "stage1_build_verifier_test",
             EXPERIMENT / "verify_stage1_build_identity.py",
         )
+        cls.generator = load_file(
+            "stage1_build_generator_test",
+            EXPERIMENT / "stage1_build_identity.py",
+        )
         cls.result_dir = (
             ROOT / "results" / ("vllm-zmq-backpressure-stage1-build-20260915")
         )
@@ -588,6 +594,28 @@ class Stage1BuildIdentityVerifierTest(unittest.TestCase):
         records["fix"]["distributions"]["aiohttp"]["version"] = "unexpected"
         with self.assertRaisesRegex(AssertionError, "dependency manifest"):
             self.verifier.verify_pair(records)
+
+    def test_record_verification_detects_installed_file_tampering(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            package = root / "example.py"
+            package.write_bytes(b"original\n")
+            metadata = root / "example-1.0.dist-info"
+            metadata.mkdir()
+            digest = base64.urlsafe_b64encode(
+                hashlib.sha256(package.read_bytes()).digest()
+            ).rstrip(b"=")
+            (metadata / "RECORD").write_text(
+                f"example.py,sha256={digest.decode()},9\n"
+                "example-1.0.dist-info/RECORD,,\n",
+                encoding="utf-8",
+            )
+            verified, owned = self.generator.verify_record_files(metadata)
+            self.assertEqual(verified, 1)
+            self.assertIn("example.py", owned)
+            package.write_bytes(b"tampered\n")
+            with self.assertRaisesRegex(RuntimeError, "hash mismatch"):
+                self.generator.verify_record_files(metadata)
 
 
 class Stage1PluginTest(unittest.TestCase):

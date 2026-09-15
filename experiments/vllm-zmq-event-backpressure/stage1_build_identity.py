@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import csv
 import email
 import hashlib
 import importlib.metadata as metadata
@@ -94,9 +96,42 @@ def dependency_pool_attachment(pool: Path) -> dict[str, str]:
     }
 
 
-def distribution_identity(pool: Path) -> dict[str, dict[str, str]]:
+def verify_record_files(metadata_path: Path) -> tuple[int, set[str]]:
+    record_file = metadata_path / "RECORD"
+    if not record_file.is_file():
+        raise RuntimeError(f"distribution has no RECORD: {metadata_path.name}")
+    installed_root = metadata_path.resolve().parent
+    verified = 0
+    owned_top_level: set[str] = set()
+    with record_file.open(encoding="utf-8", newline="") as stream:
+        for relative, encoded_hash, _size in csv.reader(stream):
+            relative_path = Path(relative)
+            if relative_path.parts and relative_path.parts[0] != "..":
+                owned_top_level.add(relative_path.parts[0])
+            if not encoded_hash:
+                continue
+            algorithm, separator, expected = encoded_hash.partition("=")
+            if separator != "=" or algorithm != "sha256" or not expected:
+                raise RuntimeError(f"unsupported RECORD hash: {relative}")
+            installed = installed_root / relative_path
+            if not installed.is_file():
+                raise RuntimeError(f"RECORD file is missing: {relative}")
+            actual = base64.urlsafe_b64encode(
+                hashlib.sha256(installed.read_bytes()).digest()
+            ).rstrip(b"=")
+            if actual.decode("ascii") != expected:
+                raise RuntimeError(f"RECORD file hash mismatch: {relative}")
+            verified += 1
+    if verified == 0:
+        raise RuntimeError(
+            f"distribution has no hashed RECORD entries: {metadata_path.name}"
+        )
+    return verified, owned_top_level
+
+
+def distribution_identity(pool: Path) -> dict[str, dict[str, Any]]:
     site_packages = Path(sysconfig.get_paths()["purelib"]).resolve()
-    result: dict[str, dict[str, str]] = {}
+    result: dict[str, dict[str, Any]] = {}
     for distribution in metadata.distributions():
         name = distribution.metadata.get("Name")
         if not name:
@@ -110,8 +145,7 @@ def distribution_identity(pool: Path) -> dict[str, dict[str, str]]:
         else:
             raise RuntimeError(f"distribution outside arm and pool: {name}")
         record_file = raw_path / "RECORD"
-        if not record_file.is_file():
-            raise RuntimeError(f"distribution has no RECORD: {name}")
+        verified_count, _owned = verify_record_files(raw_path)
         if key in result:
             raise RuntimeError(f"duplicate visible distribution: {key}")
         result[key] = {
@@ -119,8 +153,32 @@ def distribution_identity(pool: Path) -> dict[str, dict[str, str]]:
             "record_sha256": sha256(record_file),
             "source": source,
             "version": distribution.version,
+            "verified_file_count": verified_count,
         }
     return dict(sorted(result.items()))
+
+
+def verify_pool_ownership(pool: Path) -> dict[str, int]:
+    owned: set[str] = set()
+    distribution_count = 0
+    for distribution in metadata.distributions(path=[str(pool)]):
+        distribution_count += 1
+        raw_path = Path(distribution._path).absolute()  # type: ignore[attr-defined]
+        _verified_count, distribution_owned = verify_record_files(raw_path)
+        owned.update(distribution_owned)
+    ignored = {"__pycache__"}
+    entries = {
+        path.name
+        for path in pool.iterdir()
+        if path.name not in ignored and not path.name.startswith(".")
+    }
+    unowned = sorted(entries - owned)
+    if unowned:
+        raise RuntimeError(f"dependency pool has unowned top-level entries: {unowned}")
+    return {
+        "distribution_count": distribution_count,
+        "owned_top_level_entry_count": len(entries),
+    }
 
 
 def atomic_json(path: Path, value: dict[str, object]) -> None:
@@ -197,6 +255,7 @@ def main() -> int:
         "installed_wheel_binaries": wheel_binary_identity(worktree, wheel),
         "local_head_commit": head,
         "python": ".".join(map(str, sys.version_info[:3])),
+        "pool_ownership": verify_pool_ownership(pool),
         "schema_version": 2,
         "source_tree": tree,
         "torch": torch.__version__,

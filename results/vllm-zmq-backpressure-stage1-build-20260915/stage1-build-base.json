@@ -11,1133 +11,1314 @@
       "name": "aiohappyeyeballs",
       "record_sha256": "14263431f101aad85e690b74756640a356c3f311654f0db92305c7fd5fcfa75c",
       "source": "pool",
+      "verified_file_count": 11,
       "version": "2.7.1"
     },
     "aiohttp": {
       "name": "aiohttp",
       "record_sha256": "1f6d518b02061e1c23c2c067c04a107b2780d98f87166d936eee7964216f70d4",
       "source": "pool",
+      "verified_file_count": 83,
       "version": "3.14.1"
     },
     "aiosignal": {
       "name": "aiosignal",
       "record_sha256": "b9a6cd07dac78298d856613e8140b7da26b20506ed07747802bd513bf9b3ea35",
       "source": "pool",
+      "verified_file_count": 8,
       "version": "1.4.0"
     },
     "annotated-doc": {
       "name": "annotated-doc",
       "record_sha256": "1d924fb80688852ae450acc786e6fcd63a752dd045e2f1e4ec7341367fac06a8",
       "source": "pool",
+      "verified_file_count": 9,
       "version": "0.0.4"
     },
     "annotated-types": {
       "name": "annotated-types",
       "record_sha256": "5bb4f1ca72420634ebd566dafd9d5fbce3051b0c1c1d13980f6ceeb5c4dbb843",
       "source": "pool",
+      "verified_file_count": 8,
       "version": "0.7.0"
     },
     "anthropic": {
       "name": "anthropic",
       "record_sha256": "4c6e765ca9ee7a4bc6d2e8ef2ae58e7435df4bc52f5026f6b71c1ac2e45557f0",
       "source": "pool",
+      "verified_file_count": 1032,
       "version": "0.116.0"
     },
     "anyio": {
       "name": "anyio",
       "record_sha256": "722d3bb1432c0f34f49dca8ac66fa132db1e4a2151f7104ee66a8cd44222c0b6",
       "source": "pool",
+      "verified_file_count": 53,
       "version": "4.14.2"
     },
     "apache-tvm-ffi": {
       "name": "apache-tvm-ffi",
       "record_sha256": "c8a809333e4a5624ba84908900bea10333471ea66f6f280bd370064905070851",
       "source": "pool",
+      "verified_file_count": 224,
       "version": "0.1.9"
     },
     "astor": {
       "name": "astor",
       "record_sha256": "09853d467a6dc3475fe8f076e538be0798969f57e8b33e614c0623f56a71fdb0",
       "source": "pool",
+      "verified_file_count": 19,
       "version": "0.8.1"
     },
     "attrs": {
       "name": "attrs",
       "record_sha256": "a5151f0461f45abf44fdc57c2ccdb73151bb54a0abfd22133f7ea7ad48f8dc23",
       "source": "arm",
+      "verified_file_count": 35,
       "version": "26.1.0"
     },
     "blake3": {
       "name": "blake3",
       "record_sha256": "fcdc67ec314b5b4c9854bcab77966bb8ab3f9993eda92a4cb88e7057356c9d72",
       "source": "pool",
+      "verified_file_count": 10,
       "version": "1.0.9"
     },
     "cachetools": {
       "name": "cachetools",
       "record_sha256": "644ab2b773f4a71b509c0e53b3bb1335946e83f7d40c1b4192f63e42058a6905",
       "source": "pool",
+      "verified_file_count": 15,
       "version": "7.1.4"
     },
     "cbor2": {
       "name": "cbor2",
       "record_sha256": "a6c828052c957f7f14a2706b1a0b2589874c9874ba256acebb76cfd23c6155ee",
       "source": "pool",
+      "verified_file_count": 15,
       "version": "6.1.3"
     },
     "certifi": {
       "name": "certifi",
       "record_sha256": "f010bf8e6401172bf2ac5eb50c0a44e60d4f5917b88a8f95ac05e37633a1803b",
       "source": "pool",
+      "verified_file_count": 11,
       "version": "2026.6.17"
     },
     "cffi": {
       "name": "cffi",
       "record_sha256": "03f163300129084e7820f6d71ce163952333d01457b305d8b517cbbad3568ce9",
       "source": "pool",
+      "verified_file_count": 33,
       "version": "2.1.0"
     },
     "charset-normalizer": {
       "name": "charset-normalizer",
       "record_sha256": "776936a078bc2b9181fd2eb5a6651aaf7cd7f8353a9df6438afb252fe638e825",
       "source": "pool",
+      "verified_file_count": 24,
       "version": "3.4.9"
     },
     "click": {
       "name": "click",
       "record_sha256": "f14e3990f101ef4a1dd09903eb3f859f233ec1d9bd9a00e4470f207568804d12",
       "source": "pool",
+      "verified_file_count": 23,
       "version": "8.4.2"
     },
     "cloudpickle": {
       "name": "cloudpickle",
       "record_sha256": "a24820e3d3ea3f0fb210f58b84abb5450a94cc649e573a9a0a69354afc6fa1de",
       "source": "pool",
+      "verified_file_count": 8,
       "version": "3.1.2"
     },
     "compressed-tensors": {
       "name": "compressed-tensors",
       "record_sha256": "d4a616afc2fc0e37cdd58a05c26429c8618655311bf3799d32a62b73ea48ab95",
       "source": "pool",
+      "verified_file_count": 109,
       "version": "0.15.0.1"
     },
     "cryptography": {
       "name": "cryptography",
       "record_sha256": "e31d1289313c152741ff7e2935fc2f61424a3fcfe9fcec7436674c1b0ff6b819",
       "source": "pool",
+      "verified_file_count": 118,
       "version": "49.0.0"
     },
     "cuda-bindings": {
       "name": "cuda-bindings",
       "record_sha256": "90d8a7b5ef9066d07825af1c24d138cba88e534880ea93f6d102e6035bf041dc",
       "source": "arm",
+      "verified_file_count": 94,
       "version": "13.3.1"
     },
     "cuda-core": {
       "name": "cuda-core",
       "record_sha256": "5c13ec3eb6982f92f55579fec7c2fc2d12bbbe8ea9868120d1121566f36dc578",
       "source": "pool",
+      "verified_file_count": 215,
       "version": "1.0.1"
     },
     "cuda-pathfinder": {
       "name": "cuda-pathfinder",
       "record_sha256": "478e1ef69f1220c8f0168a032003438065b5deb0fc0d173c550c76e83b2af51d",
       "source": "arm",
+      "verified_file_count": 38,
       "version": "1.6.0"
     },
     "cuda-python": {
       "name": "cuda-python",
       "record_sha256": "f6cb100c0025e09256142d21c9d0e838d55eafbe03724fe84c398b82da6e68a1",
       "source": "pool",
+      "verified_file_count": 6,
       "version": "13.3.1"
     },
     "cuda-tile": {
       "name": "cuda-tile",
       "record_sha256": "978a08cbc234c1278ce5de41b23a438f59ce34027fea5bb8427c35a8c0ff3dd8",
       "source": "pool",
+      "verified_file_count": 82,
       "version": "1.5.0"
     },
     "cuda-toolkit": {
       "name": "cuda-toolkit",
       "record_sha256": "be82975316765be12c731f65c0771d402a7a4883988d1a5f459b16c0aab5c477",
       "source": "arm",
+      "verified_file_count": 3,
       "version": "13.0.3.0"
     },
     "depyf": {
       "name": "depyf",
       "record_sha256": "0e17b93f7a5779405ad8f9d0a4ee5354b120b886d2c831a836ef98370792ccf6",
       "source": "pool",
+      "verified_file_count": 22,
       "version": "0.20.0"
     },
     "detect-installer": {
       "name": "detect-installer",
       "record_sha256": "58cd3b2d7cabcba1737c016404122b32bd1807cbc782681f20ef8d372e97bf1e",
       "source": "pool",
+      "verified_file_count": 10,
       "version": "0.1.0"
     },
     "dill": {
       "name": "dill",
       "record_sha256": "778628d39e465b5dfebed7f612665bedbc89d2d5b84a3077e9af0d316ed7c968",
       "source": "pool",
+      "verified_file_count": 55,
       "version": "0.4.1"
     },
     "diskcache": {
       "name": "diskcache",
       "record_sha256": "ab59122ad3cfc35cf47cc5b5d97ccf567fcad86a80588cfaca049a797f7088aa",
       "source": "pool",
+      "verified_file_count": 13,
       "version": "5.6.3"
     },
     "distro": {
       "name": "distro",
       "record_sha256": "b78232bb6f8f7e753352b316ef525cbc2c7f5310109fc3ad0472fdef66324344",
       "source": "pool",
+      "verified_file_count": 12,
       "version": "1.9.0"
     },
     "dnspython": {
       "name": "dnspython",
       "record_sha256": "835d7f4fdc1c7488000c15b9296e76053aacb4eba2692e5b4bada924f21172c7",
       "source": "pool",
+      "verified_file_count": 155,
       "version": "2.8.0"
     },
     "docstring-parser": {
       "name": "docstring_parser",
       "record_sha256": "ed0a3538437bb77b4efc7e9b93ed802ac99acf1dedd7b1c5b36d0b0ef0f11398",
       "source": "pool",
+      "verified_file_count": 15,
       "version": "0.18.0"
     },
     "einops": {
       "name": "einops",
       "record_sha256": "f5ab2503eead94b7dbb3c722415260439feee273c0b91019e1f0788f041400bc",
       "source": "pool",
+      "verified_file_count": 32,
       "version": "0.8.2"
     },
     "email-validator": {
       "name": "email-validator",
       "record_sha256": "676dd5ab6ad7522374a6dcc8a7f53934c9915a335bf4384e84513ddf939f31ad",
       "source": "pool",
+      "verified_file_count": 18,
       "version": "2.3.0"
     },
     "fastapi": {
       "name": "fastapi",
       "record_sha256": "62e067a1405805e537734393d553b0a50f23c6c4cd88d693a018cbe37ba1a43d",
       "source": "pool",
+      "verified_file_count": 63,
       "version": "0.139.2"
     },
     "fastapi-cli": {
       "name": "fastapi-cli",
       "record_sha256": "cf60c41586a09255f25bb6552993bf581ef08f22a1a800abfd289c1f6b5284aa",
       "source": "pool",
+      "verified_file_count": 16,
       "version": "0.0.32"
     },
     "fastapi-cloud-cli": {
       "name": "fastapi-cloud-cli",
       "record_sha256": "ac4b6750157729783adea3ca2fc0725b229cbfbeb1aebc1e13f8f5734c8a83b1",
       "source": "pool",
+      "verified_file_count": 63,
       "version": "0.22.2"
     },
     "fastar": {
       "name": "fastar",
       "record_sha256": "76705d9f4f05a1b39e5b8e8df7d13b53cf1e6b0291c0aa4ee2eae814d57140b6",
       "source": "pool",
+      "verified_file_count": 10,
       "version": "0.11.0"
     },
     "fastsafetensors": {
       "name": "fastsafetensors",
       "record_sha256": "04d7ad4f2eaadc46b297f4003a4d6e4e67dde2cf61c80a9da495df40561ae001",
       "source": "pool",
+      "verified_file_count": 37,
       "version": "0.3.3"
     },
     "filelock": {
       "name": "filelock",
       "record_sha256": "679499108d56433f5c6ce79675b87661069bb9c8ee4b3479384e7bc91c2da420",
       "source": "arm",
+      "verified_file_count": 26,
       "version": "3.32.3"
     },
     "flashinfer-cubin": {
       "name": "flashinfer-cubin",
       "record_sha256": "6f8906a4b098b8b97ee2172c758697f5d2e34ce56a6c4ecb6ed543c20f3f962e",
       "source": "pool",
+      "verified_file_count": 10605,
       "version": "0.6.8.post1"
     },
     "flashinfer-python": {
       "name": "flashinfer-python",
-      "record_sha256": "7a14385320a5c83b3e9765bf27073ff45cdbe387fe770c3fd9f2ff043aa8c9bd",
+      "record_sha256": "9fcf7a5e474fe526d241534a6168ed5794bf1963ab79f9b5f2564c5fdfe28c9b",
       "source": "pool",
+      "verified_file_count": 2257,
       "version": "0.6.8.post1"
     },
     "frozenlist": {
       "name": "frozenlist",
       "record_sha256": "8f934b7c96c7ba14179d87da9876b436b260e2b97200915756ed8ab880f807fe",
       "source": "pool",
+      "verified_file_count": 11,
       "version": "1.8.0"
     },
     "fsspec": {
       "name": "fsspec",
       "record_sha256": "4801db90e1425026baa5d1164ce1ea97a882a7d71f27081a77e7e3154ab8d958",
       "source": "arm",
+      "verified_file_count": 61,
       "version": "2026.7.0"
     },
     "gguf": {
       "name": "gguf",
       "record_sha256": "97c7d7e25f1423c2308c336a5e87ec4027d02ab83457762bb1ab29b086105d48",
       "source": "pool",
+      "verified_file_count": 29,
       "version": "0.19.0"
     },
     "googleapis-common-protos": {
       "name": "googleapis-common-protos",
       "record_sha256": "64afafef23d59c3895680c65f00d91944151c74c31352cdfddf409bd8e6ddfea",
       "source": "pool",
+      "verified_file_count": 200,
       "version": "1.75.0"
     },
     "grpcio": {
       "name": "grpcio",
       "record_sha256": "845df6ce04e6aed99fcc426df03f92f9c08bd9ad8259723d5f5146714fee0cec",
       "source": "pool",
+      "verified_file_count": 67,
       "version": "1.82.1"
     },
     "h11": {
       "name": "h11",
       "record_sha256": "3779e13c17d8e21c769ed9ee8780af123cc3f8656185f5f8d3af258ff5639b3e",
       "source": "pool",
+      "verified_file_count": 18,
       "version": "0.16.0"
     },
     "hf-xet": {
       "name": "hf-xet",
       "record_sha256": "3e94dcbec72065fe639fdd7eb3630877b0e3757157fb846c276eff64f3275c8b",
       "source": "pool",
+      "verified_file_count": 8,
       "version": "1.5.2"
     },
     "httpcore": {
       "name": "httpcore",
       "record_sha256": "67cb4644d84fef1df8c5a0862c57c3380eff058a153bac7a4ba2722779982554",
       "source": "pool",
+      "verified_file_count": 37,
       "version": "1.0.9"
     },
     "httptools": {
       "name": "httptools",
       "record_sha256": "ec3aaee7dba4c908829d663a4acde40782d78aecf9155e24761fa35dfe413fc8",
       "source": "pool",
+      "verified_file_count": 23,
       "version": "0.8.0"
     },
     "httpx": {
       "name": "httpx",
       "record_sha256": "1925062f1fe8c5b26ad4ddc71a44dd3499930c679034d18454572ec50a4a895a",
       "source": "pool",
+      "verified_file_count": 31,
       "version": "0.28.1"
     },
     "httpx-sse": {
       "name": "httpx-sse",
       "record_sha256": "534a024ec59846f799fe9bae52bbf60023f625872d27466d4ab50856147657b8",
       "source": "pool",
+      "verified_file_count": 12,
       "version": "0.4.3"
     },
     "huggingface-hub": {
       "name": "huggingface_hub",
       "record_sha256": "b8cf2da196f9dda22a5291ec0292fa989e54ac97843da578f4fa7e9290558049",
       "source": "pool",
+      "verified_file_count": 194,
       "version": "1.23.0"
     },
     "idna": {
       "name": "idna",
       "record_sha256": "1e1f75b6101ab2cfb4599d993c786cf3be55bf71ee298708c5cc7d7b4e08c897",
       "source": "pool",
+      "verified_file_count": 18,
       "version": "3.18"
     },
     "ijson": {
       "name": "ijson",
       "record_sha256": "6ec8c0b26104c537e262087a0cc84b0e77c3a505954c68fc44b5542917f51750",
       "source": "pool",
+      "verified_file_count": 24,
       "version": "3.5.1"
     },
     "iniconfig": {
       "name": "iniconfig",
       "record_sha256": "35ac7262caa2981ee781f2072c5052a0f729d4a59929e1dcf444b1e4fa3a6036",
       "source": "pool",
+      "verified_file_count": 10,
       "version": "2.3.0"
     },
     "interegular": {
       "name": "interegular",
       "record_sha256": "b1b0a33168bec8acee564aac1eec86011399cf8e37a8571051380e0b017068d8",
       "source": "pool",
+      "verified_file_count": 13,
       "version": "0.3.3"
     },
     "jinja2": {
       "name": "Jinja2",
       "record_sha256": "1bb3b46d00f55f63d24c3a34a7f955ef6692d4691217a53b15261769607f9f7c",
       "source": "arm",
+      "verified_file_count": 31,
       "version": "3.1.6"
     },
     "jiter": {
       "name": "jiter",
       "record_sha256": "414ad3e49106c41cb7d8a1ee4a220e9acce7709f733fda1ca6fa47e2d8b7d100",
       "source": "pool",
+      "verified_file_count": 10,
       "version": "0.16.0"
     },
     "jmespath": {
       "name": "jmespath",
       "record_sha256": "fa12c1a0e83fb41ee2a8b4324156350b02ea5305c992963333ef655d9cb45eca",
       "source": "pool",
+      "verified_file_count": 15,
       "version": "1.1.0"
     },
     "jsonschema": {
       "name": "jsonschema",
       "record_sha256": "b43abf36269168861d58c502e5972fc74e750e941c132112ef88620a394d552f",
       "source": "arm",
+      "verified_file_count": 45,
       "version": "4.26.0"
     },
     "jsonschema-specifications": {
       "name": "jsonschema-specifications",
       "record_sha256": "9cc3b56b6becdd45482310d7d2ff9d98dbf8a5775e36f7ccde49a09146e389da",
       "source": "arm",
+      "verified_file_count": 28,
       "version": "2025.9.1"
     },
     "lark": {
       "name": "lark",
       "record_sha256": "06c6b4283d3177598c754e33e6cf451b914e9300f13bb0ccb4257007dceb3649",
       "source": "pool",
+      "verified_file_count": 47,
       "version": "1.2.2"
     },
     "llguidance": {
       "name": "llguidance",
       "record_sha256": "3e0365a36527056b2c7c51a148ec5eb455c0ccdb24e9d9e64f66f493d17616af",
       "source": "pool",
+      "verified_file_count": 21,
       "version": "1.3.0"
     },
     "llvmlite": {
       "name": "llvmlite",
       "record_sha256": "843e64891c2096b7666280d04f5ff809e31ed1f978ced22ca6f927c2b0faadc8",
       "source": "pool",
+      "verified_file_count": 46,
       "version": "0.47.0"
     },
     "lm-format-enforcer": {
       "name": "lm-format-enforcer",
       "record_sha256": "b1a7444b54181db9f87afda4825892cfb28818ca29820968d79be9a717438b03",
       "source": "pool",
+      "verified_file_count": 26,
       "version": "0.11.3"
     },
     "loguru": {
       "name": "loguru",
       "record_sha256": "f561bf516e2dacc992d6041c129f33d6c98d63794d424e6738389eb031a40177",
       "source": "pool",
+      "verified_file_count": 25,
       "version": "0.7.3"
     },
     "markdown-it-py": {
       "name": "markdown-it-py",
       "record_sha256": "dede6b2ad264510eb71411f807bc79f21668fa2c2034cda668170131a8798c67",
       "source": "pool",
+      "verified_file_count": 76,
       "version": "4.2.0"
     },
     "markupsafe": {
       "name": "MarkupSafe",
       "record_sha256": "cf94542b5c0d5a7bb16c08bcd035ef0c71d9bf579a9cd21e4c52626155144b3c",
       "source": "arm",
+      "verified_file_count": 11,
       "version": "3.0.3"
     },
     "mcp": {
       "name": "mcp",
       "record_sha256": "9e51facdebcc6b5b1d690607095be5ae61281adf8ed31df82fa049328dee701c",
       "source": "pool",
+      "verified_file_count": 118,
       "version": "1.28.1"
     },
     "mdurl": {
       "name": "mdurl",
       "record_sha256": "9a1b05128e711beabd7684e116fcf408ce8cff7ef10e7e8b359b248924fe529c",
       "source": "pool",
+      "verified_file_count": 12,
       "version": "0.1.2"
     },
     "mistral-common": {
       "name": "mistral_common",
       "record_sha256": "5ac2ded5a60ebb2fb85de26ff1cdbcda497d280a0f9e0e1404689f4ae1edfd08",
       "source": "pool",
+      "verified_file_count": 71,
       "version": "1.11.5"
     },
     "ml-dtypes": {
       "name": "ml_dtypes",
       "record_sha256": "cf3c62d8fef69b076a5a4f2812da26e7d4e73e1325e6b2a7821db62f0edd3079",
       "source": "pool",
+      "verified_file_count": 12,
       "version": "0.5.4"
     },
     "model-hosting-container-standards": {
       "name": "model-hosting-container-standards",
       "record_sha256": "eb0d5a592a0e5ebf74f7d07bc5c1568dfb873c1a04601ff48e9c7faa63b8638f",
       "source": "pool",
+      "verified_file_count": 78,
       "version": "0.1.16"
     },
     "mpmath": {
       "name": "mpmath",
       "record_sha256": "89869bb99d259b6078aa20ebadb44d921aa20595ffa58ab929e3082d7f3f5529",
       "source": "arm",
+      "verified_file_count": 92,
       "version": "1.3.0"
     },
     "msgspec": {
       "name": "msgspec",
       "record_sha256": "a5be666753a2a639a9c465a963ef4bd5b4f6909e9f8f88622f0db198f2964dd7",
       "source": "pool",
+      "verified_file_count": 24,
       "version": "0.21.1"
     },
     "multidict": {
       "name": "multidict",
       "record_sha256": "00df5867e4b6ddcb88675199117a50f3784270ec62e22efc964cd091c65a2edf",
       "source": "pool",
+      "verified_file_count": 12,
       "version": "6.7.1"
     },
     "networkx": {
       "name": "networkx",
       "record_sha256": "b9eec012d3da7de578ab44e1effc11626e933a07ecbd50e7d474b4b92648574c",
       "source": "arm",
+      "verified_file_count": 601,
       "version": "3.6.1"
     },
     "ninja": {
       "name": "ninja",
       "record_sha256": "7857caad4adc83377eb319912ce4f7efdf6ea8f6e102398bad54370ea99d98d0",
       "source": "pool",
+      "verified_file_count": 14,
       "version": "1.13.0"
     },
     "numba": {
       "name": "numba",
       "record_sha256": "a21d5704ba6b9b0c62519bb72413ad53d77e1f0b20b83682eacd12c2d98fd13a",
       "source": "pool",
+      "verified_file_count": 793,
       "version": "0.65.0"
     },
     "numpy": {
       "name": "numpy",
       "record_sha256": "84cda0ec4286570b2bb8f25e1eaca54ae3a1547ace30545a72896c3fb56cd175",
       "source": "arm",
+      "verified_file_count": 879,
       "version": "2.2.6"
     },
     "nvidia-cublas": {
       "name": "nvidia-cublas",
       "record_sha256": "b77d18a6a9a739817310a2a8ba310d2d9015ae2fdf2012506ed8ed4da8e95e8d",
       "source": "arm",
+      "verified_file_count": 14,
       "version": "13.1.1.3"
     },
     "nvidia-cuda-cupti": {
       "name": "nvidia-cuda-cupti",
       "record_sha256": "cd0e5fd6b1482324c32a2f1bec026a7476b7fdd5945d74f7c38a5ffa481c071a",
       "source": "arm",
+      "verified_file_count": 47,
       "version": "13.0.85"
     },
     "nvidia-cuda-nvrtc": {
       "name": "nvidia-cuda-nvrtc",
       "record_sha256": "feb5e212257b3aac517943060c250545f535301d7fa3c191bcbb36ba04744b80",
       "source": "arm",
+      "verified_file_count": 10,
       "version": "13.0.88"
     },
     "nvidia-cuda-runtime": {
       "name": "nvidia-cuda-runtime",
       "record_sha256": "443de57800e9c58620fc37b70fc391bbd5ee3c9fb612d453fbbd5aa4635d7a79",
       "source": "arm",
+      "verified_file_count": 99,
       "version": "13.0.96"
     },
     "nvidia-cudnn-cu13": {
       "name": "nvidia-cudnn-cu13",
       "record_sha256": "5def090f7ea54f95e411212231c8041f0b69958d9cb555b58dcc3ad9a6313dd6",
       "source": "arm",
+      "verified_file_count": 27,
       "version": "9.20.0.48"
     },
     "nvidia-cufft": {
       "name": "nvidia-cufft",
       "record_sha256": "b6fdf1b8f8b6efe03c9751b9ab807d9d31c8929c481be08cddcc3a6c2a9cd5c1",
       "source": "arm",
+      "verified_file_count": 11,
       "version": "12.0.0.61"
     },
     "nvidia-cufile": {
       "name": "nvidia-cufile",
       "record_sha256": "169df085952dcba197c3f7893244b063cbd75f3cee5b9a2988d273f0eff87a54",
       "source": "arm",
+      "verified_file_count": 8,
       "version": "1.15.1.6"
     },
     "nvidia-curand": {
       "name": "nvidia-curand",
       "record_sha256": "e43492a8980bf4ea0a405a5abc6eccad605630479441674de42dcf000fece5b1",
       "source": "arm",
+      "verified_file_count": 23,
       "version": "10.4.0.35"
     },
     "nvidia-cusolver": {
       "name": "nvidia-cusolver",
       "record_sha256": "7b7c32d787a853ebbe2e854db340780cda70b01515dd584067c30d58f775c4c1",
       "source": "arm",
+      "verified_file_count": 13,
       "version": "12.0.4.66"
     },
     "nvidia-cusparse": {
       "name": "nvidia-cusparse",
       "record_sha256": "905ef4711e5b313ab35c4c32d1611ac2296622ca891f943dabd995757080bb78",
       "source": "arm",
+      "verified_file_count": 8,
       "version": "12.6.3.3"
     },
     "nvidia-cusparselt-cu13": {
       "name": "nvidia-cusparselt-cu13",
       "record_sha256": "018aaeffbbdc374a4a5d0227ba11692c4ee1a0444444d841e6f89c991bfbdeb3",
       "source": "arm",
+      "verified_file_count": 7,
       "version": "0.8.1"
     },
     "nvidia-nccl-cu13": {
       "name": "nvidia-nccl-cu13",
       "record_sha256": "453a21840563dd834b02963b6740d73f06b4283bb3bdde324f3fc0ff9fe4cb58",
       "source": "arm",
+      "verified_file_count": 57,
       "version": "2.29.7"
     },
     "nvidia-nvjitlink": {
       "name": "nvidia-nvjitlink",
       "record_sha256": "b781695bf9f04753a5f0846b24f60a8ec8d244c2ca1b8bdd81d859804658a6c7",
       "source": "arm",
+      "verified_file_count": 7,
       "version": "13.3.33"
     },
     "nvidia-nvshmem-cu13": {
       "name": "nvidia-nvshmem-cu13",
       "record_sha256": "b997d9bbc91176e3141888d0741dbf38ed9a821b85e934dc9078cd047966f378",
       "source": "arm",
+      "verified_file_count": 64,
       "version": "3.4.5"
     },
     "nvidia-nvtx": {
       "name": "nvidia-nvtx",
       "record_sha256": "ff1c34d50e539649776e5a7a6711b833c998dc6022d8bb4d4e466f6eba995d70",
       "source": "arm",
+      "verified_file_count": 41,
       "version": "13.0.85"
     },
     "openai": {
       "name": "openai",
       "record_sha256": "9ed50f3f1c7364497a8d20fb031d71c393b3530c7da001375f5f369b025be408",
       "source": "pool",
+      "verified_file_count": 1489,
       "version": "2.45.0"
     },
     "openai-harmony": {
       "name": "openai-harmony",
       "record_sha256": "3af9a3b775cbb8b63c0bff36f1b0917be51574517c227b0dd48f97606ee3d76b",
       "source": "pool",
+      "verified_file_count": 7,
       "version": "0.0.8"
     },
     "opencv-python-headless": {
       "name": "opencv-python-headless",
       "record_sha256": "a4172fa37f8a5c3352f206f392daabe05cfa35010d3b7dd9dd9d9f404be49abb",
       "source": "pool",
+      "verified_file_count": 62,
       "version": "5.0.0.93"
     },
     "opentelemetry-api": {
       "name": "opentelemetry-api",
       "record_sha256": "8fc686374999a083eb0efe08cee273ba623863153834268ed6233eca624d92f3",
       "source": "pool",
+      "verified_file_count": 48,
       "version": "1.44.0"
     },
     "opentelemetry-exporter-otlp": {
       "name": "opentelemetry-exporter-otlp",
       "record_sha256": "376f3cc96c8af678fbfa6669347dba9f2ea3fb079fe2e6a3c75c97de9f113fb0",
       "source": "pool",
+      "verified_file_count": 8,
       "version": "1.44.0"
     },
     "opentelemetry-exporter-otlp-proto-common": {
       "name": "opentelemetry-exporter-otlp-proto-common",
       "record_sha256": "03743f536cca6d545209958968d996d90ce961d8f9b1c46bd70760fcb441705f",
       "source": "pool",
+      "verified_file_count": 16,
       "version": "1.44.0"
     },
     "opentelemetry-exporter-otlp-proto-grpc": {
       "name": "opentelemetry-exporter-otlp-proto-grpc",
       "record_sha256": "bcfca74929394bc335de6695afafa43dcba91626b062b5d6c9ecc2b3ee2fcb9e",
       "source": "pool",
+      "verified_file_count": 13,
       "version": "1.44.0"
     },
     "opentelemetry-exporter-otlp-proto-http": {
       "name": "opentelemetry-exporter-otlp-proto-http",
       "record_sha256": "0325c0e8cb3bf7433cc39d56d72409774f1ece3b688330a7145ac26f0f787244",
       "source": "pool",
+      "verified_file_count": 14,
       "version": "1.44.0"
     },
     "opentelemetry-proto": {
       "name": "opentelemetry-proto",
       "record_sha256": "8334e10bbce6e51c7353e17545088f5cf8b3a9c4a38d06bbde8491c191cf7a22",
       "source": "pool",
+      "verified_file_count": 45,
       "version": "1.44.0"
     },
     "opentelemetry-sdk": {
       "name": "opentelemetry-sdk",
       "record_sha256": "4390feafc90b106e7e0e8add55c48e6e179c537ee8b6b563b91fa9d4c56a2588",
       "source": "pool",
+      "verified_file_count": 71,
       "version": "1.44.0"
     },
     "opentelemetry-semantic-conventions": {
       "name": "opentelemetry-semantic-conventions",
       "record_sha256": "a088d61bbfaa3279adb9aabd56a51d5d61a9d040e69d03f10e5cbd9325073cee",
       "source": "pool",
+      "verified_file_count": 133,
       "version": "0.65b0"
     },
     "opentelemetry-semantic-conventions-ai": {
       "name": "opentelemetry-semantic-conventions-ai",
       "record_sha256": "e81dc3c95d0442daafd53de9501de62942527fbd24fff8f017832f4b26f2800c",
       "source": "pool",
+      "verified_file_count": 8,
       "version": "0.5.1"
     },
     "outlines-core": {
       "name": "outlines_core",
       "record_sha256": "0ff2229bb96529f54393fb7de20424264cccda57f6b8e704224e79100ed55529",
       "source": "pool",
+      "verified_file_count": 12,
       "version": "0.2.14"
     },
     "packaging": {
       "name": "packaging",
       "record_sha256": "2db86fa1abcd7cddc9205020b3c7ecf114d279d367fe2782978b23e141837ecc",
       "source": "pool",
+      "verified_file_count": 27,
       "version": "26.2"
     },
     "partial-json-parser": {
       "name": "partial-json-parser",
       "record_sha256": "962e274b3e23ac3df17405aad7f1e47f820da6e39ea1679ffda4aec7500cc10d",
       "source": "pool",
+      "verified_file_count": 16,
       "version": "0.2.1.1.post7"
     },
     "pillow": {
       "name": "pillow",
       "record_sha256": "e29a8853b254fcc14a7b13ab9df938bcdea09e57c5e345ad9819c611a62ac46f",
       "source": "pool",
+      "verified_file_count": 141,
       "version": "12.3.0"
     },
     "pip": {
       "name": "pip",
       "record_sha256": "69e4e9b9c716e02d1b33dda726284d2c1d0753609da6857bc70d2997d8427031",
       "source": "arm",
+      "verified_file_count": 528,
       "version": "24.0"
     },
     "pluggy": {
       "name": "pluggy",
       "record_sha256": "6bb7a9d0ece8e716b9b2d61c5656639449d6408e413e5ba2526119bfc4f629f6",
       "source": "pool",
+      "verified_file_count": 14,
       "version": "1.6.0"
     },
     "prometheus-client": {
       "name": "prometheus_client",
       "record_sha256": "e1715b2e4ba71d1df7e91051f533712f9f2f44f3a6bc68d71ed4f0e11b52b766",
       "source": "pool",
+      "verified_file_count": 38,
       "version": "0.25.0"
     },
     "prometheus-fastapi-instrumentator": {
       "name": "prometheus-fastapi-instrumentator",
       "record_sha256": "98e7eeeb3b8ebd8a5aa8a30f3d4754e33d8fe34efa15a1fa99d07ac0cb7377e4",
       "source": "pool",
+      "verified_file_count": 11,
       "version": "8.0.2"
     },
     "propcache": {
       "name": "propcache",
       "record_sha256": "5b47b5249186957cc332c6bc948cae117846f92e3561d6a8835888d6da3ba392",
       "source": "pool",
+      "verified_file_count": 14,
       "version": "0.5.2"
     },
     "protobuf": {
       "name": "protobuf",
       "record_sha256": "eed97d1353261effa97aaec15c9b010657b09c54bc7c795a3abe62fe0ca4ad7a",
       "source": "pool",
+      "verified_file_count": 60,
       "version": "7.35.1"
     },
     "psutil": {
       "name": "psutil",
       "record_sha256": "2af7e87b12ad6542c1eaaf20a299c109fa09b9dc5d69faf745219bd61e8cfca6",
       "source": "pool",
+      "verified_file_count": 17,
       "version": "7.2.2"
     },
     "py-cpuinfo": {
       "name": "py-cpuinfo",
       "record_sha256": "add13afd86ab6a32041460ca09ab948d236b70f6d939fc3b800a096aa9091031",
       "source": "pool",
+      "verified_file_count": 11,
       "version": "9.0.0"
     },
     "py-spy": {
       "name": "py-spy",
       "record_sha256": "314ae85bfde591ae401735d404254d16acb71c0a3c50452e5557e87c949adcb1",
       "source": "arm",
+      "verified_file_count": 7,
       "version": "0.4.2"
     },
     "pybase64": {
       "name": "pybase64",
       "record_sha256": "3eec8f45459828a37e107fd961792f246cccc763f8e99bd20b7e50a50b9e92f9",
       "source": "pool",
+      "verified_file_count": 18,
       "version": "1.4.3"
     },
     "pycountry": {
       "name": "pycountry",
       "record_sha256": "f7c488f0acc09e2d1ca0ca2ea08f27e095bcf5f0454fd8115e97f6055e25d8fd",
       "source": "pool",
+      "verified_file_count": 631,
       "version": "26.2.16"
     },
     "pycparser": {
       "name": "pycparser",
       "record_sha256": "e752c5c64ce06f508a80e0edeef0c165df849587b829cb9a7b7bb22ac43b0c7e",
       "source": "pool",
+      "verified_file_count": 14,
       "version": "3.0"
     },
     "pydantic": {
       "name": "pydantic",
       "record_sha256": "d0cbe0f34b294885175920bc8f2ece0b3ed6d9874347dc9cfb2caf4931329272",
       "source": "pool",
+      "verified_file_count": 112,
       "version": "2.13.4"
     },
     "pydantic-core": {
       "name": "pydantic_core",
       "record_sha256": "3e55a95c4577dcb5dfd08cb8740db06dad7117273dd4885c090413888e606fc0",
       "source": "pool",
+      "verified_file_count": 11,
       "version": "2.46.4"
     },
     "pydantic-extra-types": {
       "name": "pydantic-extra-types",
       "record_sha256": "97cdd61dee1a5d20bd92f941aaf66a6b47c6509a411bd731d7e169198e072925",
       "source": "pool",
+      "verified_file_count": 33,
       "version": "2.11.1"
     },
     "pydantic-settings": {
       "name": "pydantic-settings",
       "record_sha256": "cbb65a16388ac8010e749031b892cbc0f73d6859d43234dcfde95eadcbd1b941",
       "source": "pool",
+      "verified_file_count": 28,
       "version": "2.14.2"
     },
     "pygments": {
       "name": "Pygments",
       "record_sha256": "84ed706c6746a380f58a89b526843809e9414801b90f8392815826afd26a4ebf",
       "source": "pool",
+      "verified_file_count": 347,
       "version": "2.20.0"
     },
     "pyjwt": {
       "name": "PyJWT",
       "record_sha256": "b86eb3be0a89de734598127029531ba39dcdc6962c4c996fbac48218f8a52879",
       "source": "pool",
+      "verified_file_count": 20,
       "version": "2.13.0"
     },
     "pytest": {
       "name": "pytest",
       "record_sha256": "884a5163b0602a922ee4bdd96ffd7e98103bd28ab989622a3ca0dd7b14de41ad",
       "source": "pool",
+      "verified_file_count": 92,
       "version": "9.1.1"
     },
     "pytest-asyncio": {
       "name": "pytest-asyncio",
       "record_sha256": "e49266b994f750ffb149f52d35c162c7626f6e422bd9317b13ae2aa6767ea2f1",
       "source": "pool",
+      "verified_file_count": 10,
       "version": "1.4.0"
     },
     "python-dotenv": {
       "name": "python-dotenv",
       "record_sha256": "ba44a29cf129f34b2a94b91a3cc197a4e4bd59def77391a98f0bd43e7e4b6ece",
       "source": "pool",
+      "verified_file_count": 17,
       "version": "1.2.2"
     },
     "python-json-logger": {
       "name": "python-json-logger",
       "record_sha256": "a635b68ada7ff0a7025b56fe6c46bb6c106dc7a45416888ad61b2b8110ba2e75",
       "source": "pool",
+      "verified_file_count": 16,
       "version": "4.1.0"
     },
     "python-multipart": {
       "name": "python-multipart",
       "record_sha256": "5c11c391e44fdc2dbec56603265b8af273dae504ee2e6143d3b9d3bab2bc12df",
       "source": "pool",
+      "verified_file_count": 14,
       "version": "0.0.32"
     },
     "pyyaml": {
       "name": "PyYAML",
       "record_sha256": "7d0856221a182f5b25fde9bb976af79b4883090f54680d86a42b35fc8d6735a2",
       "source": "pool",
+      "verified_file_count": 25,
       "version": "6.0.3"
     },
     "pyzmq": {
       "name": "pyzmq",
       "record_sha256": "5d6335bd4cb60ac1bee8883bdaf7fa6217eb09eb98bf4158a685fe304c3338b4",
       "source": "pool",
+      "verified_file_count": 97,
       "version": "27.1.0"
     },
     "quack-kernels": {
       "name": "quack-kernels",
       "record_sha256": "6287dcd11c76a47a8743ea17a557c9629227bd2d445499ca17e37a822292657d",
       "source": "pool",
+      "verified_file_count": 81,
       "version": "0.5.0"
     },
     "referencing": {
       "name": "referencing",
       "record_sha256": "6bb85471519901d877804e8dc05f032e6fa362b72c8a73b21b7486517e36c90e",
       "source": "arm",
+      "verified_file_count": 19,
       "version": "0.37.0"
     },
     "regex": {
       "name": "regex",
       "record_sha256": "144c09b2262e23a09cc778f5647e4036542b099147aab9ccb08230cea5c60da5",
       "source": "pool",
+      "verified_file_count": 11,
       "version": "2026.7.10"
     },
     "requests": {
       "name": "requests",
       "record_sha256": "fc8c5216d0e865d815bd04cc240b5adc5d56f6c3dbe9aef3b4ea3b83d735bdfe",
       "source": "pool",
+      "verified_file_count": 27,
       "version": "2.34.2"
     },
     "rich": {
       "name": "rich",
       "record_sha256": "1b725253b1bd316b53169a3a0b35d03d6c81bad9009ddae73d8645fb3cd3f292",
       "source": "pool",
+      "verified_file_count": 106,
       "version": "15.0.0"
     },
     "rich-toolkit": {
       "name": "rich-toolkit",
       "record_sha256": "42e6feb09ddc15b7003dac16b41ebf286f62ddb8f663fe6e2693aae90595e98e",
       "source": "pool",
+      "verified_file_count": 29,
       "version": "0.20.3"
     },
     "rignore": {
       "name": "rignore",
       "record_sha256": "0772245127b1500133e7237ccf2b6d241962dd5114337906c5e892155983ba94",
       "source": "pool",
+      "verified_file_count": 9,
       "version": "0.7.6"
     },
     "rpds-py": {
       "name": "rpds-py",
       "record_sha256": "ca48c32a18f9570bc6a1dcb731571525c27eabc24e24f0635d6e800fd41901ef",
       "source": "arm",
+      "verified_file_count": 9,
       "version": "2026.6.3"
     },
     "ruff": {
       "name": "ruff",
       "record_sha256": "04a7efacb0280e819da23316005a7d91179abff5f38e61afda86195202f46bee",
       "source": "arm",
+      "verified_file_count": 10,
       "version": "0.16.6"
     },
     "safetensors": {
       "name": "safetensors",
       "record_sha256": "c5110881c0c39a4f163a23b2ccc88cad19ce1823b6dce1ceef353d33f16c004b",
       "source": "pool",
+      "verified_file_count": 16,
       "version": "0.8.0"
     },
     "semantic-version": {
       "name": "semantic-version",
       "record_sha256": "ea5868637b632fd544721da7917723292a5150c0346065c2b3b776162dc6d20c",
       "source": "arm",
+      "verified_file_count": 8,
       "version": "2.10.0"
     },
     "sentencepiece": {
       "name": "sentencepiece",
       "record_sha256": "01a5ca51eeeb3a09f58e7fa466d0e6985646d4687575c06f50926cabc1f9ac32",
       "source": "pool",
+      "verified_file_count": 17,
       "version": "0.2.2"
     },
     "sentry-sdk": {
       "name": "sentry-sdk",
       "record_sha256": "52bcef6253e5b31fe393f649e63aae4b54908acb9386ef99a8cc712a7811930a",
       "source": "pool",
+      "verified_file_count": 201,
       "version": "2.66.0"
     },
     "setproctitle": {
       "name": "setproctitle",
       "record_sha256": "23d6e3d52b2be9205df4fc0e3174e6074647b8d671773f8b29061b4251a17f01",
       "source": "pool",
+      "verified_file_count": 9,
       "version": "1.3.7"
     },
     "setuptools": {
       "name": "setuptools",
       "record_sha256": "3620fe28d9f6218a0d0864d8afc83ce14cdb9f17748948965d18e675feeb7c41",
       "source": "arm",
+      "verified_file_count": 514,
       "version": "78.1.0"
     },
     "setuptools-rust": {
       "name": "setuptools-rust",
       "record_sha256": "0d72c8ee26374bb9e875faf374d92734f30edb4c87fbac0a57add1d50d347749",
       "source": "arm",
+      "verified_file_count": 18,
       "version": "1.13.0"
     },
     "shellingham": {
       "name": "shellingham",
       "record_sha256": "2a878ed08ec32adc6b08a9b6a83754cd7c30ffb8a67e26527292456da9ff2fee",
       "source": "pool",
+      "verified_file_count": 14,
       "version": "1.5.4"
     },
     "six": {
       "name": "six",
       "record_sha256": "d16e50f347969b1e1919fb0c88bac4b9c644f5305bcfcfb00f72b646dbd4065d",
       "source": "pool",
+      "verified_file_count": 7,
       "version": "1.17.0"
     },
     "sniffio": {
       "name": "sniffio",
       "record_sha256": "e6c97953661def7ab6dac78f83c86f31e622bee38ff55ea508cb04e1a604d4ff",
       "source": "pool",
+      "verified_file_count": 14,
       "version": "1.3.1"
     },
     "sse-starlette": {
       "name": "sse-starlette",
       "record_sha256": "f9e13cd172033b607cc6e3ad4a644da0a4d2f7045f4d560439dcec1d89fe6455",
       "source": "pool",
+      "verified_file_count": 12,
       "version": "3.4.5"
     },
     "starlette": {
       "name": "starlette",
       "record_sha256": "798ee94d43c1be08a0c60745972eac69ae9c8fd249cf741df98d432218d3416d",
       "source": "pool",
+      "verified_file_count": 40,
       "version": "1.3.1"
     },
     "supervisor": {
       "name": "supervisor",
       "record_sha256": "bfcc8febeabd76278b5f2c45e6a0a9fb10805c882fbc9b558f4517b5afe3c8f5",
       "source": "pool",
+      "verified_file_count": 117,
       "version": "4.3.0"
     },
     "sympy": {
       "name": "sympy",
       "record_sha256": "9025fe607bebdb2a3e0b236234769520797f38dad85ec31d875974ce895fc195",
       "source": "arm",
+      "verified_file_count": 1571,
       "version": "1.14.0"
     },
     "tabulate": {
       "name": "tabulate",
       "record_sha256": "ea8a639337245f42842008c9c60ef842a40f0c61ec912dce13014653cb5fc8db",
       "source": "pool",
+      "verified_file_count": 9,
       "version": "0.10.0"
     },
     "tblib": {
       "name": "tblib",
       "record_sha256": "8d281e5f029952af175bd3bdf900fc4a05d422d8dc04947a19aa6e917f194719",
       "source": "pool",
+      "verified_file_count": 9,
       "version": "3.2.2"
     },
     "tiktoken": {
       "name": "tiktoken",
       "record_sha256": "f84ea16165064b385d0944e174d1aa76bed07e57abed4c48444a7adaf2fb944b",
       "source": "pool",
+      "verified_file_count": 15,
       "version": "0.13.0"
     },
     "tilelang": {
       "name": "tilelang",
       "record_sha256": "0be414b4e238854e630223415621b1aa086d9e82670ae59eec4440fa11c5d0f2",
       "source": "pool",
+      "verified_file_count": 6879,
       "version": "0.1.9"
     },
     "tokenizers": {
       "name": "tokenizers",
       "record_sha256": "f6cf016a34d1eb2dbf38bb6b0896b18f1d81651c97ddf514674a42ec3e958bc7",
       "source": "pool",
+      "verified_file_count": 30,
       "version": "0.22.2"
     },
     "torch": {
       "name": "torch",
       "record_sha256": "78c2962550d3c68ad5b35bbddd8fb82d5245d565ef945ec3bc11bceabcffcc76",
       "source": "arm",
+      "verified_file_count": 12121,
       "version": "2.13.0+cu130"
-    },
-    "torch-c-dlpack-ext": {
-      "name": "torch_c_dlpack_ext",
-      "record_sha256": "3ca68ad15fde3e4ea2ecf0f1cea8ba0d62ec8397957f68eb80653fc01a0040c0",
-      "source": "pool",
-      "version": "0.1.5"
     },
     "tqdm": {
       "name": "tqdm",
       "record_sha256": "36394edf1646a9b5b040b95fc7345b7ec3210b0181f1e8427d626b426b13e96c",
       "source": "pool",
+      "verified_file_count": 45,
       "version": "4.68.4"
     },
     "transformers": {
       "name": "transformers",
       "record_sha256": "a1ea799191855445410c65d6e2901096ffe1132031d545aa8e8c707d3dbdc765",
       "source": "pool",
+      "verified_file_count": 2565,
       "version": "5.14.1"
     },
     "triton": {
       "name": "triton",
       "record_sha256": "23c20d4273f3e46e60d8f8b42ae486504033a8e264aff923e326e5d439414bfe",
       "source": "arm",
+      "verified_file_count": 361,
       "version": "3.7.1"
     },
     "typer": {
       "name": "typer",
       "record_sha256": "828693a30a00299516abe5ed31f5b43c5e3f4da40aeeec936dc5c74e6adc6700",
       "source": "pool",
+      "verified_file_count": 42,
       "version": "0.27.0"
     },
     "typing-extensions": {
       "name": "typing_extensions",
       "record_sha256": "78f74ed46a377d6e1debed78b3e994ff9cfe02a529d393d7c8ab80989bd25079",
       "source": "arm",
+      "verified_file_count": 5,
       "version": "4.16.0"
     },
     "typing-inspection": {
       "name": "typing-inspection",
       "record_sha256": "96edfd27f64244b308dd9b63a60613ad2a04e5012066fdbd1aeebe85b348ba29",
       "source": "pool",
+      "verified_file_count": 10,
       "version": "0.4.2"
     },
     "urllib3": {
       "name": "urllib3",
       "record_sha256": "4869c7ca2082c964b4e2bb8244deda15cfa069d93e4543d3a16eca6a63cbb81f",
       "source": "pool",
+      "verified_file_count": 43,
       "version": "2.7.0"
     },
     "uv": {
       "name": "uv",
       "record_sha256": "8f73f3ce299fe3dc29d2ba0d89af3014c1218afee8f5c5c7f40895a8984aaacd",
       "source": "pool",
+      "verified_file_count": 13,
       "version": "0.9.9"
     },
     "uvicorn": {
       "name": "uvicorn",
       "record_sha256": "6ac7207105f2419df9daf64bfc89ffb0b9667062c7e56724adb88cbb97f95134",
       "source": "pool",
+      "verified_file_count": 49,
       "version": "0.51.0"
     },
     "uvloop": {
       "name": "uvloop",
       "record_sha256": "562769559d99609e53bed0deaf383980bf14b495e0c1e65f8c03a979d80308a2",
       "source": "pool",
+      "verified_file_count": 64,
       "version": "0.22.1"
     },
     "vllm": {
       "name": "vllm",
       "record_sha256": "c7ad8bb055b1430233039e04605cdfc5edbc808b3a6cff740dbac2fee22692f4",
       "source": "arm",
+      "verified_file_count": 11,
       "version": "0.1.dev1+g9935dfceb.precompiled"
     },
     "vllm-dfx-stage1-backpressure-hook": {
       "name": "vllm-dfx-stage1-backpressure-hook",
       "record_sha256": "94244424afb8e56b6c91cf3a9f7d1ca29972575595b7f6f861824efa0a7071d4",
       "source": "arm",
+      "verified_file_count": 8,
       "version": "0.0.1"
     },
     "vllm-runtime-dfx-lab": {
       "name": "vllm-runtime-dfx-lab",
       "record_sha256": "7840b37922bd394fc7595dcee0bf76792c375168775feeb9648b3cb54409e712",
       "source": "pool",
+      "verified_file_count": 10,
       "version": "0.1.0a1"
     },
     "watchfiles": {
       "name": "watchfiles",
       "record_sha256": "abce5784f3629acefb0640ad4ce027d1ff03f5d61d77edd4c583b50fb56bb524",
       "source": "pool",
+      "verified_file_count": 18,
       "version": "1.2.0"
     },
     "websockets": {
       "name": "websockets",
       "record_sha256": "a6290bb8986b811f015b3df1fe928b71dc4b7706b3e88b82f4d8230805f422fc",
       "source": "pool",
+      "verified_file_count": 60,
       "version": "16.1"
     },
     "wheel": {
       "name": "wheel",
       "record_sha256": "c5ca3173b8b1579a8ca8b762a1aab1668c755d1bcb9bcb48f528513f8a94a61a",
       "source": "pool",
+      "verified_file_count": 22,
       "version": "0.47.0"
     },
     "xgrammar": {
       "name": "xgrammar",
       "record_sha256": "c6f9b8c31852b01f619958631d00ea939f71f0ea59663495a66a242ae4224a3e",
       "source": "pool",
+      "verified_file_count": 52,
       "version": "0.2.3"
     },
     "yarl": {
       "name": "yarl",
       "record_sha256": "4242c6a226f35f999167cfad9c51aa11ac548b8bbcf9ee36b93b42ed232c91a7",
       "source": "pool",
+      "verified_file_count": 18,
       "version": "1.24.2"
     },
     "z3-solver": {
       "name": "z3-solver",
       "record_sha256": "5d9bf43293125dfb00dfdb7bf958b44528977358fadfb63677e99e98de887943",
       "source": "pool",
+      "verified_file_count": 45,
       "version": "4.15.4.0"
     }
   },
   "driver_version": "580.105.08",
-  "generator_sha256": "49bd45a71d1051ffcbce44009031038ea8f86202d68c8d2c2157472bd15611de",
+  "generator_sha256": "70cc5c128283a023733f06495058fb74391201580fb9efcd55d06b0fb7ea221d",
   "gpu_capability": "8.9",
   "gpu_name": "NVIDIA GeForce RTX 4090",
   "installed_wheel_binaries": {
@@ -1219,6 +1400,10 @@
     }
   },
   "local_head_commit": "9935dfceb7535eb4b95d29e9b8d1c83c5f918d5f",
+  "pool_ownership": {
+    "distribution_count": 145,
+    "owned_top_level_entry_count": 291
+  },
   "python": "3.12.3",
   "schema_version": 2,
   "source_tree": "b7061e73a6ed4773e16bd2ae3acf47aebfd1342d",

@@ -32,9 +32,11 @@ Non-core packages are exposed through one reviewed
 `stage1-dependency-pool.pth` file in each arm environment. Its sole line is the
 absolute read-only pool path. The build record hashes both the file and its
 value. For every visible distribution it records the normalized name, version,
-SHA-256 of `RECORD`, and whether its metadata came from the arm environment or
-the pool. Duplicate normalized names fail generation. The two manifests must
-match except for `vllm` and the test plugin.
+SHA-256 of `RECORD`, count of content-verified files, and whether its metadata
+came from the arm environment or the pool. Every hashed `RECORD` entry is
+verified against its installed bytes. Duplicate normalized names fail
+generation. Every pool top-level entry must be owned by a distribution
+`RECORD`. The two manifests must match except for `vllm` and the test plugin.
 
 ## Fault hook
 
