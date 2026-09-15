@@ -3,6 +3,20 @@
 Status: **first GPU lane complete; the predeclared reproduction hypothesis was
 not supported.**
 
+## Later outcome and upstream status (2026-09-14)
+
+Subsequent controlled gates isolated gradient accumulation as the missing
+condition. A current-nightly standalone reproducer then confirmed two forms of
+the same mixed-gradient-dtype assertion: a parameter first used on the final
+microbatch, and an unused-parameter zero placeholder mixed with an accumulated
+gradient. The validated report is now
+[pytorch/pytorch#196996](https://github.com/pytorch/pytorch/issues/196996).
+
+The issue is open and triaged. A PyTorch maintainer has stated that a fix is
+already in progress, so this project will not open an overlapping PR. See the
+[validation result](upstream_dtype_issue/VALIDATION_RESULT_2026-09-14.md)
+and [upstream status](upstream_dtype_issue/UPSTREAM_STATUS_2026-09-14.md).
+
 This experiment tests whether a simplified two-rank unused-parameter case is
 sufficient to reproduce the mixed-gradient-dtype assertion observed during the
 four-GPU organic-hang control. It cannot establish whether pipeline parallelism

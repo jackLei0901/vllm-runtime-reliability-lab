@@ -66,3 +66,16 @@ dtype-collect-env.txt
 Raw logs remain outside the public repository pending privacy review. The
 public issue should quote only the minimal assertion, return codes and required
 environment output.
+
+## Upstream disposition
+
+The validated defect was filed as
+[pytorch/pytorch#196996](https://github.com/pytorch/pytorch/issues/196996) on
+2026-09-14. The issue is open and has entered the FSDP and distributed triage
+queues. A PyTorch maintainer replied that the maintainers are already preparing
+the fix.
+
+No overlapping pull request is planned from this lab. The remaining action is
+to monitor the upstream fix, link the merged change here, and synchronize the
+issue's closure after the fix lands. A proposed or draft fix alone is not
+treated as completion.

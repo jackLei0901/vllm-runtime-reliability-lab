@@ -321,6 +321,14 @@ not identify the exact NCCL blocking call or validate a fix. See the frozen
 [`protocol`](experiments/pytorch-unused-grad-dtype/GATE1G_PROTOCOL.md) and
 [`result`](experiments/pytorch-unused-grad-dtype/GATE1G_RESULT_2026-09-13.md).
 
+The campaign also isolated a separate FSDP2 gradient-accumulation dtype defect
+and reproduced both of its triggers on a current PyTorch nightly. It was filed
+as [pytorch/pytorch#196996](https://github.com/pytorch/pytorch/issues/196996),
+is now triaged, and has been taken up for a maintainer-owned fix. The lab will
+track the upstream change rather than open a competing PR; see the
+[validation result](experiments/pytorch-unused-grad-dtype/upstream_dtype_issue/VALIDATION_RESULT_2026-09-14.md)
+and [upstream status](experiments/pytorch-unused-grad-dtype/upstream_dtype_issue/UPSTREAM_STATUS_2026-09-14.md).
+
 The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Documentation
