@@ -149,15 +149,42 @@ publication narrative.
 
 ## 9. Transfer to vLLM
 
-The next vLLM case should test a different capability: a process remains alive
-while request progress stops. The candidate is
-[`vllm-project/vllm#53859`](https://github.com/vllm-project/vllm/issues/53859),
-where a full event queue can block EngineCore while health remains green.
+The lab next tested a different failure class in
+[`vllm-project/vllm#53859`](https://github.com/vllm-project/vllm/issues/53859):
+an EngineCore process remains alive and health-responsive while request
+progress stops because the KV-event publisher is blocked by a full queue.
 
-The pre-registered product question is whether the lab can detect no progress
-and place the blocked EngineCore thread at the queue operation, then show that
-the signal disappears with the existing fix. That work is intentionally not
-claimed by this case study yet.
+The pre-registered four-cell Stage 1 campaign compared vLLM base commit
+`22258a26` with the same base plus
+[`vllm-project/vllm#53883`](https://github.com/vllm-project/vllm/pull/53883),
+using control and paused-consumer cells on one RTX 4090. The
+[reviewed result](../vllm-zmq-event-backpressure/STAGE1_R3_RESULT_2026-09-16.md)
+and
+[closed-shape summaries](../../results/vllm-zmq-backpressure-stage1-r3-20260916/)
+showed:
+
+- both controls completed 64 output tokens without a stall or drop;
+- on the base tree, progress stopped after 11 streaming events while
+  `/health` continued to return 2xx;
+- an external stack sample placed the EngineCore publisher on the blocking
+  path through `Queue.put()` and `threading.Condition.wait()`;
+- releasing the consumer after 10.36 seconds restored progress and the request
+  completed;
+- with #53883 applied, the same request completed before release, with one
+  event batch accepted and four dropped.
+
+This is the lab's first vLLM-native evidence that external progress and stack
+signals can distinguish an alive-but-stalled EngineCore and evaluate an
+existing liveness fix. It supports **liveness restored with measured event
+loss**, not reliable KV-event delivery: dropped batches receive no publisher
+sequence number, so downstream subscribers cannot detect the loss from this
+interface alone.
+
+The boundary remains narrow. This was a deterministic, test-plugin-induced
+pause on one GPU and one EngineCore. It does not establish the reported
+data-parallel `shm_broadcast` consequence, production drop rates, or behavior
+under an organic consumer failure. The captured stack also contains the lab's
+`observed_put` wrapper frame.
 
 ## 10. Publication gate
 
