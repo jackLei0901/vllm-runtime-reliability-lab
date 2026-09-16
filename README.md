@@ -329,6 +329,17 @@ track the upstream change rather than open a competing PR; see the
 [validation result](experiments/pytorch-unused-grad-dtype/upstream_dtype_issue/VALIDATION_RESULT_2026-09-14.md)
 and [upstream status](experiments/pytorch-unused-grad-dtype/upstream_dtype_issue/UPSTREAM_STATUS_2026-09-14.md).
 
+The vLLM #53859 Stage 1 campaign adds a different kind of result: a real
+single-GPU EngineCore remained health-responsive while KV-event publisher
+backpressure stopped token progress. An external stack located the blocking
+queue path, and releasing the consumer restored the request. With #53883
+applied, the same request completed without a stall while the EngineCore-local
+counter measured one accepted event batch and four dropped batches. This is
+evidence for **liveness restored with event loss**, not reliable delivery or a
+production loss-rate estimate. See the
+[reviewed result](experiments/vllm-zmq-event-backpressure/STAGE1_R3_RESULT_2026-09-16.md)
+and [public summaries](results/vllm-zmq-backpressure-stage1-r3-20260916/).
+
 The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Documentation

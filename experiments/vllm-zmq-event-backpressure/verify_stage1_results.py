@@ -15,6 +15,10 @@ FIX_HEAD = "1a2b85306b6d13033bbecc693e6cb776acb4bcaa"
 FIX_PATCH_SHA256 = "ebf0e35f53e6e3a74c79d608f6a2656d3f7537bcb3c648ce6885a8eac3423dfc"
 BASE_TREE = "b7061e73a6ed4773e16bd2ae3acf47aebfd1342d"
 FIX_TREE = "46bc6e191b14ce12a04827454b4588ea5d3a435f"
+KV_EVENTS_SHA256 = {
+    "base": "de08f01e8736881560256c350a3b6418999dd4aa30f9c6ec9159527f7ed6899a",
+    "fix": "15c3038f1bf97e785c3f1960451e10b54bfa3d87ab456ce2550a2fe98ba1b49a",
+}
 CELLS = {
     1: ("base", "control"),
     2: ("fix", "control"),
@@ -271,6 +275,10 @@ def verify_cell(record: dict[str, Any], index: int) -> None:
         f"{label}: imported kv_events hash mismatch",
     )
     require(
+        environment["tree_kv_events_sha256"] == KV_EVENTS_SHA256[source_arm],
+        f"{label}: source-specific kv_events hash mismatch",
+    )
+    require(
         record["engine_core_kv_events_sha256"] == environment["tree_kv_events_sha256"],
         f"{label}: EngineCore kv_events hash mismatch",
     )
@@ -357,6 +365,53 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def verify_cross_cell(records: list[dict[str, Any]]) -> None:
+    require(
+        len({record["request_sha256"] for record in records}) == 1,
+        "request changed across cells",
+    )
+    require(
+        len({record["server_command_sha256"] for record in records}) == 1,
+        "server command changed across cells",
+    )
+    shared_runtime_keys = {
+        "cuda",
+        "cuda_available",
+        "gpu_capability",
+        "gpu_count",
+        "gpu_name",
+        "python",
+        "torch",
+    }
+    shared_runtimes = {
+        json.dumps(
+            {key: record["environment"][key] for key in shared_runtime_keys},
+            sort_keys=True,
+        )
+        for record in records
+    }
+    require(len(shared_runtimes) == 1, "runtime environment changed across cells")
+    for source_arm in ("base", "fix"):
+        source_records = [
+            record for record in records if record["source_arm"] == source_arm
+        ]
+        build_identities = {
+            record["build_identity_sha256"] for record in source_records
+        }
+        require(
+            len(build_identities) == 1,
+            f"{source_arm} build identity changed across cells",
+        )
+        source_environments = {
+            json.dumps(record["environment"], sort_keys=True)
+            for record in source_records
+        }
+        require(
+            len(source_environments) == 1,
+            f"{source_arm} import identity changed across cells",
+        )
+
+
 def main() -> int:
     args = parse_args()
     records = []
@@ -367,51 +422,7 @@ def main() -> int:
         verify_cell(record, index)
         records.append(record)
 
-    require(
-        len({record["request_sha256"] for record in records}) == 1,
-        "request changed across cells",
-    )
-    require(
-        len({record["server_command_sha256"] for record in records}) == 1,
-        "server command changed across cells",
-    )
-    shared_environment_keys = {
-        "cuda",
-        "cuda_available",
-        "gpu_capability",
-        "gpu_count",
-        "gpu_name",
-        "python",
-        "torch",
-        "vllm",
-    }
-    shared_environments = {
-        json.dumps(
-            {key: record["environment"][key] for key in shared_environment_keys},
-            sort_keys=True,
-        )
-        for record in records
-    }
-    require(len(shared_environments) == 1, "runtime environment changed across cells")
-    for source_arm in ("base", "fix"):
-        build_identities = {
-            record["build_identity_sha256"]
-            for record in records
-            if record["source_arm"] == source_arm
-        }
-        require(
-            len(build_identities) == 1,
-            f"{source_arm} build identity changed across cells",
-        )
-        source_environments = {
-            json.dumps(record["environment"], sort_keys=True)
-            for record in records
-            if record["source_arm"] == source_arm
-        }
-        require(
-            len(source_environments) == 1,
-            f"{source_arm} import identity changed across cells",
-        )
+    verify_cross_cell(records)
     print("PASS: vLLM #53859 Stage 1 four-cell contract verified")
     return 0
 

@@ -134,6 +134,7 @@ unlinked-versus-linked 消融是明确的产品验收项，不是前提。
 | 正常 SIGTERM、EngineCore SIGKILL、受控 CUDA OOM | RTX 4090 已验证 |
 | 四卡 FSDP2 已知答案的 collective divergence 重建 | 已完成；仍缺同版本负对照 |
 | 两卡 unused-gradient dtype 机制 Gate 0 | 已完成；Gate 1e 机制 3/3 通过 |
+| vLLM #53859 EngineCore 背压与 #53883 对照 | 单卡四 cell 通过；修复以事件丢失换取活性 |
 | 需求到测试用例的机器检查 | 已完成 |
 
 ### 尚未完成
@@ -370,6 +371,16 @@ reduce-scatter 调用而在执行前撤回；Gate 1c 又因 wall bound 过紧和
 - [`experiments/pytorch-unused-grad-dtype/GATE1E_RESULT_2026-09-13.md`](experiments/pytorch-unused-grad-dtype/GATE1E_RESULT_2026-09-13.md)
 - [`experiments/pytorch-unused-grad-dtype/GATE1F_PROTOCOL.md`](experiments/pytorch-unused-grad-dtype/GATE1F_PROTOCOL.md)
 - [`experiments/pytorch-unused-grad-dtype/GATE1F_RESULT_2026-09-13.md`](experiments/pytorch-unused-grad-dtype/GATE1F_RESULT_2026-09-13.md)
+
+vLLM #53859 的 Stage 1 则验证了另一类问题：在单卡真实 EngineCore 中，
+KV-event publisher 的背压会让 token 进度停止，但 `/health` 仍返回 2xx。
+外部 stack 定位到了阻塞的 queue 路径；释放 consumer 后，请求恢复并完成。
+应用 #53883 后，同一请求不再停滞，同时 EngineCore 内的计数器记录到 1 个
+accepted event batch 和 4 个 dropped batches。这个结果支持“以事件丢失换取
+服务活性”，不代表可靠投递，也不能作为生产环境丢失率：
+
+- [`experiments/vllm-zmq-event-backpressure/STAGE1_R3_RESULT_2026-09-16.md`](experiments/vllm-zmq-event-backpressure/STAGE1_R3_RESULT_2026-09-16.md)
+- [`results/vllm-zmq-backpressure-stage1-r3-20260916/`](results/vllm-zmq-backpressure-stage1-r3-20260916/)
 
 ## 11. 如何运行开发验证
 
