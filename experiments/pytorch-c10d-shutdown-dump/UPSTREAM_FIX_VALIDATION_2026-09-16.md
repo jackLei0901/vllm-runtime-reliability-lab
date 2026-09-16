@@ -57,10 +57,14 @@ Additional checks on the patched build:
 - a temporarily enabled `test_timeout_dumps_on_stuck_ranks` passed;
 - `git diff --check`, Ruff, Python compilation, and clang-format passed.
 
-The existing dormant `test_timeout_dumps` was also exercised. Rank 1 was still
-inside communicator destruction when the peer request arrived and wrote one
-completed trace entry. The proposed PR updates that test's old no-dump
-expectation to match the contract under review.
+The existing dormant `test_timeout_dumps` was then rewritten to use the same
+bounded complete-pickle loader as the new regression test. With its class
+temporarily enabled, both `timing_enabled=False` and `timing_enabled=True`
+passed in 3/3 runs on the patched build. Every invocation validated rank 1's
+single completed entry, and the inherited strict rank-1 exit-code requirement
+of zero also passed. The tested source revision was `6342275774378594`; the
+only remote-only change was removal of the class decorator required to collect
+the dormant test.
 
 ## Interpretation boundary
 
@@ -87,6 +91,12 @@ details outside the public schema. Their archive is content-addressed:
 - archive: `pytorch-196968-validation-20260916.tgz`;
 - SHA-256:
   `9f7d058373b3e1ff78ecf60fa7e684fdb33a1b92916673e9933ff2bafbae4af6`.
+
+The three repeated runs of the rewritten existing test are retained separately:
+
+- archive: `pytorch-196968-timeout-rewrite-validation-20260916.tgz`;
+- SHA-256:
+  `24566095846fda6662d475c8a55d1642c92ed0476099b57eb3b9aa67b9a1856e`.
 
 The public claims above are limited to the reviewed, closed-shape results and
 the upstream code and test changes.
