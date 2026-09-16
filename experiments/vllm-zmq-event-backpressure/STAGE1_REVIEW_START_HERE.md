@@ -9,7 +9,7 @@ summaries and the reviewed result are ready for verification**
 
 1. `STAGE1_R3_RESULT_2026-09-16.md` and the four summaries under
    `results/vllm-zmq-backpressure-stage1-r3-20260916/`
-2. `verify_stage1_results.py`
+2. `verify_stage1_r3_results.py`
 3. `STAGE1_PROTOCOL_DRAFT.md`
 4. `stage1_plugin/src/dfx_stage1_backpressure/__init__.py`
 5. `stage1_contract.py`

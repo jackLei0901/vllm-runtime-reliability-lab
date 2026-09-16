@@ -116,7 +116,9 @@ identical across base and fix. It reached that final cross-cell comparison only
 after every per-cell check passed. The verifier was corrected after execution
 to require common runtime fields to match across all cells, exact full
 environment equality within each arm, and fixed source-specific
-`kv_events.py` hashes. No result field was changed.
+`kv_events.py` hashes. The executed verifier remains preserved as
+`verify_stage1_results.py`; the correction is the separate
+`verify_stage1_r3_results.py`. No result field was changed.
 
 ## Public/private boundary
 
@@ -136,6 +138,6 @@ independently inspectable rather than only tamper-evident.
 Verify with:
 
 ```bash
-python experiments/vllm-zmq-event-backpressure/verify_stage1_results.py \
+python experiments/vllm-zmq-event-backpressure/verify_stage1_r3_results.py \
   results/vllm-zmq-backpressure-stage1-r3-20260916
 ```

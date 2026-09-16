@@ -352,7 +352,6 @@ class Stage1VerifierTest(unittest.TestCase):
         source_arm, trigger = self.verifier.CELLS[index]
         pause_base = index == 3
         pause_fix = index == 4
-        kv_events_sha256 = self.verifier.KV_EVENTS_SHA256[source_arm]
         offsets = [0.1, 0.2, 10.3] if pause_base else [0.1, 0.2, 0.3]
         return {
             "accepted_batch_count": 1,
@@ -363,7 +362,7 @@ class Stage1VerifierTest(unittest.TestCase):
             "completion_tokens": 32,
             "dropped_batch_count": 1 if pause_fix else 0,
             "engine_core_bound": True,
-            "engine_core_kv_events_sha256": kv_events_sha256,
+            "engine_core_kv_events_sha256": "e" * 64,
             "engine_core_mapped_worktree_binaries": {"vllm/_C.abi3.so": "8" * 64},
             "environment": {
                 "cuda": "13.0",
@@ -373,10 +372,10 @@ class Stage1VerifierTest(unittest.TestCase):
                 "gpu_name": "test-gpu",
                 "import_matches_tree": True,
                 "kv_events_relative_file": "vllm/distributed/kv_events.py",
-                "kv_events_sha256": kv_events_sha256,
+                "kv_events_sha256": "e" * 64,
                 "python": "3.12.0",
                 "torch": "2.13.0+cu130",
-                "tree_kv_events_sha256": kv_events_sha256,
+                "tree_kv_events_sha256": "e" * 64,
                 "vllm": "test",
                 "vllm_relative_file": "vllm/__init__.py",
             },
@@ -436,19 +435,6 @@ class Stage1VerifierTest(unittest.TestCase):
         for index in self.verifier.CELLS:
             self.verifier.verify_cell(self.record(index), index)
 
-    def test_cross_cell_verifier_allows_source_specific_identity(self) -> None:
-        records = [self.record(index) for index in self.verifier.CELLS]
-        for record in records:
-            if record["source_arm"] == "fix":
-                record["environment"]["vllm"] = "test-fix"
-        self.verifier.verify_cross_cell(records)
-
-    def test_cross_cell_verifier_rejects_runtime_drift(self) -> None:
-        records = [self.record(index) for index in self.verifier.CELLS]
-        records[3]["environment"]["torch"] = "unexpected"
-        with self.assertRaisesRegex(AssertionError, "runtime environment"):
-            self.verifier.verify_cross_cell(records)
-
     def test_verifier_rejects_missing_stack_producer(self) -> None:
         record = deepcopy(self.record(3))
         record["stack"] = {
@@ -470,14 +456,6 @@ class Stage1VerifierTest(unittest.TestCase):
         record["engine_core_kv_events_sha256"] = "f" * 64
         with self.assertRaisesRegex(AssertionError, "EngineCore kv_events"):
             self.verifier.verify_cell(record, 1)
-
-    def test_verifier_rejects_unpinned_source_hash(self) -> None:
-        record = self.record(2)
-        record["environment"]["kv_events_sha256"] = "f" * 64
-        record["environment"]["tree_kv_events_sha256"] = "f" * 64
-        record["engine_core_kv_events_sha256"] = "f" * 64
-        with self.assertRaisesRegex(AssertionError, "source-specific kv_events"):
-            self.verifier.verify_cell(record, 2)
 
     def test_bounded_campaign_error_does_not_retain_message(self) -> None:
         self.assertEqual(

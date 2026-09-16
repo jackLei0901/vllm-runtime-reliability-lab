@@ -44,6 +44,9 @@ extend-exclude = [
   "experiments/pytorch-unused-grad-dtype/upstream_dtype_issue/reproducer.py",
   # Immutable Stage 0 evidence: its SHA-256 is checked by the verifier.
   "experiments/vllm-zmq-event-backpressure/stage0_backpressure_executed.py",
+  # Pre-execution freeze verifiers are byte-pinned by their manifests.
+  "experiments/vllm-zmq-event-backpressure/verify_stage1_freeze.py",
+  "experiments/vllm-zmq-event-backpressure/verify_stage1_r2_freeze.py",
 ]
 
 [tool.ruff.lint]
