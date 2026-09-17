@@ -1,0 +1,92 @@
+{
+  "cells": [
+    {
+      "case": "intentional-sigterm-after-ready",
+      "elapsed_seconds": 2.388,
+      "process_returncode": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "65b08a8c17afae791a985f5e9196a6a38dd13150a8ed6af409f9c7b6f62d6913",
+      "subject": {
+        "case": "intentional-sigterm-after-ready",
+        "child_exitcode": -15,
+        "entry_returned": true,
+        "error": null,
+        "handled_signals": [
+          "SIGTERM"
+        ],
+        "probe_failure_triggered": false,
+        "server_started": true,
+        "signal_sent": true
+      },
+      "timed_out": false
+    },
+    {
+      "case": "abnormal-child-exit-before-ready",
+      "elapsed_seconds": 2.834,
+      "process_returncode": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "cee7f716fca0cd0107f8aa4e7d5467ea05b84a3b5c9515c84e83493102bc4b63",
+      "subject": {
+        "case": "abnormal-child-exit-before-ready",
+        "child_exitcode": 17,
+        "entry_returned": true,
+        "error": null,
+        "handled_signals": [],
+        "probe_failure_triggered": false,
+        "server_started": false,
+        "signal_sent": false
+      },
+      "timed_out": false
+    },
+    {
+      "case": "abnormal-child-exit-after-ready",
+      "elapsed_seconds": 2.694,
+      "process_returncode": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "73645f19dc98a684cf4915765a7942bf965c0813a8dd1d3fbad7f395b46f5fb2",
+      "subject": {
+        "case": "abnormal-child-exit-after-ready",
+        "child_exitcode": 17,
+        "entry_returned": true,
+        "error": null,
+        "handled_signals": [],
+        "probe_failure_triggered": false,
+        "server_started": true,
+        "signal_sent": false
+      },
+      "timed_out": false
+    },
+    {
+      "case": "probe-failure-after-ready",
+      "elapsed_seconds": 2.321,
+      "process_returncode": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "8af6f463acf9a25b9cd51a8312774fbfb13f29e4df3dcd2bafe618d8ae152050",
+      "subject": {
+        "case": "probe-failure-after-ready",
+        "child_exitcode": -15,
+        "entry_returned": true,
+        "error": null,
+        "handled_signals": [],
+        "probe_failure_triggered": true,
+        "server_started": true,
+        "signal_sent": false
+      },
+      "timed_out": false
+    }
+  ],
+  "fault_tolerance_enabled": false,
+  "gate": "vllm-dp-supervisor-exit-gate0",
+  "platform": {
+    "machine": "x86_64",
+    "release": "5.15.0-94-generic",
+    "system": "Linux"
+  },
+  "protocol_sha256": "33789491a7bbd3c7d12bee6ea9cd93d5de5476237d0bcb74841b0f93e4c2826a",
+  "python": "3.12.3",
+  "runner_sha256": "5b6ac4defd855f1b0757fd3aef67421b5ee2966486292402170cdb4bcf180f38",
+  "schema_version": 1,
+  "subject_source_sha256": "7c80f64bfe37feaebaaadadf5630cfa825035c034267951db0ca9a5a1e74588b",
+  "timeout_seconds": 90.0,
+  "vllm_commit": "61950f9589938ffc73e4f4eaf4181c39f66afbaf"
+}
