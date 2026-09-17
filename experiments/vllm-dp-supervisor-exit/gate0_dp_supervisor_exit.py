@@ -149,9 +149,7 @@ def install_vllm_import_stubs() -> None:
     launcher.NoSignalServer = MinimalNoSignalServer
     sys.modules[launcher.__name__] = launcher
 
-    server_utils = types.ModuleType(
-        "vllm.entrypoints.launchers.utils.server_utils"
-    )
+    server_utils = types.ModuleType("vllm.entrypoints.launchers.utils.server_utils")
     server_utils.get_uvicorn_log_config = lambda _args: None
     sys.modules[server_utils.__name__] = server_utils
 
@@ -174,7 +172,7 @@ def run_subject(case: str, subject_source: Path) -> None:
     real_supervisor = dp_sup.DPSupervisor
 
     class ProbeSupervisor(real_supervisor):
-        instance: "ProbeSupervisor | None" = None
+        instance: ProbeSupervisor | None = None
 
         def __init__(self, args: argparse.Namespace) -> None:
             super().__init__(args)
@@ -271,9 +269,7 @@ def run_subject(case: str, subject_source: Path) -> None:
                 "probe_failure_triggered": (
                     instance.probe_failure_triggered if instance else False
                 ),
-                "handled_signals": (
-                    instance.handled_signals if instance else []
-                ),
+                "handled_signals": (instance.handled_signals if instance else []),
                 "server_started": instance.server_started if instance else False,
                 "signal_sent": instance.signal_sent if instance else False,
             },
@@ -411,9 +407,7 @@ def main() -> None:
         or args.subject_commit is None
         or args.output is None
     ):
-        parser.error(
-            "--subject-source, --subject-commit, and --output are required"
-        )
+        parser.error("--subject-source, --subject-commit, and --output are required")
     run_campaign(
         args.subject_source.resolve(),
         args.subject_commit,

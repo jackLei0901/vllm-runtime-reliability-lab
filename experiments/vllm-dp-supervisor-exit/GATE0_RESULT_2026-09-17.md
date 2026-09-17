@@ -55,8 +55,8 @@ duplicate this candidate fix.
 
 | Subject | Source SHA-256 | Summary SHA-256 |
 | --- | --- | --- |
-| vLLM main | `d10e5991...a4b9a97` | `d0680b94...b584941` |
-| #54963 head | `7c80f64b...1e74588b` | `05f85e4d...a80a3dd` |
+| vLLM main | `d10e5991...a4b9a97` | `eaeff41b...f9690c4` |
+| #54963 head | `7c80f64b...1e74588b` | `7a257ec2...ffc0c45` |
 
 Both retained summaries pass `verify_gate0.py` under normal Python and
 `python -O`. A deliberately altered summary with fault tolerance enabled is

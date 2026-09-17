@@ -46,8 +46,7 @@ def main() -> None:
         "protocol hash mismatch",
     )
     require(
-        summary["runner_sha256"]
-        == sha256_file(root / "gate0_dp_supervisor_exit.py"),
+        summary["runner_sha256"] == sha256_file(root / "gate0_dp_supervisor_exit.py"),
         "runner hash mismatch",
     )
     require(
@@ -55,8 +54,7 @@ def main() -> None:
         "unexpected vLLM commit",
     )
     require(
-        summary["subject_source_sha256"]
-        == EXPECTED_SOURCES[summary["vllm_commit"]],
+        summary["subject_source_sha256"] == EXPECTED_SOURCES[summary["vllm_commit"]],
         "subject source hash mismatch",
     )
     require(
