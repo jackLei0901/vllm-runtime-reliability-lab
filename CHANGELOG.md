@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Lead the README with demonstrated outcomes from PyTorch #196968, vLLM
+  #53859/#53883, and PyTorch #196996, with discovery/validation boundaries.
+- Add a dependency-free, fail-closed CPU replay for the published #53859
+  four-cell result and a structured external replay-report template.
+- Add the gated v0.2 release plan, focused adoption scorecard, and a Flight
+  Recorder case-study draft that cannot be published before an explicit
+  upstream outcome for #197232.
+- Add the reviewed v0.2 collect/verify core: separate progress producers,
+  demand-gated no-progress verdicts, native closed bundles, and offline
+  fail-closed recomputation.
+- Add bounded CPU-only collection with stable PID identity, endpoint privacy,
+  opt-in streaming progress probes, and opt-in `py-spy` producer identity.
+- Preserve the published #53859 R3 result as a legacy oracle: a compatibility
+  projection reports unavailable native evidence instead of inventing it.
+
 ## 0.1.0-alpha.4 - 2026-09-12
 
 - Reframe the product around health-green loss of progress and cross-producer

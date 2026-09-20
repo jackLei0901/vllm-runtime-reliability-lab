@@ -1,0 +1,28 @@
+{
+  "case_id": "vllm-53859-stage1-r3",
+  "files": {
+    "base_control": {
+      "path": "cell-1-base-control.json",
+      "sha256": "2e0f7025b3d60ffdd9bca2a562962d871120b9fe69670178d48ae0c8b2d967f2"
+    },
+    "fix_control": {
+      "path": "cell-2-fix-control.json",
+      "sha256": "9ce0b5bedefc2fa421b0fc13978ada6b1cb1f9ca77e659d3e56b29e474ae9360"
+    },
+    "base_pause": {
+      "path": "cell-3-base-pause.json",
+      "sha256": "2da7e095602749cedb22b10350bd4c07bef0f3e3fd1ecac453006cad17db3880"
+    },
+    "fix_pause": {
+      "path": "cell-4-fix-pause.json",
+      "sha256": "4560e38603649461c9591171e87ab874687859bc7491c42a8c25f9e3f58f59ba"
+    }
+  },
+  "kind": "vllm_zmq_backpressure_four_cell_v1",
+  "schema_version": 1,
+  "source_links": [
+    "https://github.com/vllm-project/vllm/issues/53859",
+    "https://github.com/vllm-project/vllm/pull/53883"
+  ],
+  "title": "vLLM health-green no-progress under KV-event backpressure"
+}

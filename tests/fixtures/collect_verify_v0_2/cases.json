@@ -1,0 +1,493 @@
+{
+  "schema_version": "collect-verify-contract-cases-v1",
+  "case_count": 32,
+  "producer_cases": [
+    {
+      "id": "server-counter-rising",
+      "kind": "server_counter",
+      "input": {
+        "producer_available": true,
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "minimum_span_ns": 10000000000,
+        "minimum_fresh_samples": 2,
+        "samples": [
+          {"monotonic_ns": 10000000000, "fresh": true, "value": 100.0},
+          {"monotonic_ns": 20000000000, "fresh": true, "value": 112.0}
+        ]
+      },
+      "expected": {"state": "progressing", "reason": "positive_delta"}
+    },
+    {
+      "id": "server-counter-flat",
+      "kind": "server_counter",
+      "input": {
+        "producer_available": true,
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "minimum_span_ns": 10000000000,
+        "minimum_fresh_samples": 2,
+        "samples": [
+          {"monotonic_ns": 10000000000, "fresh": true, "value": 100.0},
+          {"monotonic_ns": 20000000000, "fresh": true, "value": 100.0}
+        ]
+      },
+      "expected": {"state": "flat", "reason": "equal_samples"}
+    },
+    {
+      "id": "server-counter-producer-missing",
+      "kind": "server_counter",
+      "input": {
+        "producer_available": false,
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "minimum_span_ns": 10000000000,
+        "minimum_fresh_samples": 2,
+        "samples": []
+      },
+      "expected": {"state": "producer_missing", "reason": "unavailable"}
+    },
+    {
+      "id": "server-counter-one-sample",
+      "kind": "server_counter",
+      "input": {
+        "producer_available": true,
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "minimum_span_ns": 10000000000,
+        "minimum_fresh_samples": 2,
+        "samples": [
+          {"monotonic_ns": 10000000000, "fresh": true, "value": 100.0}
+        ]
+      },
+      "expected": {"state": "insufficient_evidence", "reason": "sample_count"}
+    },
+    {
+      "id": "server-counter-reset",
+      "kind": "server_counter",
+      "input": {
+        "producer_available": true,
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "minimum_span_ns": 10000000000,
+        "minimum_fresh_samples": 2,
+        "samples": [
+          {"monotonic_ns": 10000000000, "fresh": true, "value": 100.0},
+          {"monotonic_ns": 20000000000, "fresh": true, "value": 3.0}
+        ]
+      },
+      "expected": {"state": "insufficient_evidence", "reason": "counter_reset"}
+    },
+    {
+      "id": "server-counter-cached-values-do-not-count",
+      "kind": "server_counter",
+      "input": {
+        "producer_available": true,
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "minimum_span_ns": 10000000000,
+        "minimum_fresh_samples": 2,
+        "samples": [
+          {"monotonic_ns": 10000000000, "fresh": true, "value": 100.0},
+          {"monotonic_ns": 15000000000, "fresh": false, "value": 100.0},
+          {"monotonic_ns": 20000000000, "fresh": false, "value": 100.0}
+        ]
+      },
+      "expected": {"state": "insufficient_evidence", "reason": "sample_count"}
+    },
+    {
+      "id": "client-content-progress",
+      "kind": "client_request",
+      "input": {
+        "producer_available": true,
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "request_started_ns": 9000000000,
+        "request_completed_ns": null,
+        "chunks": [
+          {"monotonic_ns": 15000000000, "kind": "content"}
+        ]
+      },
+      "expected": {"state": "progressing", "reason": "content_chunk"}
+    },
+    {
+      "id": "client-non-content-chunks-remain-flat",
+      "kind": "client_request",
+      "input": {
+        "producer_available": true,
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "request_started_ns": 9000000000,
+        "request_completed_ns": null,
+        "chunks": [
+          {"monotonic_ns": 11000000000, "kind": "role_only"},
+          {"monotonic_ns": 15000000000, "kind": "empty"},
+          {"monotonic_ns": 19000000000, "kind": "usage_only"}
+        ]
+      },
+      "expected": {"state": "flat", "reason": "no_content_while_open"}
+    },
+    {
+      "id": "client-completed-before-interval-end",
+      "kind": "client_request",
+      "input": {
+        "producer_available": true,
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "request_started_ns": 9000000000,
+        "request_completed_ns": 15000000000,
+        "chunks": []
+      },
+      "expected": {"state": "insufficient_evidence", "reason": "request_not_open_for_interval"}
+    }
+  ],
+  "demand_cases": [
+    {
+      "id": "server-demand-present",
+      "kind": "server_counter",
+      "input": {
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "minimum_fresh_samples": 2,
+        "samples": [
+          {"monotonic_ns": 10000000000, "fresh": true, "running": 1.0, "waiting": 0.0},
+          {"monotonic_ns": 20000000000, "fresh": true, "running": 1.0, "waiting": 2.0}
+        ]
+      },
+      "expected": {"state": "present", "reason": "work_visible"}
+    },
+    {
+      "id": "server-demand-absent",
+      "kind": "server_counter",
+      "input": {
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "minimum_fresh_samples": 2,
+        "samples": [
+          {"monotonic_ns": 10000000000, "fresh": true, "running": 0.0, "waiting": 0.0},
+          {"monotonic_ns": 20000000000, "fresh": true, "running": 0.0, "waiting": 0.0}
+        ]
+      },
+      "expected": {"state": "absent", "reason": "no_work_visible"}
+    },
+    {
+      "id": "server-demand-contradictory",
+      "kind": "server_counter",
+      "input": {
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "minimum_fresh_samples": 2,
+        "samples": [
+          {"monotonic_ns": 10000000000, "fresh": true, "running": 1.0, "waiting": 0.0},
+          {"monotonic_ns": 20000000000, "fresh": true, "running": 0.0, "waiting": 0.0}
+        ]
+      },
+      "expected": {"state": "insufficient_evidence", "reason": "demand_not_continuous"}
+    },
+    {
+      "id": "server-demand-cached-values-do-not-count",
+      "kind": "server_counter",
+      "input": {
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "minimum_fresh_samples": 2,
+        "samples": [
+          {"monotonic_ns": 10000000000, "fresh": false, "running": 1.0, "waiting": 0.0},
+          {"monotonic_ns": 20000000000, "fresh": false, "running": 1.0, "waiting": 0.0}
+        ]
+      },
+      "expected": {"state": "insufficient_evidence", "reason": "sample_count"}
+    },
+    {
+      "id": "client-demand-present",
+      "kind": "client_request",
+      "input": {
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "request_started_ns": 9000000000,
+        "request_completed_ns": null
+      },
+      "expected": {"state": "present", "reason": "request_open_for_interval"}
+    },
+    {
+      "id": "client-demand-ended",
+      "kind": "client_request",
+      "input": {
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "request_started_ns": 9000000000,
+        "request_completed_ns": 15000000000
+      },
+      "expected": {"state": "insufficient_evidence", "reason": "request_not_open_for_interval"}
+    },
+    {
+      "id": "client-demand-started-after-interval",
+      "kind": "client_request",
+      "input": {
+        "evaluation_start_ns": 10000000000,
+        "evaluation_end_ns": 20000000000,
+        "request_started_ns": 11000000000,
+        "request_completed_ns": null
+      },
+      "expected": {"state": "insufficient_evidence", "reason": "request_not_open_for_interval"}
+    }
+  ],
+  "verdict_cases": [
+    {
+      "id": "idle-flat-is-undetermined",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "ok",
+        "decision_source": "server_counter",
+        "decision_state": "flat",
+        "corroborating_state": "producer_missing",
+        "demand_state": "absent",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "undetermined", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "service-no-progress-with-demand",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "ok",
+        "decision_source": "server_counter",
+        "decision_state": "flat",
+        "corroborating_state": "producer_missing",
+        "demand_state": "present",
+        "stack_state": "produced"
+      },
+      "expected": {"verdict": "alive_health_ok_no_progress", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "request-no-progress-despite-global-progress",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "ok",
+        "decision_source": "client_request",
+        "decision_state": "flat",
+        "corroborating_state": "progressing",
+        "demand_state": "present",
+        "stack_state": "unavailable"
+      },
+      "expected": {"verdict": "alive_health_ok_no_progress", "progress_scope": "request", "producer_conflict": true}
+    },
+    {
+      "id": "decision-progress-observed",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "ok",
+        "decision_source": "server_counter",
+        "decision_state": "progressing",
+        "corroborating_state": "producer_missing",
+        "demand_state": "present",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "progress_observed", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "service-progress-despite-stuck-request",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "ok",
+        "decision_source": "server_counter",
+        "decision_state": "progressing",
+        "corroborating_state": "flat",
+        "demand_state": "present",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "progress_observed", "progress_scope": "service", "producer_conflict": true}
+    },
+    {
+      "id": "missing-decision-producer-is-undetermined",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "ok",
+        "decision_source": "server_counter",
+        "decision_state": "producer_missing",
+        "corroborating_state": "producer_missing",
+        "demand_state": "insufficient_evidence",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "undetermined", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "endpoint-never-healthy-is-undetermined",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "insufficient_evidence",
+        "decision_source": "server_counter",
+        "decision_state": "producer_missing",
+        "corroborating_state": "producer_missing",
+        "demand_state": "insufficient_evidence",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "undetermined", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "endpoint-only-flat-is-undetermined",
+      "input": {
+        "process_supplied": false,
+        "process_identity_stable": false,
+        "process_alive_throughout": false,
+        "endpoint_supplied": true,
+        "health_state": "ok",
+        "decision_source": "server_counter",
+        "decision_state": "flat",
+        "corroborating_state": "producer_missing",
+        "demand_state": "present",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "undetermined", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "insufficient-decision-evidence-is-undetermined",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "ok",
+        "decision_source": "server_counter",
+        "decision_state": "insufficient_evidence",
+        "corroborating_state": "producer_missing",
+        "demand_state": "present",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "undetermined", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "pid-reuse-is-process-missing",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": false,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "ok",
+        "decision_source": "server_counter",
+        "decision_state": "progressing",
+        "corroborating_state": "producer_missing",
+        "demand_state": "present",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "process_missing", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "process-exit-is-process-missing",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": false,
+        "endpoint_supplied": true,
+        "health_state": "lost",
+        "decision_source": "server_counter",
+        "decision_state": "producer_missing",
+        "corroborating_state": "producer_missing",
+        "demand_state": "insufficient_evidence",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "process_missing", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "health-loss-precedes-progress",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "lost",
+        "decision_source": "server_counter",
+        "decision_state": "progressing",
+        "corroborating_state": "producer_missing",
+        "demand_state": "present",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "health_lost", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "pid-only-survival-is-undetermined",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": false,
+        "health_state": "unavailable",
+        "decision_source": "server_counter",
+        "decision_state": "producer_missing",
+        "corroborating_state": "producer_missing",
+        "demand_state": "insufficient_evidence",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "undetermined", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "pid-only-exit-is-process-missing",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": false,
+        "endpoint_supplied": false,
+        "health_state": "unavailable",
+        "decision_source": "server_counter",
+        "decision_state": "producer_missing",
+        "corroborating_state": "producer_missing",
+        "demand_state": "insufficient_evidence",
+        "stack_state": "disabled"
+      },
+      "expected": {"verdict": "process_missing", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "stack-unavailable-does-not-change-verdict",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "ok",
+        "decision_source": "server_counter",
+        "decision_state": "flat",
+        "corroborating_state": "producer_missing",
+        "demand_state": "present",
+        "stack_state": "unavailable"
+      },
+      "expected": {"verdict": "alive_health_ok_no_progress", "progress_scope": "service", "producer_conflict": false}
+    },
+    {
+      "id": "health-evidence-insufficient-for-no-progress",
+      "input": {
+        "process_supplied": true,
+        "process_identity_stable": true,
+        "process_alive_throughout": true,
+        "endpoint_supplied": true,
+        "health_state": "insufficient_evidence",
+        "decision_source": "server_counter",
+        "decision_state": "flat",
+        "corroborating_state": "producer_missing",
+        "demand_state": "present",
+        "stack_state": "produced"
+      },
+      "expected": {"verdict": "undetermined", "progress_scope": "service", "producer_conflict": false}
+    }
+  ]
+}

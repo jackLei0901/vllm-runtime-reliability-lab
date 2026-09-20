@@ -75,6 +75,13 @@ class CollectorHttpTest(unittest.TestCase):
         self.assertEqual(health.status, 503)
         self.assertIsNone(error)
 
+    def test_any_2xx_health_status_is_healthy(self) -> None:
+        FakeVllmHandler.health_status = 204
+        health, error = collect_health(self.base_url, 1.0)
+        self.assertTrue(health.ok)
+        self.assertEqual(health.status, 204)
+        self.assertIsNone(error)
+
     def test_malformed_metrics_is_bounded_error_kind(self) -> None:
         FakeVllmHandler.metrics_body = "not prometheus text"
         metrics, error = collect_metrics(self.base_url, 1.0)

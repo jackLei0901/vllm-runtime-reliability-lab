@@ -1,0 +1,53 @@
+name: Replay report
+description: Report an independent run of a published, CPU-only evidence replay
+title: "[replay] "
+labels:
+  - replay
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for running the replay. This report is about usability and verifier behavior; it does not claim to reproduce the original GPU failure.
+  - type: input
+    id: case
+    attributes:
+      label: Case
+      value: vllm-53859-stage1-r3
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform and Python version
+      placeholder: Ubuntu 24.04, Python 3.12.5
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command
+      value: python -m dfxlab.replay results/vllm-zmq-backpressure-stage1-r3-20260916
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Outcome
+      options:
+        - Replay passed and the conclusion was clear
+        - Replay passed but the conclusion was unclear
+        - Replay failed
+    validations:
+      required: true
+  - type: textarea
+    id: improvement
+    attributes:
+      label: What would make this easier to reuse?

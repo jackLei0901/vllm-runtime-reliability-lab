@@ -3,14 +3,18 @@ from __future__ import annotations
 import argparse
 import json
 import signal
+import sys
 from pathlib import Path
 
+from dfxlab.bundle import BundleError
+from dfxlab.collect_bundle import collect_bundle
 from dfxlab.collectors import environment_snapshot, runtime_allowlist
 from dfxlab.external_writer import IncidentWriter
 from dfxlab.faults import inject_signal
 from dfxlab.recorder import IncidentRecorder
 from dfxlab.report import summarize_file
 from dfxlab.schema import atomic_write_private_json
+from dfxlab.verify_bundle import verify_bundle
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -72,6 +76,31 @@ def build_parser() -> argparse.ArgumentParser:
     summary_parser = subparsers.add_parser("summarize", help="render incident markdown")
     summary_parser.add_argument("--input", type=Path, required=True)
     summary_parser.add_argument("--output", type=Path, required=True)
+
+    collect_parser = subparsers.add_parser(
+        "collect", help="collect a bounded v0.2 incident evidence bundle"
+    )
+    collect_parser.add_argument("--base-url")
+    collect_parser.add_argument("--pid", type=int)
+    collect_parser.add_argument("--output", type=Path, required=True)
+    collect_parser.add_argument("--window", type=float, default=60.0)
+    collect_parser.add_argument("--no-progress-window", type=float, default=10.0)
+    collect_parser.add_argument("--sample-interval", type=float, default=1.0)
+    collect_parser.add_argument("--timeout", type=float, default=1.0)
+    collect_parser.add_argument("--unhealthy-samples", type=int, default=3)
+    collect_parser.add_argument("--observation-only", action="store_true")
+    collect_parser.add_argument(
+        "--decision-source",
+        choices=("server_counter", "client_request"),
+        default="server_counter",
+    )
+    collect_parser.add_argument("--progress-request", type=Path)
+    collect_parser.add_argument("--stack", action="store_true")
+
+    verify_parser = subparsers.add_parser(
+        "verify", help="offline verification of a v0.2 evidence bundle"
+    )
+    verify_parser.add_argument("bundle", type=Path)
     return parser
 
 
@@ -126,5 +155,34 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "summarize":
         summarize_file(args.input, args.output)
+        return 0
+    if args.command == "collect":
+        try:
+            summary = collect_bundle(
+                output_dir=args.output,
+                base_url=args.base_url,
+                pid=args.pid,
+                window=args.window,
+                no_progress_window=args.no_progress_window,
+                sample_interval=args.sample_interval,
+                timeout=args.timeout,
+                unhealthy_samples=args.unhealthy_samples,
+                observation_only=args.observation_only,
+                decision_source=args.decision_source,
+                progress_request=args.progress_request,
+                stack=args.stack,
+            )
+        except (BundleError, ValueError, OSError) as exc:
+            print(f"FAIL: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(summary["verdict"], ensure_ascii=False))
+        return 0
+    if args.command == "verify":
+        try:
+            summary = verify_bundle(args.bundle)
+        except BundleError as exc:
+            print(f"FAIL: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(summary["verdict"], ensure_ascii=False))
         return 0
     raise AssertionError(f"unhandled command: {args.command}")

@@ -5,16 +5,95 @@
 
 [![CI](https://github.com/jackLei0901/vllm-runtime-reliability-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/jackLei0901/vllm-runtime-reliability-lab/actions/workflows/ci.yml)
 
-An opt-in, out-of-process reliability evidence and validation lab for vLLM. The
-current alpha freezes a bounded, privacy-safe runtime history when an externally
-observable condition is met. The next product step is to correlate independent
-process/rank evidence and detect health-green loss of progress without relying
-on a failure-time collective.
+An evidence lab for inference failures that leave the service process alive but
+stop useful work across processes or ranks.
 
-This is an **alpha research tool**, not a production monitor and not a root-cause
-classifier. An external observer can preserve chronology, but it cannot infer an
-internal EngineCore exception kind or execution stage. The artifact records both
-as `unknown` by construction.
+The lab turns “it hung” into a bounded chain of claims: real failure, minimal
+mechanism, preregistered prediction, base/fix comparison, external process and
+stack evidence, privacy-bounded per-rank flags, a fail-closed verifier, and an
+upstream issue, PR, or review result.
+
+This is an **alpha research tool**, not a monitoring platform, an issue
+collection, or an automatic root-cause classifier.
+
+## What this lab caught
+
+| Failure seen from outside | What the lab established | External result and current boundary |
+| --- | --- | --- |
+| Flight Recorder produced a rank-0 dump but no rank-1 dump | `producer missing != member missing`: rank 1 was alive, had entered `destroy_process_group()`, and could no longer answer the dump request | Lab-originated [PyTorch #196968](https://github.com/pytorch/pytorch/issues/196968) and proposed C++ fix [#197232](https://github.com/pytorch/pytorch/pull/197232). Both remain open as of 2026-09-20. |
+| vLLM stayed alive and `/health` returned 2xx while token progress stopped | A deterministic full event queue blocked the real EngineCore in `ZmqEventPublisher.publish()`; the fix preserved progress by dropping event batches | Independent validation of reported [vLLM #53859](https://github.com/vllm-project/vllm/issues/53859) and proposed fix [#53883](https://github.com/vllm-project/vllm/pull/53883), not a lab-originated bug. Both remain open as of 2026-09-20. |
+| A torchtitan distributed hang appeared to be a collective mismatch | Successive gates removed the distributed surface and reproduced an FSDP2 mixed-gradient-dtype assertion on one GPU | Lab-originated [PyTorch #196996](https://github.com/pytorch/pytorch/issues/196996), triaged and open as of 2026-09-20. |
+
+The evidence changed the conclusion in each case:
+
+| Case | Tempting conclusion | Evidence-backed conclusion |
+| --- | --- | --- |
+| #196968 | Missing dump means the rank did not participate | The diagnostic producer disappeared while the participating process remained alive in teardown |
+| #53859 / #53883 | HTTP health means the server is healthy | Health stayed green while inference made no progress; the fix restored liveness with a measured event-loss trade-off |
+| #196996 | A multi-rank hang requires a distributed root cause | The relevant correctness failure reduces to a local mixed-dtype contract violation |
+
+`#49869` is an independent upstream contribution and is intentionally not
+presented as a lab discovery. `#52178` is a separate lifecycle fix for which the
+lab supplied process-level validation.
+
+## Five-minute replay — no GPU required
+
+The replay does not rerun a GPU experiment. It verifies the closed file set,
+SHA-256 identities, four-cell base/fix contract, external progress and health
+observations, blocking-stack claim, and measured trade-off from the published
+#53859 campaign.
+
+```bash
+python -m pip install -e .
+python -m dfxlab.replay results/vllm-zmq-backpressure-stage1-r3-20260916
+```
+
+Expected conclusion:
+
+```text
+PASS: evidence file set and SHA-256 identities verified
+PASS: controls completed without a stall or dropped event batch
+PASS: EngineCore process remained alive during the injected stall
+PASS: /health remained 2xx while token progress stopped
+STACK: EngineCore -> ZmqEventPublisher.publish -> Queue.put
+FIX ARM: token progress completed under the same trigger
+TRADE-OFF: 4 event batches dropped
+BOUNDARY: replay verifies archived evidence; it does not rerun the GPU experiment
+```
+
+The verifier fails closed if an evidence hash, record shape, cell identity, or
+cross-cell identity changes. If you run it, please report the command, platform,
+and result with the [replay report template](https://github.com/jackLei0901/vllm-runtime-reliability-lab/issues/new?template=replay-report.yml).
+
+To apply the same evidence rules to a local incident without a GPU dependency:
+
+```bash
+vllm-dfx collect \
+  --base-url http://127.0.0.1:8000 \
+  --pid 12345 \
+  --window 60 \
+  --no-progress-window 10 \
+  --output incident/
+vllm-dfx verify incident/
+```
+
+`verify` is offline and recomputes producer, demand, conflict, and verdict
+claims from `observations.json`. The public bundle does not retain the base URL,
+prompt, response content, headers, raw stack, or complete sampler command. See
+the [v0.2 collect/verify contract](docs/COLLECT_VERIFY_V0_2.md) for endpoint-only,
+PID-only, client-probe, stack, and trust-boundary details.
+
+## Evidence rules
+
+```text
+alive              != making progress
+health green       != serving healthy
+producer missing   != participant missing
+fix restores life  != fix preserves every diagnostic event
+```
+
+Architecture, recorder internals, and schemas follow the demonstrated results
+because they are means to those claims, not the project headline.
 
 ## The operational problem
 
@@ -153,7 +232,7 @@ The alpha does **not** yet provide a no-progress detector, process/rank discover
 a cross-producer join or a correlation manifest. Those are v0.2 targets and must
 not be inferred from the current feature list.
 
-## Five-minute CPU-only demo
+## Live CPU-only recorder demo
 
 Python 3.10 or newer is required. The runtime package has no third-party
 dependencies.
@@ -173,7 +252,8 @@ vllm-dfx record \
   --duration 5
 ```
 
-The healthy demo does not manufacture an incident. To exercise the health-loss
+This live recorder demo is separate from the published-result replay above. The
+healthy demo does not manufacture an incident. To exercise the health-loss
 path, stop the fake server while the recorder is running:
 
 ```bash
@@ -352,17 +432,23 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 - [`PRIOR_ART_AND_VALUE.md`](PRIOR_ART_AND_VALUE.md): linked-evidence precedent,
   demonstrated value and transfer limits.
 - [`TEST_PLAN.md`](TEST_PLAN.md): CPU and GPU validation matrix.
+- [`docs/V0.2_RELEASE_PLAN.md`](docs/V0.2_RELEASE_PLAN.md): bounded v0.2 payload
+  and release gates.
+- [`docs/ADOPTION_PLAN.md`](docs/ADOPTION_PLAN.md): focused external-reuse plan
+  and scorecard.
+- [`docs/case-studies/flight-recorder-missing-rank-DRAFT.md`](docs/case-studies/flight-recorder-missing-rank-DRAFT.md):
+  unpublished #196968 case study, gated on an explicit #197232 outcome.
 - [`SECURITY.md`](SECURITY.md): privacy assumptions and reporting guidance.
 - [`CHANGELOG.md`](CHANGELOG.md): release history.
 
 ## Status
 
-`v0.1.0-alpha.4` adds an auditable four-GPU known-answer reconstruction for an
-organic PyTorch FSDP2 hang. It does not establish unknown-root-cause discovery
-or a campaign-level GO decision. Paired overhead, fresh KV-pressure,
-health-green no-progress, cross-host correlation, long-duration, and
-production-utility gates remain open. Treat this release as an evaluation
-build.
+`v0.1.0-alpha.4` is the latest tag. Since that tag, the lab has isolated two
+PyTorch defects and completed a single-GPU vLLM health-green no-progress
+base/fix campaign. These are experiment results, not a shipped general-purpose
+no-progress detector or cross-process joiner. Paired overhead, fresh KV-pressure,
+cross-host correlation, long-duration, and production-utility gates remain
+open. Treat the current branch as an evaluation build until v0.2 is tagged.
 
 ## License
 

@@ -1,6 +1,6 @@
 # vLLM Runtime Reliability Lab 中文指南
 
-> 当前版本：`v0.1.0-alpha.3`  
+> 当前版本：`v0.1.0-alpha.4`
 > 当前定位：可公开安装和复现的研究型 Alpha，不是生产监控产品。
 
 相关文档：
@@ -10,6 +10,73 @@
 - [`PRIOR_ART_AND_VALUE.zh-CN.md`](PRIOR_ART_AND_VALUE.zh-CN.md)：关联证据的公开先例、实际收益和适用边界；
 - [`REQUIREMENTS.md`](REQUIREMENTS.md)：当前英文需求基线；
 - [`TEST_PLAN.md`](TEST_PLAN.md)：当前英文测试计划。
+
+## 先看结果
+
+vLLM Runtime Reliability Lab 是面向推理引擎故障的证据实验室。当服务进程仍然
+存活、健康检查仍然成功，但跨进程或跨 rank 的推理已经停止时，它用外部观测、
+受控故障注入和跨主体证据规则，把“卡住了”转化为可复现、可验证、能推动
+upstream 修复的结论。它不是监控平台，也不是 issue 收集仓库。
+
+| 外部症状 | Lab 得出的结论 | 外部结果与边界 |
+| --- | --- | --- |
+| Flight Recorder 有 rank 0 dump，却没有 rank 1 dump | `producer missing != member missing`：rank 1 仍存活并卡在 `destroy_process_group()`，只是诊断生产者已停止响应 | Lab 发现并提交 [PyTorch #196968](https://github.com/pytorch/pytorch/issues/196968)，形成 C++ 修复 [#197232](https://github.com/pytorch/pytorch/pull/197232)；截至 2026-09-20 两者仍 open |
+| vLLM 进程存活、`/health` 返回 2xx，但 token 停止推进 | 确定性满队列使真实 EngineCore 阻塞在 `ZmqEventPublisher.publish()`；修复通过丢弃事件 batch 恢复活性 | 独立验证已有报告 [vLLM #53859](https://github.com/vllm-project/vllm/issues/53859) 和修复 [#53883](https://github.com/vllm-project/vllm/pull/53883)，不是 Lab 首次发现；截至 2026-09-20 两者仍 open |
+| torchtitan 表现为分布式 hang | 多轮 gate 去除分布式表象后，在单卡复现 FSDP2 mixed-gradient-dtype assertion | Lab 发现并提交 [PyTorch #196996](https://github.com/pytorch/pytorch/issues/196996)；截至 2026-09-20 已 triage、仍 open |
+
+三条最重要的证据规则是：
+
+```text
+alive            != making progress
+health green     != serving healthy
+producer missing != participant missing
+```
+
+`#49869` 是独立的 upstream 成果，不属于 Lab 发现；`#52178` 是 Lab 提供系统级
+验证的独立 lifecycle 修复。
+
+### 五分钟无 GPU replay
+
+下面的命令不会重新证明 GPU 结果，而是对已发布的 #53859 四 cell 证据执行
+fail-closed 重放：校验封闭文件集合、SHA-256、base/fix 身份、progress、health、
+stack 结论和事件丢失代价。
+
+```bash
+python -m pip install -e .
+python -m dfxlab.replay results/vllm-zmq-backpressure-stage1-r3-20260916
+```
+
+关键输出：
+
+```text
+PASS: EngineCore process remained alive during the injected stall
+PASS: /health remained 2xx while token progress stopped
+STACK: EngineCore -> ZmqEventPublisher.publish -> Queue.put
+FIX ARM: token progress completed under the same trigger
+TRADE-OFF: 4 event batches dropped
+```
+
+任何 evidence hash、record shape、cell identity 或跨 cell identity 改变都会让
+replay 失败关闭。独立运行后可用
+[replay report 模板](https://github.com/jackLei0901/vllm-runtime-reliability-lab/issues/new?template=replay-report.yml)
+报告平台、命令和结果。
+
+也可以把同一套 evidence rule 用在本地 incident 上，不需要 GPU：
+
+```bash
+vllm-dfx collect \
+  --base-url http://127.0.0.1:8000 \
+  --pid 12345 \
+  --window 60 \
+  --no-progress-window 10 \
+  --output incident/
+vllm-dfx verify incident/
+```
+
+`verify` 完全离线，并从 `observations.json` 重新计算 producer、demand、conflict
+和 verdict。公开 bundle 不保留 base URL、prompt、response content、header、原始
+stack 或完整 sampler command。endpoint-only、PID-only、client probe、stack 和
+信任边界详见 [v0.2 collect/verify 合同](docs/COLLECT_VERIFY_V0_2.md)。
 
 ## 1. 这个项目解决什么问题
 

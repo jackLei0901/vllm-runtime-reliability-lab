@@ -55,7 +55,9 @@ def collect_health(
     base_url: str, timeout: float
 ) -> tuple[HealthObservation, str | None]:
     status, _, error = _http_get(f"{base_url.rstrip('/')}/health", timeout)
-    return HealthObservation(ok=status == 200, status=status), error
+    return HealthObservation(
+        ok=status is not None and 200 <= status < 300, status=status
+    ), error
 
 
 def collect_metrics(
