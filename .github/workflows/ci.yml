@@ -31,3 +31,22 @@ jobs:
         run: python -m compileall -q src tests
       - name: CLI smoke test
         run: vllm-dfx --help
+
+  release-replay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build wheel from the checked-out commit
+        run: python -m pip wheel . --no-deps --wheel-dir dist
+      - name: Install wheel into a clean environment
+        run: |
+          python -m venv .release-venv
+          .release-venv/bin/python -m pip install --no-deps dist/*.whl
+          .release-venv/bin/python -c "import importlib.metadata as m, pathlib, tomllib, dfxlab; expected = tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version']; assert m.version('vllm-runtime-dfx-lab') == dfxlab.__version__ == expected"
+      - name: Replay the published result without GPU dependencies
+        run: |
+          . .release-venv/bin/activate
+          vllm-dfx replay results/vllm-zmq-backpressure-stage1-r3-20260916
