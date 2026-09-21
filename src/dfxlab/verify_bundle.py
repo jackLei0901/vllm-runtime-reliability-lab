@@ -222,6 +222,13 @@ def _validate_observations(value: dict[str, Any]) -> None:
             raise BundleError("health status type")
         if sample["error_kind"] not in {None, "timeout", "connection", "os_error"}:
             raise BundleError("health error kind")
+        if sample["error_kind"] is None:
+            if sample["status"] is None or sample["ok"] != (
+                200 <= sample["status"] < 300
+            ):
+                raise BundleError("health status inconsistent")
+        elif sample["ok"] or sample["status"] is not None:
+            raise BundleError("health transport error inconsistent")
     _strict_times(health["samples"], "health samples")
 
     producers = _closed(

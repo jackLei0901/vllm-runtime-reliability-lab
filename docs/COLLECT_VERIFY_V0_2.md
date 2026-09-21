@@ -168,6 +168,10 @@ normalized producer shape and typed outcome; it must not branch on whether the
 observation came from a particular metrics parser, request client, or future
 external tool.
 
+The complete decisional/non-decisional leaf-field registry and its executable
+coverage rules are documented in
+[`V0.2_FIELD_ROLES.md`](V0.2_FIELD_ROLES.md).
+
 The client request is an active, opt-in probe. Its input file is private. The
 publishable bundle retains only a digest and bounded request metadata; it never
 retains prompt text, response text, token IDs, headers, credentials, or raw

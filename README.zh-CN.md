@@ -10,6 +10,7 @@
 - [`PRIOR_ART_AND_VALUE.zh-CN.md`](PRIOR_ART_AND_VALUE.zh-CN.md)：关联证据的公开先例、实际收益和适用边界；
 - [`REQUIREMENTS.md`](REQUIREMENTS.md)：当前英文需求基线；
 - [`TEST_PLAN.md`](TEST_PLAN.md)：当前英文测试计划。
+- [`docs/V0.2_FIELD_ROLES.md`](docs/V0.2_FIELD_ROLES.md)：机器校验的公开字段角色审计。
 
 ## 先看结果
 
