@@ -20,9 +20,9 @@ collection, or an automatic root-cause classifier.
 
 | Failure seen from outside | What the lab established | External result and current boundary |
 | --- | --- | --- |
-| Flight Recorder produced a rank-0 dump but no rank-1 dump | `producer missing != member missing`: rank 1 was alive, had entered `destroy_process_group()`, and could no longer answer the dump request | Lab-originated [PyTorch #196968](https://github.com/pytorch/pytorch/issues/196968) and proposed C++ fix [#197232](https://github.com/pytorch/pytorch/pull/197232). Both remain open as of 2026-09-20. |
-| vLLM stayed alive and `/health` returned 2xx while token progress stopped | A deterministic full event queue blocked the real EngineCore in `ZmqEventPublisher.publish()`; the fix preserved progress by dropping event batches | Independent validation of reported [vLLM #53859](https://github.com/vllm-project/vllm/issues/53859) and proposed fix [#53883](https://github.com/vllm-project/vllm/pull/53883), not a lab-originated bug. Both remain open as of 2026-09-20. |
-| A torchtitan distributed hang appeared to be a collective mismatch | Successive gates removed the distributed surface and reproduced an FSDP2 mixed-gradient-dtype assertion on one GPU | Lab-originated [PyTorch #196996](https://github.com/pytorch/pytorch/issues/196996), triaged and open as of 2026-09-20. |
+| Flight Recorder produced a rank-0 dump but no rank-1 dump | `producer missing != member missing`: rank 1 was alive, had entered `destroy_process_group()`, and could no longer answer the dump request | Lab-originated [PyTorch #196968](https://github.com/pytorch/pytorch/issues/196968) and proposed C++ fix [#197232](https://github.com/pytorch/pytorch/pull/197232). Both remain open as of 2026-09-21. |
+| vLLM stayed alive and `/health` returned 2xx while token progress stopped | A deterministic full event queue blocked the real EngineCore in `ZmqEventPublisher.publish()`; the fix preserved progress by dropping event batches | Independent validation of reported [vLLM #53859](https://github.com/vllm-project/vllm/issues/53859) and proposed fix [#53883](https://github.com/vllm-project/vllm/pull/53883), not a lab-originated bug. Both remain open as of 2026-09-21. |
+| A torchtitan distributed hang appeared to be a collective mismatch | Successive gates removed the distributed surface and reproduced an FSDP2 mixed-gradient-dtype assertion on one GPU | Lab-originated [PyTorch #196996](https://github.com/pytorch/pytorch/issues/196996), triaged and open as of 2026-09-21. |
 
 The evidence changed the conclusion in each case:
 
@@ -64,6 +64,8 @@ BOUNDARY: replay verifies archived evidence; it does not rerun the GPU experimen
 The verifier fails closed if an evidence hash, record shape, cell identity, or
 cross-cell identity changes. If you run it, please report the command, platform,
 and result with the [replay report template](https://github.com/jackLei0901/vllm-runtime-reliability-lab/issues/new?template=replay-report.yml).
+For a copy-paste clean-environment check, use the
+[five-minute external trial](docs/V0.2_EXTERNAL_TRIAL.md).
 
 To apply the same evidence rules to a local incident without a GPU dependency:
 

@@ -20,9 +20,9 @@ upstream 修复的结论。它不是监控平台，也不是 issue 收集仓库�
 
 | 外部症状 | Lab 得出的结论 | 外部结果与边界 |
 | --- | --- | --- |
-| Flight Recorder 有 rank 0 dump，却没有 rank 1 dump | `producer missing != member missing`：rank 1 仍存活并卡在 `destroy_process_group()`，只是诊断生产者已停止响应 | Lab 发现并提交 [PyTorch #196968](https://github.com/pytorch/pytorch/issues/196968)，形成 C++ 修复 [#197232](https://github.com/pytorch/pytorch/pull/197232)；截至 2026-09-20 两者仍 open |
-| vLLM 进程存活、`/health` 返回 2xx，但 token 停止推进 | 确定性满队列使真实 EngineCore 阻塞在 `ZmqEventPublisher.publish()`；修复通过丢弃事件 batch 恢复活性 | 独立验证已有报告 [vLLM #53859](https://github.com/vllm-project/vllm/issues/53859) 和修复 [#53883](https://github.com/vllm-project/vllm/pull/53883)，不是 Lab 首次发现；截至 2026-09-20 两者仍 open |
-| torchtitan 表现为分布式 hang | 多轮 gate 去除分布式表象后，在单卡复现 FSDP2 mixed-gradient-dtype assertion | Lab 发现并提交 [PyTorch #196996](https://github.com/pytorch/pytorch/issues/196996)；截至 2026-09-20 已 triage、仍 open |
+| Flight Recorder 有 rank 0 dump，却没有 rank 1 dump | `producer missing != member missing`：rank 1 仍存活并卡在 `destroy_process_group()`，只是诊断生产者已停止响应 | Lab 发现并提交 [PyTorch #196968](https://github.com/pytorch/pytorch/issues/196968)，形成 C++ 修复 [#197232](https://github.com/pytorch/pytorch/pull/197232)；截至 2026-09-21 两者仍 open |
+| vLLM 进程存活、`/health` 返回 2xx，但 token 停止推进 | 确定性满队列使真实 EngineCore 阻塞在 `ZmqEventPublisher.publish()`；修复通过丢弃事件 batch 恢复活性 | 独立验证已有报告 [vLLM #53859](https://github.com/vllm-project/vllm/issues/53859) 和修复 [#53883](https://github.com/vllm-project/vllm/pull/53883)，不是 Lab 首次发现；截至 2026-09-21 两者仍 open |
+| torchtitan 表现为分布式 hang | 多轮 gate 去除分布式表象后，在单卡复现 FSDP2 mixed-gradient-dtype assertion | Lab 发现并提交 [PyTorch #196996](https://github.com/pytorch/pytorch/issues/196996)；截至 2026-09-21 已 triage、仍 open |
 
 三条最重要的证据规则是：
 
@@ -60,6 +60,8 @@ TRADE-OFF: 4 event batches dropped
 replay 失败关闭。独立运行后可用
 [replay report 模板](https://github.com/jackLei0901/vllm-runtime-reliability-lab/issues/new?template=replay-report.yml)
 报告平台、命令和结果。
+如需从全新环境复制执行，请使用
+[五分钟外部试用入口](docs/V0.2_EXTERNAL_TRIAL.md)。
 
 也可以把同一套 evidence rule 用在本地 incident 上，不需要 GPU：
 
