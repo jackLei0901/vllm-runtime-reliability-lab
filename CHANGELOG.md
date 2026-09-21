@@ -24,6 +24,8 @@
   that provenance changes cannot alter semantic verdicts.
 - Reject inconsistent health observations instead of allowing HTTP status and
   transport state to disagree.
+- Use the high-resolution monotonic performance clock for v0.2 collection so
+  self-generated samples remain strictly ordered on Windows.
 
 ## 0.1.0-alpha.4 - 2026-09-12
 

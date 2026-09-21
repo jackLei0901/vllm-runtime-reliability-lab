@@ -9,6 +9,7 @@ import time
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from unittest.mock import patch
 
 from dfxlab.cli import main
 from dfxlab.collect_bundle import collect_bundle
@@ -162,6 +163,27 @@ class CollectBundleTest(unittest.TestCase):
                 progress_request=None,
                 stack=False,
             )
+            self.assertEqual("undetermined", summary["verdict"]["verdict"])
+            self.assertEqual(summary, verify_bundle(root))
+
+    def test_collection_does_not_depend_on_coarse_monotonic_ns(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "bundle"
+            with patch("dfxlab.collect_bundle.time.monotonic_ns", return_value=1):
+                summary = collect_bundle(
+                    output_dir=root,
+                    base_url=None,
+                    pid=os.getpid(),
+                    window=0.04,
+                    no_progress_window=0.02,
+                    sample_interval=0.01,
+                    timeout=0.5,
+                    unhealthy_samples=2,
+                    observation_only=True,
+                    decision_source="server_counter",
+                    progress_request=None,
+                    stack=False,
+                )
             self.assertEqual("undetermined", summary["verdict"]["verdict"])
             self.assertEqual(summary, verify_bundle(root))
 

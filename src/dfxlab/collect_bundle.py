@@ -142,7 +142,7 @@ class _ClientProbe:
         self._thread = threading.Thread(target=self._run, daemon=True)
 
     def start(self) -> None:
-        self.request_started_ns = time.monotonic_ns()
+        self.request_started_ns = time.perf_counter_ns()
         self._thread.start()
 
     def stop(self) -> None:
@@ -181,7 +181,7 @@ class _ClientProbe:
                     kind = _chunk_kind(data)
                     if kind == "content":
                         self.chunks[:] = [
-                            {"monotonic_ns": time.monotonic_ns(), "kind": kind}
+                            {"monotonic_ns": time.perf_counter_ns(), "kind": kind}
                         ]
         except (OSError, ValueError, json.JSONDecodeError):
             if not self._stopping:
@@ -189,7 +189,7 @@ class _ClientProbe:
                 self.chunks.clear()
         finally:
             self._response = None
-            self.request_completed_ns = time.monotonic_ns()
+            self.request_completed_ns = time.perf_counter_ns()
 
 
 def _chunk_kind(data: str) -> str:
@@ -257,14 +257,17 @@ def collect_bundle(
     if probe is not None:
         probe.start()
 
-    collection_start = time.monotonic_ns()
+    # perf_counter_ns is monotonic and has enough resolution to preserve the
+    # verifier's strict sample ordering on Windows implementations where
+    # monotonic_ns may be backed by the coarse GetTickCount64 clock.
+    collection_start = time.perf_counter_ns()
     deadline = collection_start + int(window * 1_000_000_000)
     health_samples: list[dict[str, Any]] = []
     process_samples: list[dict[str, Any]] = []
     counter_samples: list[dict[str, Any]] = []
     demand_samples: list[dict[str, Any]] = []
     while True:
-        now = time.monotonic_ns()
+        now = time.perf_counter_ns()
         if base_url is not None:
             health_ok, health_status, health_error = _health(base_url, timeout)
             health_samples.append(
@@ -309,7 +312,7 @@ def collect_bundle(
             )
         if now >= deadline:
             break
-        remaining = max(0.0, (deadline - time.monotonic_ns()) / 1e9)
+        remaining = max(0.0, (deadline - time.perf_counter_ns()) / 1e9)
         if remaining == 0:
             continue
         time.sleep(min(sample_interval, remaining))
