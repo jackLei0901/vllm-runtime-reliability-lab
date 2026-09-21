@@ -162,6 +162,12 @@ corroborating evidence only and never silently changes the verdict. A
 disagreement is recorded as `producer_conflict: true` and remains visible to the
 reader.
 
+Producer kind is therefore decisional: it selects the scope of the claim.
+Producer implementation is non-decisional. Verification consumes only the
+normalized producer shape and typed outcome; it must not branch on whether the
+observation came from a particular metrics parser, request client, or future
+external tool.
+
 The client request is an active, opt-in probe. Its input file is private. The
 publishable bundle retains only a digest and bounded request metadata; it never
 retains prompt text, response text, token IDs, headers, credentials, or raw

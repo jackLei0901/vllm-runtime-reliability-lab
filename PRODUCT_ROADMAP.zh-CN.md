@@ -1,238 +1,254 @@
-# 产品化路线图
+# Lab 发展计划
 
-## 1. 最终目标
+> 2026-09-21 修订：从“扩大采集和部署能力”转向“故障分类、领域解释和可证伪判断”。
 
-目标不是把实验脚本包装成一个命令，也不是建设新的通用监控平台。目标是交付
-一个面向 vLLM 运行时故障的外部可靠性证据层，优先解决两个实际问题：
+## 1. 定位
 
-- 进程和 `/health` 仍然存活，但请求已经不再取得进展；
-- 多进程或多 rank 故障中，各方只有局部记录，无法判断谁先出现分歧、谁缺失。
+vLLM Runtime Reliability Lab 不是监控平台、通用 collector framework 或 issue
+收集仓库。它是面向推理运行时故障的证据实验室：将不完整、缺失或相互冲突的
+运行时观察，转化为可复现、可证伪并且能明确拒绝回答的结论。
 
-产品最终需要满足以下条件：
+Lab 的独立价值按重要性排序：
 
-- 操作者可以稳定安装、升级和回滚；
-- 默认配置不会泄露请求内容；
-- 资源开销有可复现的上界；
-- 在单卡和主要分布式拓扑中不干扰 vLLM；
-- 故障时能稳定生成有限、可解释且可以相互关联的证据；
-- 关联结果能够产生单份日志无法表达的事实，而不是只把文件打包在一起；
-- 不支持的版本、指标和拓扑会明确失败或降级；
-- 至少有真实用户证明 artifact 改变了诊断动作；
-- 项目有 issue、兼容、发布和安全响应流程。
+1. 故障分类：定义需要区分的 failure modes；
+2. 领域解释：说明某个 frame、counter 或 stage 能支持和不能支持什么推断；
+3. verdict contract：定义身份、时间、freshness、冲突和 precedence；
+4. evidence standard：冻结 schema、负对照、隐私边界和 fail-closed verifier；
+5. collector：只提供上述判断所需的事实，且尽量复用成熟实现。
 
-明确不做：通用 telemetry 数据库、查询引擎、长期数据仓库，以及没有证据边界的
-自动根因判断。Prometheus、OpenTelemetry、NCCL/PyTorch Flight Recorder 和
-编排器仍然拥有各自的数据；本项目只定义事故边界上的冻结、身份、校验和语义关联。
+外部工具负责回答“观察到了什么”，Lab 负责回答“这些观察足以证明什么，以及何时
+证据不足”。
 
-建议将“正式公开产品”分成 `public alpha → production preview → 1.0` 三个承诺
-等级，避免一次性声称生产可用。
+## 2. 不可违反的工程规则
 
-## 2. 当前基线
+- 每个公开 bundle 字段必须声明为 `decisional` 或进入关闭的 `non_decisional` 集合。
+  `decisional` 字段由 verdict 或 attribution rule 消费；`non_decisional` 只允许 schema
+  version、完整性摘要、producer provenance 及复现所需但不参与判断的元数据。字段的角色
+  按具体 claim 声明，不能把所有 timestamp 或 identity 一概视为非决策字段。
+- verifier 必须通过变异测试证明：在 bundle 仍然通过 schema 和完整性校验的前提下，改变
+  `non_decisional` provenance 不会改变 semantic verdict。单独篡改摘要只能导致 validation
+  failure，不能产生另一个 verdict。无法归入上述两类的字段不发布。
+- 每个正向 verdict 都必须有反证或不足证据测试。
+- `producer_missing != member_missing`，工具失败、权限不足和目标状态不得混为一谈。
+- verdict 与 attribution 分离；stack、NCCL RAS 和硬件状态只能补充解释，不能绕过
+  progress、process identity 和 demand 的既有判定条件。
+- 原始 native stack、地址、参数和本地路径默认私有；公开结果只保留关闭枚举、producer
+  identity 和原始内容摘要。
+- 成熟外部能力优先通过有界 CLI、socket 或 metrics 接口调用，不重写 stack unwinder、
+  NCCL rank discovery 或 GPU telemetry。
+- verifier 只能读取标准化 observation shape 和 typed producer outcome，不能 import、
+  分支判断或匹配具体工具名称。两个 producer 产生相同标准化事实时必须得到相同 verdict；
+  事实更少时只能得到更弱的 attribution 或 `insufficient_evidence`。
+- 只有当两个已经命名的 failure modes 因缺少内部状态而无法区分时，才增加最小 C++
+  probe。
+- 新 producer 必须让至少一个现有 contract case 从 `insufficient_evidence` 变为可验证或
+  可反证，否则不进入产品代码。
+- 不为制造内容继续扩大问题数量；优先完成和解释已有案例。
+- degraded operation 是正常路径：`unsupported`、`permission_denied`、`timed_out`、
+  `feature_disabled` 和 `producer_missing` 必须保留原义，不能静默补默认值。
 
-当前版本 `v0.1.0-alpha.3` 已达到 public alpha：
+## 3. Fault taxonomy admission gate
 
-- 源码、License、Release、wheel 和 CI 可公开访问；
-- 运行时零第三方 Python 依赖；
-- 关闭 schema、隐私边界和资源上限已有测试；
-- fake server 和 RTX 4090 故障矩阵可复现；
-- 需求与测试用例可机器追踪；
-- 已公开无效试次和未覆盖边界。
+新的 failure category 只有同时满足以下条件才能进入 taxonomy：
 
-它尚未达到 production preview，也还不能检测 health-green no-progress 或关联
-多个 producer。主要缺口是开销、进展语义、跨进程关联、多卡、长稳、版本兼容、
-部署模板和采用证据。
+- 有一个已命名、可观察的 discriminating evidence requirement；
+- 至少有一次可重放 reproduction；
+- 至少有一个 negative control 或明确反例；
+- 声明适用的软件版本、拓扑和已知不支持边界；
+- 无法满足条件时保留 `unknown`，不得选择“最接近”的已有类别。
 
-## 3. 阶段 P1：单卡运行特性闭环
+`unknown` 是合法的终态，不是等待随意补分类的临时错误。
 
-### 工作项
+## 4. 当前基线：完成 v0.2，而不是扩展 v0.2
 
-1. 完成 recorder disabled/enabled 交错实验；
-2. 记录 request/token throughput、TTFT、TPOT、E2E；
-3. 记录 recorder CPU、RSS、每类 collector latency；
-4. 新建真实 KV pressure/preemption 场景；
-5. 对健康、压力、SIGTERM、EngineCore loss、OOM 各运行至少三次；
-6. 增加 2 小时和 24 小时两个稳定运行档位；
-7. 注入只读目录、磁盘空间不足、目标 PID 重启和 metrics 格式变化。
+v0.2 的范围已经冻结为：
 
-### 环境
+- CPU-only published-result replay；
+- bounded `collect` 与 offline `verify`；
+- server/client progress producers 及显式冲突规则；
+- process identity、demand、health 和 progress precedence；
+- closed-shape bundle、内容摘要和 fail-closed verdict；
+- #53859/#53883 的归档 base/fix 重放。
 
-- 单卡 RTX 4090 或显存相近的 CUDA GPU；
-- 固定 vLLM commit、模型、启动参数和请求集；
-- recorder 与 server 分别记录 commit 和 Python 环境；
-- 所有配对实验使用相同 seed、请求顺序和到达模型。
+发布前只完成版本、干净构建、跨平台 replay transcript、不可变链接和 release hashes。
+PyStack、NCCL RAS、DCGM、通用 trigger bus、部署模板及新的 collector 均不进入 v0.2。
 
-### 通过条件
+#196968 case study 继续遵守 #197232 的明确 upstream outcome gate；等待期间不扩张该
+case 的公开结论。
 
-- 事前固定开销统计方法，不在看到数据后改变阈值；
-- 发布配对原始汇总及 null result；
-- recorder 关闭时无进程、无轮询、无 artifact；
-- writer 失败不改变请求结果和服务退出状态；
-- 24 小时内 RSS、CPU 和文件数量没有无法解释的持续增长；
-- KV pressure/preemption artifact 的计数和保留序列可独立复算。
+## 5. 阶段 E1：现有案例的 capability-gap audit
 
-### 预计投入
+不编写新 adapter，先用已有案例回答“成熟工具能看到什么，Lab 还必须判断什么”。
 
-代码与脚本约 3–5 个工作日；GPU 实际占用约 1–2 天，可分批执行。
+| 案例 | 现成观察 | 尚需 Lab 证明的关系 |
+| --- | --- | --- |
+| PyTorch #196968/#197232 | Flight Recorder dump、外部 native stack | participant 是否仍存在、producer 为何消失、absence 能否解释 |
+| vLLM #53859/#53883 | health、token counter、EngineCore stack、drop counter | demand 存在时是否停止服务、修复是否恢复活性并引入数据丢失 |
+| PyTorch #196996 | distributed hang symptom、本地 assertion | distributed symptom 是否可缩减为单卡 correctness mechanism |
 
-## 4. 阶段 P2：Progress Sentinel 与 Correlation Contract
+每个案例产出一份固定结构的 evidence-to-claim 表：
 
-### 工作项
+```text
+observation
+  -> allowed inference
+  -> forbidden inference
+  -> required corroboration
+  -> contradiction
+  -> verdict or insufficient_evidence
+```
 
-1. 先用 CPU fake service 建立 no-progress 状态机，区分 idle、正常推进、长
-   prefill、等待但仍推进、health-green stall 和恢复；
-2. 定义 `run_id`、`producer_id`、content-addressed `artifact_id` 和由外部
-   coordinator 分配的 `incident_id`；
-3. 定义关闭的 correlation manifest，每个 producer 声明 role/rank、clock
-   domain、时间精度和 artifact hash；
-4. 实现一个有限的 vLLM process/progress semantic join，输出 missing producer、
-   state/progress divergence、logical mismatch position 和 ordering unknown；
-5. 在实现 stack joiner 前完成 Phase 0：CPU attach/native wait、单卡 CUDA wait，
-   以及双 rank 独立 GPU 上的真实 NCCL blocking sampling go/no-go；
-6. 只有 Phase 0 通过后，才增加可选的 CPU main-thread stack adapter，把逐进程
-   stack snapshot 与 producer/rank 身份及已有 Flight Recorder dump 引用关联；
-7. 使用同一组 producer records 做 unlinked-versus-linked 消融，验证关联是否
-   产生新事实，而不是只改善展示；
-8. 再进入完整 TP=2：分别终止或暂停非主 rank、EngineCore 和 API server；
-9. 检查 rank/process 变化、health、退出码、关联覆盖和孤儿进程；
-10. 建立 NCCL hang/abort 的受控实验，不通过日志字符串伪造根因；
-11. 覆盖至少三个 vLLM 版本、两类 GPU 架构，并处理 metrics 演进。
+### E1 通过条件
 
-### 环境
+- 三个案例均列出主体、时间窗口、producer 和反证；
+- schema 中每个公开字段均声明为 decisional 或关闭集合内的 non-decisional；
+- schema-valid 的 non-decisional provenance 变异不能改变 semantic verdict；摘要篡改只能
+  导致 validation failure；
+- 至少一组等价 producer vectors 证明 verifier 不依赖工具身份；
+- 删除所有只改善展示、不改变 discrimination 的候选字段；
+- 明确哪些结论由 Lab 发现、独立验证或仅提供系统级证据；
+- 不把 #49869 描述为 Lab 发现。
 
-- 状态机、manifest 和 join 的第一轮只需要 CPU；
-- 拓扑验证最低需要 2×同型号 GPU；
-- 一个当前 main/开发版、一个近期稳定 release、一个较旧受支持 release；
-- 优先覆盖 Ampere/Ada 与 Hopper 中至少两类。
+## 6. 阶段 E2：native-state interpretation
 
-### 通过条件
+只在已有 reproducer 上评估成熟 producer：
 
-- 不把 SIGSTOP 定位能力外推成任意 CUDA/NCCL hang 定位能力；
-- 每个 producer 的身份与 clock domain 可机器校验，缺失或 hash 不一致必须显式失败；
-- 不宣称跨主机 monotonic clock 存在全局顺序；
-- 相同底层记录的 linked arm 至少产生一项 unlinked arm 无法定义的可核查关系事实；
-- FR 负责定位逻辑位置上的 missing/mismatched ranks，stack 只解释 CPU 当前活动；
-- Prometheus 对照能够说明本项目是否提供增量证据；
-- raw stack 默认私有且不进入当前公开 schema，attach 权限不足时明确记录缺失；
-- 不把单卡结论外推为多卡结论；
-- 每个进程故障点至少重复三次；
-- 没有遗留 worker、共享内存或 GPU context；
-- 不支持的 metrics/拓扑会输出有限、可操作的降级状态；
-- 文档中形成明确支持矩阵。
+1. PyStack：验证 Python/native 混合栈、GIL 状态、权限失败和超时边界；
+2. NCCL RAS：在支持的 NCCL 版本上比较 healthy/fault 两个窗口中的 rank、communicator
+   和 collective 状态；
+3. DCGM/Prometheus：仅当实验环境已经部署时，用作硬件时间线上下文，不建设新的默认
+   NVML polling 产品面。
 
-### 预计投入
+这些工具首先是实验对照，不自动成为 Lab 依赖。评估结果必须形成带显式版本约束、以
+数据表示的关闭 native-state 解释表，而不是散落在 classifier 代码中的工具特判。例如：
 
-CPU 状态机、契约、join 和消融约 5–8 个工作日；双卡验证另需约 1–3 天计费
-时间，取决于模型准备和故障注入速度。
+| 观察 | 允许推断 | 禁止单独推断 |
+| --- | --- | --- |
+| thread parked in communicator destruction | 该线程当前处于 teardown | rank 未参与 collective |
+| collective count 跨窗口不变 | 该 communicator 未观察到新 collective | 请求没有生成 token |
+| 高 SM utilization | GPU 正在执行 kernel | kernel 正在产生有效进展 |
+| publisher blocked in queue operation | 发布路径正在等待队列 | 整个服务没有进展 |
 
-## 5. 阶段 P3：部署与可运维性
+### 最小 C++ probe gate
 
-### 工作项
+只有同时满足以下条件才增加 probe：
 
-1. 增加 TOML/YAML 配置文件和严格 schema；
-2. 提供 systemd unit；
-3. 提供 Docker 和 Kubernetes sidecar 示例；
-4. recorder 暴露自身 health 和低基数 metrics；
-5. 定义退出码、启动失败和重启策略；
-6. 定义 artifact 目录权限、磁盘配额和保留策略；
-7. 加入 schema 兼容、配置迁移和回滚说明；
-8. 建立安全漏洞报告和敏感 artifact 处理流程。
+- 需要区分的两个 failure modes 已在 taxonomy 中命名；
+- PyStack、NCCL RAS、Flight Recorder 和已有公开 counters 无法区分它们；
+- 所需事实是明确的状态转换，而不是自由文本日志；
+- probe 可以输出关闭枚举或 stage flag；
+- base/fix 或正/负对照能够验证该字段的解释。
 
-### 通过条件
+优先候选仍是 #196968 已证明必要的 shutdown-stage 边界，而不是通用 csrc 埋点系统。
 
-- 新用户可以只按文档部署，不需要理解源码；
-- 错误配置在启动时失败并给出明确字段；
-- recorder crash-loop 不会无限生成文件；
-- recorder 自身不可用不会改变 vLLM 的生命周期；
-- 升级和回滚各有一次自动化端到端测试。
+### E2 通过条件
 
-### 预计投入
+- healthy 与 fault 观察成对保存；
+- 工具缺失、unsupported、权限不足、timeout 和 empty output 明确区分；
+- native classification 不直接改变 v0.2 主 verdict；
+- 分类规则声明 vLLM、PyTorch、NCCL 和 producer 的适用版本；未匹配版本或 frame shape
+  一律输出 `unknown`，禁止 nearest-match；
+- 至少一个分类通过已有案例证明能排除一个竞争解释；
+- 若现成工具已经足够，则明确记录“不需要 probe”的负面设计结论。
 
-约 1–2 周，不一定需要 GPU，可与 P2 并行准备。
+## 7. 阶段 E3：加强可证伪 verifier
 
-## 6. 阶段 P4：真实用户试用
+不先建设通用规则引擎。每次只为一个已验证案例加入一条显式 claim，并要求：
 
-### 工作项
+- subject identity 稳定；
+- 时间关系可复算；
+- required evidence 和 corroborating evidence 分离；
+- contradiction 优先于归因；
+- 缺失关键 producer 时输出 `insufficient_evidence`；
+- required producer 缺失时主 claim 变弱或拒绝；optional corroborating producer 缺失时
+  不改写已经充分成立的主 verdict，但 attribution coverage 必须显式降低；
+- 相同标准化 observation 来自不同 producer 时 verdict 相同；
+- 同一 bundle 可离线复算并通过摘要验证；
+- 修改关键字节或身份后验证失败。
 
-1. 招募 2–3 个真实 vLLM 使用者进行 opt-in 试用；
-2. 不上传 prompt/token，只分享 schema-valid artifact 或人工审核摘要；
-3. 每个事故记录 artifact 是否：
-   - 改变首个故障域判断；
-   - 缩小下一步操作；
-   - 避免一次复现；
-   - 减少 GPU 调试时长；
-4. 同时记录“没有额外价值”的事件；
-5. 根据真实引用字段删除长期无人使用的字段。
+首个候选 claim 是：
 
-### 通过条件
+```text
+participant present + diagnostic producer stopped + artifact absent
+  -> producer_missing
+  != participant missing
+```
 
-- 至少获得 5 个真实事件或明确记录样本不足；
-- 至少一名外部使用者能独立完成安装、采集和解释；
-- 公开正、负结果和限制；
-- 没有发生敏感字段泄露；
-- 根据采用结果作出继续、收窄或停止的明确决策。
+该 claim 只有在 #197232 gate 关闭、公开证据足够且隐私边界明确后才进入已发布
+case study。
 
-### 预计投入
+## 8. 阶段 E4：发布和 upstream 影响
 
-2–6 周观察期。该阶段主要受用户和真实故障频率限制，不应通过合成事故填充
-采用指标。
+按完整证据回路发布，而不是按功能数量发布：
 
-## 7. 阶段 P5：production preview
+```text
+ambiguous symptom
+  -> preregistered alternatives
+  -> bounded evidence
+  -> minimal mechanism
+  -> base/fix comparison
+  -> falsifiable verdict
+  -> upstream outcome
+```
 
-满足 P1–P4 后发布 production preview。版本号由届时的兼容承诺决定，并承诺：
+发布顺序：
 
-- 固定支持矩阵；
-- 有限 schema 兼容周期；
-- 有界默认资源预算；
-- 部署模板和升级说明；
-- 已验证的单卡与多卡场景；
-- 明确的支持/不支持边界。
+1. 发布 v0.2 和 #53859 CPU-only replay；
+2. 发布“Failures that never reach the supervisor”综合文章；
+3. 只在能提供直接证据的现有 upstream thread 中链接不可变 artifact；
+4. #197232 获得明确结果后发布 Flight Recorder case study；
+5. 若方法形成稳定共识，再考虑将 progress-vs-health 诊断步骤贡献到 upstream 文档。
 
-此阶段仍不承诺自动根因分类、自动重启或自动修复。
+## 9. 明确延后或不做
 
-## 8. 阶段 P6：1.0 决策
+- 通用 plugin/adapter framework；
+- 长期 telemetry 数据库、dashboard 和查询系统；
+- 默认 DCGM/NVML collector；
+- 自动根因分类、自动重启和自动修复；
+- systemd、Kubernetes sidecar 和大规模部署模板；
+- 为展示覆盖面而新增实验目录或 upstream 问题；
+- 在没有 verifier consumer 的情况下增加指标；
+- 将 stars、安装量或 collector 数量作为主要技术指标。
 
-只有下面条件同时满足才建议发布 1.0：
+如果真实 upstream 场景要求其中某项，再以具体 claim 和 acceptance test 重新开启，
+而不是提前建设平台。
 
-- production preview 经历至少两个版本周期；
-- 兼容矩阵和长稳结果稳定；
-- 有持续外部使用，而不是只有作者实验；
-- 安全、升级、回滚和故障处理流程可执行；
-- 字段集合经过真实事件裁剪；
-- 是否进入 vLLM EngineCore 已有明确决策。
+## 10. 成功指标
 
-如果真实采用表明外部 recorder 没有增加诊断价值，应保留实验和负面结论，
-停止扩大产品承诺，而不是为了达到 1.0 继续增加功能。
+### 技术与 upstream
 
-## 9. 近期执行顺序
+- 至少一个由 Lab 发现的问题获得 upstream 明确结论，优先争取修复合入；
+- 至少两个 upstream issue/PR 引用不可变 Lab 证据；
+- 至少一个第三方修复通过 Lab 的 base/fix 或 claim verifier；
+- 至少一个 native-state mapping 经实际案例验证，而非只停留在设计文档。
 
-按投入产出比，建议下一轮依次执行：
+### 方法复用
 
-1. 固化并发布现有单卡配对 overhead 结果；
-2. 在无需 GPU 的环境实现 no-progress fake states；
-3. 定义 correlation schema、身份、clock 和 hash 校验；
-4. 实现最小 process/progress semantic join，并完成 unlinked-versus-linked 消融；
-5. 完成 stack sampling Phase 0a；只有结果支持时才租双卡执行 Phase 0b；
-6. Phase 0 通过后，用受控多进程场景验证 CPU stack adapter 与 rank/FR 关联；
-7. 加入 Prometheus 基线，判断现有监控能否提供同等证据；
-8. 租单卡验证 health-green stall、恢复和误报边界；
-9. 租双卡完成 TP=2 worker/rank stall、loss 和证据关联矩阵；
-10. 再执行长稳、版本兼容和部署模板；
-11. 发布 preview 试用包，以可执行工具和结果推进 RFC；
-12. 招募真实使用者，进入 adoption gate。
+- CPU-only replay 可在五分钟内运行；
+- 外部使用者能够复算一个已发布 verdict；
+- 至少一个外部 issue、PR 或讨论采用 evidence format、failure taxonomy 或判断规则；
+- 一个第三方能够指出某条 claim 的反例、缺失条件或 schema 改进。
 
-当前进度：CPU 配对 harness、固定 A/B 顺序、工作负载签名校验、独立试次日志和
-GPU 配置模板已经进入 `experiments/overhead/`。GPU 模板仍标记为不可执行，必须
-在租卡前替换并复核所有 `REPLACE_*` 字段。
+### 传播
 
-## 10. 项目看板建议
+- 首批十个真实外部 stars、一个 fork；
+- 一篇 case study 获得社区成员引用或转发；
+- maintainer 在新的相关问题中主动引用、邀请或 cc 作者。
 
-GitHub milestone 可以按下面方式划分：
+Stars 只表示传播；可证伪结论、upstream 结果和方法复用才表示技术价值。
 
-- `P1-single-gpu-evidence`
-- `P2-progress-correlation`
-- `P3-deployment`
-- `P4-adoption`
-- `0.2.0-production-preview`
+## 11. 近期执行顺序
 
-每个 issue 必须包含：问题、范围、验收测试、所需环境、输出物、隐私边界和
-不包含的工作。没有验收条件的“增强可观测性”类 issue 不进入当前里程碑。
+1. 完成 v0.2 发布机械项，不增加功能；
+2. 为 bundle 字段建立 decisional/non-decisional 清单及 non-decisional 变异测试；
+3. 为 #196968、#53859 和 #196996 编写 evidence-to-claim/forbidden-inference 表；
+4. 为 taxonomy 写入 category admission gate，并保留终态 `unknown`；
+5. 运行一次 PyStack capability check，记录它能替代和不能替代的事实；
+6. 在可用环境中运行一次 NCCL RAS healthy/fault 对照；版本不支持时记录明确边界；
+7. 使用等价 observation vectors 验证 producer interchangeability；
+8. 基于实际缺口决定是否需要一个最小 C++ shutdown-stage probe；
+9. 只为已经证实且带版本约束的 native classification 增加 verifier test；
+10. 发布综合文章；
+11. 等 #197232 明确结果后完成并发布 case study。
+
+这一路线不以“拥有更多 collector”为进展。每一阶段都必须让一个已命名 failure mode
+更可区分、一个错误推断更难发生，或一个结论更容易被第三方反证。

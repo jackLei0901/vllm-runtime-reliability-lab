@@ -6,7 +6,7 @@
 相关文档：
 
 - [`DESIGN.zh-CN.md`](DESIGN.zh-CN.md)：详细方案设计与产品候选架构；
-- [`PRODUCT_ROADMAP.zh-CN.md`](PRODUCT_ROADMAP.zh-CN.md)：阶段计划和验收条件；
+- [`PRODUCT_ROADMAP.zh-CN.md`](PRODUCT_ROADMAP.zh-CN.md)：evidence-first 阶段计划和验收条件；
 - [`PRIOR_ART_AND_VALUE.zh-CN.md`](PRIOR_ART_AND_VALUE.zh-CN.md)：关联证据的公开先例、实际收益和适用边界；
 - [`REQUIREMENTS.md`](REQUIREMENTS.md)：当前英文需求基线；
 - [`TEST_PLAN.md`](TEST_PLAN.md)：当前英文测试计划。
@@ -42,8 +42,8 @@ fail-closed 重放：校验封闭文件集合、SHA-256、base/fix 身份、prog
 stack 结论和事件丢失代价。
 
 ```bash
-python -m pip install -e .
-python -m dfxlab.replay results/vllm-zmq-backpressure-stage1-r3-20260916
+python -m pip install .  # 安装 distribution vllm-runtime-dfx-lab
+vllm-dfx replay results/vllm-zmq-backpressure-stage1-r3-20260916
 ```
 
 关键输出：

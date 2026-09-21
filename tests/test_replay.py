@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from dfxlab.cli import main as cli_main
 from dfxlab.replay import MANIFEST_NAME, ReplayError, main, replay
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -50,6 +51,13 @@ class ReplayTests(unittest.TestCase):
             status = main([str(PUBLISHED / "missing")])
         self.assertEqual(status, 1)
         self.assertIn("FAIL:", stderr.getvalue())
+
+    def test_installed_entry_point_exposes_replay(self) -> None:
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            status = cli_main(["replay", str(PUBLISHED)])
+        self.assertEqual(status, 0)
+        self.assertIn("TRADE-OFF: 4 event batches dropped", stdout.getvalue())
 
 
 if __name__ == "__main__":
