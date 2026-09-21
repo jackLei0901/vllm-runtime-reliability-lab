@@ -1,8 +1,9 @@
 # v0.2 `collect` → `verify` contract
 
-Status: implemented for review. The progress core, native bundle verifier,
-legacy R3 projection, optional stack producer, bounded collector, and CLI are
-covered by CPU-only tests; this is not yet a tagged v0.2 release.
+Status: frozen for v0.2. The progress core, native bundle verifier, legacy R3
+projection, optional stack producer, bounded collector, and CLI are covered by
+CPU-only tests. Release artifacts are built and verified from the exact release
+commit.
 
 This document defines the smallest interface that lets an engineer who is not
 the lab author apply the lab's evidence method to an incident. It commits only

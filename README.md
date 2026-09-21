@@ -122,30 +122,30 @@ an operational gap:
 
 | Operational gap | Product output | Decision it should support |
 | --- | --- | --- |
-| `/health=200` while admitted work stops progressing | bounded `suspected_no_progress` transition with its supporting observations | investigate, drain or restart instead of leaving a silent outage healthy |
+| `/health=200` while admitted work stops progressing | bounded `alive_health_ok_no_progress` verdict with its supporting observations | investigate, drain or restart instead of leaving a silent outage healthy |
 | one rank stalls or disappears while peers expose only local state | verified producer set, missing-peer/state divergence and ordering limits | identify the first useful fault domain without a failure-time collective |
 | several files exist but cannot be trusted as one incident | closed manifest, identities, clocks and content hashes | reject mixed or tampered evidence before diagnosis |
 
-The current alpha supplies the bounded local evidence primitive. The table's
-no-progress and multi-producer outputs are planned v0.2 gates, not shipped
-features.
+v0.2 ships the bounded local `collect` and offline `verify` path. It selects one
+decision producer and can retain one corroborating producer without merging
+their scopes. It does not yet perform a general cross-rank or cross-host join.
 
-### Planned stack adapter: a hard deployment gate
+### Optional stack producer: a hard deployment gate
 
-The proposed CPU-stack adapter is also not shipped. `py-spy` reads another
-process's memory: attaching on Linux usually needs root or an adjusted
+v0.2 can invoke a bounded, opt-in `py-spy` stack producer. Raw stack output is
+private and cannot change the verdict; the public bundle retains only typed
+availability and bounded producer identity. `py-spy` reads another process's
+memory: attaching on Linux usually needs root or an adjusted
 `ptrace_scope`; Docker and Kubernetes commonly require `SYS_PTRACE`. The default
 sampling path may pause the target briefly. `--nonblocking` avoids that pause but
 can return sampling errors or partial frames because the reads are not atomic.
 See the [py-spy deployment and nonblocking
 notes](https://github.com/benfred/py-spy#frequently-asked-questions).
 
-Before any joiner is built, a go/no-go experiment must establish that useful
-Python/native context can be captured from a blocked process within a fixed
-duration and sample-count budget. Single-process and single-GPU tests can cover
-attachment and CUDA/native waits; a real rank blocked in an unmatched NCCL
-collective requires a multi-rank GPU test. Capture denial, timeout or partial
-output is a normal explicit result, not a recorder failure.
+The shipped adapter does not publish arbitrary frames, classify native state,
+or join stacks across ranks. Those capabilities require a separate go/no-go
+experiment under a fixed duration and sample-count budget. Capture denial,
+timeout, or partial output is a normal explicit result, not a recorder failure.
 
 ### Why continuous metrics are not enough for these incidents
 
@@ -216,7 +216,7 @@ aligned offline to expose collective mismatches that no single rank can define.
 Its documented before/after, limitations and transfer boundary are summarized in
 [`PRIOR_ART_AND_VALUE.md`](PRIOR_ART_AND_VALUE.md).
 
-## What the alpha provides
+## What v0.2 provides
 
 - `/health` and selected `/metrics` polling;
 - explicit PID liveness and Linux RSS/VMS/thread sampling;
@@ -228,11 +228,16 @@ Its documented before/after, limitations and transfer boundary are summarized in
 - per-process HMAC incident IDs that do not correlate across restarts;
 - 256 KiB artifact cap, four-file rotation and POSIX mode `0600`;
 - fail-open writer behavior: artifact failure does not signal the observed service;
-- Markdown summaries and explicit signal-injection helpers.
+- Markdown summaries and explicit signal-injection helpers;
+- bounded `collect` bundles with stable PID identity and always-closed windows;
+- server-counter and opt-in client-request progress producers;
+- demand-gated, fail-closed `verify` verdict recomputation;
+- an optional private `py-spy` capture with public typed producer status; and
+- the no-GPU `vllm-dfx replay` for the published #53859 four-cell campaign.
 
-The alpha does **not** yet provide a no-progress detector, process/rank discovery,
-a cross-producer join or a correlation manifest. Those are v0.2 targets and must
-not be inferred from the current feature list.
+v0.2 does **not** provide continuous autonomous monitoring, process/rank
+discovery, a general cross-rank or cross-host join, native-state classification,
+automatic remediation, or automatic root-cause analysis.
 
 ## Live CPU-only recorder demo
 
@@ -436,6 +441,8 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 - [`TEST_PLAN.md`](TEST_PLAN.md): CPU and GPU validation matrix.
 - [`docs/V0.2_RELEASE_PLAN.md`](docs/V0.2_RELEASE_PLAN.md): bounded v0.2 payload
   and release gates.
+- [`docs/V0.2_LAUNCH_POST.md`](docs/V0.2_LAUNCH_POST.md): restrained launch copy
+  with the exact clean-install replay command.
 - [`docs/V0.2_FIELD_ROLES.md`](docs/V0.2_FIELD_ROLES.md): machine-checked
   decisional and non-decisional public-field audit.
 - [`docs/ADOPTION_PLAN.md`](docs/ADOPTION_PLAN.md): focused external-reuse plan
@@ -447,12 +454,12 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Status
 
-`v0.1.0-alpha.4` is the latest tag. Since that tag, the lab has isolated two
-PyTorch defects and completed a single-GPU vLLM health-green no-progress
-base/fix campaign. These are experiment results, not a shipped general-purpose
-no-progress detector or cross-process joiner. Paired overhead, fresh KV-pressure,
-cross-host correlation, long-duration, and production-utility gates remain
-open. Treat the current branch as an evaluation build until v0.2 is tagged.
+This branch is the `v0.2.0` release candidate. It ships bounded no-progress
+collection, offline verification, and the no-GPU published-result replay; it is
+not a production monitor or a general cross-process joiner. Paired overhead,
+fresh KV-pressure, cross-host correlation, long-duration, and production-utility
+gates remain open. The #196968 case study remains unpublished while #197232 is
+open; an open PR is not an upstream outcome.
 
 ## License
 

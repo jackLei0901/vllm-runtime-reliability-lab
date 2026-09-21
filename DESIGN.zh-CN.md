@@ -20,7 +20,7 @@
 
 ## 2. 系统边界
 
-### 2.1 当前 Alpha 架构
+### 2.1 基础 recorder 架构
 
 ```text
                          independent process
@@ -59,9 +59,11 @@ HTTP、显式 PID 和 GPU 聚合状态。
 因此，外部 artifact 的 `internal_kind` 和 `internal_stage` 被 schema 固定为
 `unknown`。这不是功能缺失的临时占位，而是当前证据边界的契约。
 
-### 2.3 当前架构与 v0.2 目标
+### 2.3 v0.2 与后续关联目标
 
-当前 Alpha 是单目标 recorder，只能生成一条外部时间线。v0.2 计划增加：
+v0.2 在单目标 recorder 之上增加了 bounded `collect`、离线 `verify`、一个
+decision producer 和一个可选 corroborating producer，但不合并二者的 scope。
+下面的通用跨 rank correlation manifest 和 semantic join 属于 v0.2 之后的目标：
 
 ```text
 独立 producer artifacts
@@ -283,8 +285,8 @@ incident ID 使用进程启动时生成的随机 HMAC key，只用于同一次 r
 
 ## 8. 产品候选架构
 
-如果外部 Alpha 的开销验证通过，下一阶段保持采集进程独立，先增加 progress
-和 correlation 能力，再增加部署与自观测能力：
+下一阶段保持采集进程独立，在 v0.2 progress verdict 之上增加通用 correlation、
+部署与自观测能力：
 
 ```text
 vLLM pod/process                  recorder sidecar/service
@@ -299,7 +301,7 @@ vLLM pod/process                  recorder sidecar/service
 
 产品候选版本需要增加：
 
-- 区分 idle、长 prefill、正常排队与 `suspected_no_progress`；
+- 在现有 demand-gated `alive_health_ok_no_progress` 之外区分长 prefill 与正常排队；
 - API server、EngineCore、worker/rank 的显式 producer model；
 - closed correlation manifest、artifact hash 和 per-source clock declaration；
 - 至少一个 vLLM process/progress semantic joiner；

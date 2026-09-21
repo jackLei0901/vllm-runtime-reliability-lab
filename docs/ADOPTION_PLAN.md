@@ -19,7 +19,7 @@ new issue targets to create content.
 
 1. **Replay launch:** one short post showing the #53859 base/fix output and the
    one-command CPU replay. Ask readers to run it and report friction, not to star
-   the repository.
+   the repository. Use the frozen draft in [`V0.2_LAUNCH_POST.md`](V0.2_LAUNCH_POST.md).
 2. **vLLM result:** a focused Slack or discussion post explaining
    `health green != making progress` and the measured liveness/event-loss
    trade-off. Link an immutable release result.

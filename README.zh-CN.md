@@ -1,6 +1,6 @@
 # vLLM Runtime Reliability Lab 中文指南
 
-> 当前版本：`v0.1.0-alpha.4`
+> 当前版本：`v0.2.0` release candidate
 > 当前定位：可公开安装和复现的研究型 Alpha，不是生产监控产品。
 
 相关文档：
@@ -105,32 +105,34 @@ stack 或完整 sampler command。endpoint-only、PID-only、client probe、stac
 进程退出、健康检查丢失、KV 压力或抢占突增时写出一个有大小上限的事件文件。
 
 它的目标不是自动判断根因，而是把故障检测、证据保留和证据边界变成可执行、
-可验证的契约。后续版本还要解决单份 artifact 无法回答的问题：哪个 rank
-首先出现分歧、哪些 producer 缺失，以及 `/health=200` 时服务是否已经失去进展。
+可验证的契约。v0.2 已能在有界窗口内判断 `/health=200` 时是否存在有需求但无
+进展；哪个 rank 首先出现分歧以及通用跨 rank join 仍属于后续范围。
 
 项目的验收标准不是“是否采到了数据”，而是证据能否补上实际运维缺口：
 
 | 运维缺口 | 产品输出 | 应支持的动作 |
 | --- | --- | --- |
-| `/health=200`，但已有请求停止推进 | 带支撑证据的、有界 `suspected_no_progress` 状态变化 | 进入排查、摘流或重启流程，而不是让静默故障继续保持健康 |
+| `/health=200`，但已有请求停止推进 | 带支撑证据的、有界 `alive_health_ok_no_progress` verdict | 进入排查、摘流或重启流程，而不是让静默故障继续保持健康 |
 | 单个 rank 卡住或消失，其他进程只有局部状态 | 经校验的 producer 集合、缺失 peer、状态分歧和顺序边界 | 不依赖故障时 collective，缩小第一个应排查的故障域 |
 | 多份文件无法证明属于同一次事故 | 关闭的 manifest、身份、clock 和内容 hash | 在诊断前拒绝混入其他运行或被篡改的证据 |
 
-当前 Alpha 提供的是有界本地证据这一基础能力。表中的 no-progress 和多 producer
-输出属于 v0.2 验收目标，不是当前已经交付的功能。
+v0.2 已交付有界本地 `collect` 与离线 `verify`：选择一个 decision producer，并可
+保留一个 corroborating producer，但不合并二者的 scope。通用跨 rank、跨主机
+关联仍未交付。
 
-### 1.1 计划中的 stack adapter 有严格部署门槛
+### 1.1 可选 stack producer 有严格部署门槛
 
-CPU stack adapter 同样不是当前能力。`py-spy` 需要读取另一个进程的内存：Linux
-attach 通常需要 root 或调整 `ptrace_scope`，Docker/Kubernetes 往往需要
+v0.2 可按需调用一个有界、显式启用的 `py-spy` stack producer。原始 stack 只保留
+在私有目录，不能改变 verdict；公开 bundle 只保留 typed availability 和有界的
+producer identity。`py-spy` 需要读取另一个进程的内存：Linux attach 通常需要
+root 或调整 `ptrace_scope`，Docker/Kubernetes 往往需要
 `SYS_PTRACE`。默认采样可能短暂停顿目标进程；`--nonblocking` 可以避免暂停，但
 由于多次内存读取不是原子的，可能得到错误或不完整 stack。具体限制见
 [py-spy FAQ](https://github.com/benfred/py-spy#frequently-asked-questions)。
 
-实现 joiner 之前必须先做 go/no-go 实验：在固定耗时和样本数预算内，能否从阻塞
-进程获得有用的 Python/native 上下文。单进程、单 GPU 只能验证 attach 以及
-CUDA/native wait；真实的 unmatched NCCL collective 需要多 rank GPU 环境。
-权限拒绝、超时或 partial output 都是正常的明确结果，不能被当作 recorder 异常。
+当前 adapter 不公开任意 frame、不分类 native state，也不跨 rank join stack。
+这些能力必须另做固定耗时和样本预算的 go/no-go 实验。权限拒绝、超时或 partial
+output 都是正常的明确结果，不能被当作 recorder 异常。
 
 ### 1.2 为什么只看持续监控还不够
 
@@ -174,17 +176,18 @@ monitor、进入 communicator destruction，但既未完成 destroy，也未观�
 可分享证据，那么本项目没有增量价值。计划中的 Prometheus 对照和
 unlinked-versus-linked 消融是明确的产品验收项，不是前提。
 
-### 1.3 当前 Alpha 与后续目标
+### 1.3 v0.2 与后续目标
 
-当前 Alpha 只完成单目标外部时间线和 bounded artifact。它尚未实现：
+v0.2 已完成 bounded `collect`、离线 `verify`、server/client progress producer、
+demand gate 和无 GPU replay。它尚未实现：
 
-- health-green no-progress 检测；
+- 持续自治监控；
 - API server、EngineCore 和 worker/rank 自动发现；
-- 多 producer correlation manifest；
-- 跨 rank semantic join；
+- 通用跨 rank 或跨主机 semantic join；
+- native-state 分类；
 - 自动摘流、重启或根因分类。
 
-这些是 v0.2 及后续版本的目标，不能作为当前发布能力宣传。
+这些属于 v0.2 之后的实验方向，不能作为当前发布能力宣传。
 
 ## 2. 当前完成度
 
@@ -201,6 +204,10 @@ unlinked-versus-linked 消融是明确的产品验收项，不是前提。
 | prompt、token、请求 ID、路径和任意配置不进入公开文件 | 已完成 |
 | 256 KiB 文件上限、最多保留四份、POSIX `0600` | 已完成 |
 | 写入失败不影响被观察服务 | 已完成并经过 GPU 冒烟验证 |
+| bounded `collect` 与离线 fail-closed `verify` | v0.2 已完成 |
+| server/client progress producer 与 demand-gated verdict | v0.2 已完成 |
+| 无 GPU 的 `vllm-dfx replay` | v0.2 已完成 |
+| 可选私有 `py-spy` capture 与公开 typed producer status | v0.2 已完成 |
 | 正常 SIGTERM、EngineCore SIGKILL、受控 CUDA OOM | RTX 4090 已验证 |
 | 四卡 FSDP2 已知答案的 collective divergence 重建 | 已完成；仍缺同版本负对照 |
 | 两卡 unused-gradient dtype 机制 Gate 0 | 已完成；Gate 1e 机制 3/3 通过 |
@@ -469,16 +476,16 @@ vllm-dfx --help
 到至少一个真实存在的测试方法。新增需求但没有新增测试、删除需求却留下旧
 映射、或重命名测试后没有更新映射，都会让 CI 失败。
 
-## 12. 从公开 Alpha 到产品候选版本
+## 12. 从 v0.2 研究型 Alpha 到产品候选版本
 
 建议按照下面的顺序推进，而不是先增加更多字段：
 
 1. **建立开销基线**：交错执行 recorder disabled/enabled 两组相同负载，报告
    吞吐、TTFT、TPOT、端到端延迟、recorder CPU/RSS 和采集器耗时。
-2. **验证 no-progress 边界**：先用 fake server 区分 idle、长 prefill、正常排队、
-   持续进展和 health-green stall，再进行单卡 `SIGSTOP/SIGCONT` 实验。
-3. **建立关联契约**：加入 job-scoped `run_id`、producer identity、clock declaration、
-   artifact hash 和 closed manifest，并完成 unlinked-versus-linked 消融。
+2. **扩展 no-progress 边界**：在现有 demand-gated verdict 之外区分长 prefill、
+   正常排队和更多版本差异，再进行单卡 `SIGSTOP/SIGCONT` 实验。
+3. **建立跨 rank 关联契约**：在 v0.2 单 incident identity、clock 和 content hash
+   之上加入 topology、logical position 和通用 semantic join，并完成消融。
 4. **补齐分布式拓扑**：至少覆盖 TP=2 worker loss/stall，输出第一个外部可观察
    divergence，同时明确不能由外部证明的 CUDA/NCCL 根因。
 5. **建立版本矩阵**：覆盖多个 vLLM release、GPU 架构和指标命名差异。
@@ -511,8 +518,8 @@ EngineCore 内部的 `incident-snapshot-v1`。二者不能互相冒充：
 ## 14. 当前结论
 
 这个项目已经是一个公开、可安装、可验证的 Alpha 产品原型。它最成熟的部分
-是证据边界、隐私约束、有限资源使用和可复现测试；最欠缺的部分是
-health-green no-progress、跨 producer 关联、分布式验证、性能开销、长稳和真实采用。
+是证据边界、隐私约束、health-green no-progress 的有界判定和可复现测试；最欠缺
+的部分是通用跨 rank 关联、分布式验证、性能开销、长稳和真实采用。
 
 因此现阶段最有价值的工作不是继续扩展 schema，而是让更多真实运行环境使用
 它，并用可重复实验回答三个问题：它会不会影响服务、相比现有监控是否保留了

@@ -1,49 +1,81 @@
-# v0.1.0-alpha.4
+# v0.2.0 — Cross-process evidence and no-progress validation
 
-This release adds the first lab case that was not designed by the project: a
-four-GPU reconstruction of the known FSDP2 conditional-parameter hang tracked
-by pytorch/pytorch#158719 and pytorch/torchtitan#2747.
+v0.2.0 turns the lab's evidence method into a bounded workflow that another
+engineer can run without a GPU. It adds `collect`, offline `verify`, and an
+installed `replay` command while preserving `undetermined` as a valid outcome
+when the evidence cannot support a stronger claim.
 
-## Delivered evidence
+## Five-minute replay
 
-- One host with 4 x RTX 4090, PP=2 and DP=2.
-- Three PyTorch 2.11 `DebugLevel.DETAIL` oracle trials reported a stable
-  `_REDUCE_SCATTER_BASE` input-shape mismatch (`[1024]` versus `[960]`).
-- Three normal hung runs with automatic ProcessGroupNCCL Flight Recorder
-  capture reconstructed the same semantic mismatch in 3/3 trials.
-- The public verifier checks the expected stage-0 DP group `[0, 2]`, uniform
-  dtype family, completed collectives before the hang, and every retained
-  lifecycle cleanup record.
-- Raw stderr, prepared source and private audit material are excluded from the
-  public result directory.
-
-## Decision boundary
-
-This is a known-answer reconstruction, not discovery of an unknown root cause,
-and the campaign remains short of GO. A same-version no-divergence control is
-still required. The attempted PyTorch 2.13 opt-in control hit a separate
-mixed-gradient-dtype assertion in all three trials and was recorded as blocked,
-not counted as evidence of success. Protocol revision `2026-09-12.6` was
-untracked at execution time, so its freeze timing remains author-declared.
-
-The result validates an external c10d-visible evidence workflow. It does not
-validate the proposed vLLM EngineCore incident Snapshot or establish its
-diagnostic utility.
-
-## Review entry
-
-- [Review entry](https://github.com/jackLei0901/vllm-runtime-reliability-lab/blob/v0.1.0-alpha.4/experiments/organic-hang/REVIEW_RESPONSE_2026-09-10.md)
-- [GPU result](https://github.com/jackLei0901/vllm-runtime-reliability-lab/blob/v0.1.0-alpha.4/experiments/organic-hang/GPU_RESULT_2026-09-12.md)
-- [Derived-only public evidence](https://github.com/jackLei0901/vllm-runtime-reliability-lab/tree/v0.1.0-alpha.4/results/organic-hang-20260912)
-
-Wheel SHA-256:
-
-```text
-67fb31e293901b3e9f6159ff0d5edaa9b9f916bad3d7862697b01cb7f5fed0e4
+```bash
+python -m pip install .  # installs distribution vllm-runtime-dfx-lab
+vllm-dfx replay results/vllm-zmq-backpressure-stage1-r3-20260916
 ```
 
-Derived-only evidence archive SHA-256:
+The replay verifies the frozen #53859 four-cell evidence, file identities,
+health-green no-progress claim, blocking-stack claim, fix-arm progress, and the
+measured four-batch event-loss trade-off. It does not rerun the GPU experiment.
 
-```text
-a7d0e4d3c90324f7e5d9c35f9f3e25ef43d7da1a56c65b4bb514f35172e820f8
-```
+## Delivered in v0.2.0
+
+- bounded `collect` bundles with operator-supplied PID identity, endpoint
+  privacy, and always-closed observation windows;
+- independent server-counter and opt-in client-request progress producers;
+- explicit demand evidence and producer-conflict reporting;
+- five closed verdicts with deterministic precedence: `process_missing`,
+  `health_lost`, `progress_observed`, `alive_health_ok_no_progress`, and
+  `undetermined`;
+- offline, fail-closed verdict recomputation from closed-shape JSON;
+- typed optional `py-spy` availability and producer identity while raw stacks
+  remain private and non-decisional;
+- a machine-checked registry that classifies every public leaf field as
+  decisional or explicitly non-decisional;
+- a compatibility projection that reports evidence missing from the legacy
+  #53859 result instead of inventing native v0.2 observations; and
+- `vllm-dfx replay` as the installed no-GPU entry point.
+
+## Evidence-backed results
+
+- Lab-originated [PyTorch #196968](https://github.com/pytorch/pytorch/issues/196968)
+  established that a missing Flight Recorder dump did not mean a missing rank;
+  [PR #197232](https://github.com/pytorch/pytorch/pull/197232) proposes the C++
+  fix. Both were open on 2026-09-21.
+- The lab independently validated reported
+  [vLLM #53859](https://github.com/vllm-project/vllm/issues/53859) and proposed
+  [PR #53883](https://github.com/vllm-project/vllm/pull/53883): `/health`
+  remained 2xx while EngineCore token progress stopped under deterministic
+  event-queue backpressure. This was not a lab-originated bug.
+- Lab-originated [PyTorch #196996](https://github.com/pytorch/pytorch/issues/196996)
+  reduced an apparent distributed hang to a single-GPU FSDP2 mixed-gradient
+  dtype correctness failure.
+
+## Publication boundary
+
+The complete #196968 case study is not part of this release. Its publication
+gate requires an explicit upstream outcome for #197232: merge, explicit design
+acceptance with another landing path, or explicit rejection/supersession with a
+documented reason. An open PR, passing CI, bot labels, or silence is not an
+upstream outcome.
+
+`#49869` is an independent upstream contribution and is not a lab discovery.
+`#52178` is a separately found lifecycle bug for which the lab supplied
+process-level validation.
+
+## Known boundaries
+
+This remains an alpha research tool, not a production monitor, automatic
+process/rank discovery system, general cross-rank or cross-host joiner,
+native-state classifier, remediation controller, or automatic root-cause
+classifier. Stack availability and producer implementation cannot change a
+verdict. Endpoint-only flat progress remains `undetermined` because repeated
+2xx responses do not establish process liveness.
+
+## Immutable release references
+
+- [v0.2.0 source tree](https://github.com/jackLei0901/vllm-runtime-reliability-lab/tree/v0.2.0)
+- [v0.2 collect/verify contract](https://github.com/jackLei0901/vllm-runtime-reliability-lab/blob/v0.2.0/docs/COLLECT_VERIFY_V0_2.md)
+- [Field-role audit](https://github.com/jackLei0901/vllm-runtime-reliability-lab/blob/v0.2.0/docs/V0.2_FIELD_ROLES.md)
+- [Published #53859 replay evidence](https://github.com/jackLei0901/vllm-runtime-reliability-lab/tree/v0.2.0/results/vllm-zmq-backpressure-stage1-r3-20260916)
+
+Release artifact SHA-256 values and clean-install transcripts are published
+alongside the release assets built from the exact tagged commit.

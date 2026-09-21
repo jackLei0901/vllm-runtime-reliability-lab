@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-09-21
+
 - Lead the README with demonstrated outcomes from PyTorch #196968, vLLM
   #53859/#53883, and PyTorch #196996, with discovery/validation boundaries.
 - Add a dependency-free, fail-closed CPU replay for the published #53859
@@ -16,6 +18,12 @@
   opt-in streaming progress probes, and opt-in `py-spy` producer identity.
 - Preserve the published #53859 R3 result as a legacy oracle: a compatibility
   projection reports unavailable native evidence instead of inventing it.
+- Expose the published-result replay through the installed `vllm-dfx replay`
+  command.
+- Add a machine-checked decisional/non-decisional field-role registry and prove
+  that provenance changes cannot alter semantic verdicts.
+- Reject inconsistent health observations instead of allowing HTTP status and
+  transport state to disagree.
 
 ## 0.1.0-alpha.4 - 2026-09-12
 
