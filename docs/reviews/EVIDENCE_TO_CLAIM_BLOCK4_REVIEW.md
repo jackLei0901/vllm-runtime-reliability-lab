@@ -43,6 +43,36 @@ observation
 | vLLM #53859 / proposed #53883 | one real EngineCore was alive and health-responsive while admitted work stopped; proposed fix restored liveness with four dropped batches / 真实 EngineCore 存活且 health 2xx，但已进入的请求停止推进；提议修复恢复活性并丢弃四个 batch | no native fact is required for the verdict; native state is attribution only / 主 verdict 不需要 native fact；底层状态只做归因 |
 | PyTorch #196996 | the mixed-gradient-dtype correctness failure reproduces on one GPU and can present as a distributed hang when ranks diverge / mixed-gradient-dtype correctness failure 可单卡复现，并可在 rank 分歧时表现为分布式 hang | existing structured dtype and assertion evidence is sufficient; no generic native probe / 现有 dtype 与 assertion 结构化证据已足够，不需要通用 native probe |
 
+## Post-review corrections / Review 后修正
+
+The review of commit `02bb428` produced seven accepted findings. This revision
+resolves them as follows:
+
+对 `02bb428` 的 review 提出了七项有效问题，本次逐项处理如下：
+
+1. **Outcome categories:** replaced one flat enum with a closed
+   `attempt_stage × outcome` matrix for coordinator, preflight, and execution /
+   将扁平枚举改为 coordinator、preflight、execution 三类互斥 pair；
+2. **Rule boundary:** rules may constrain producer kind but never implementation
+   name/version; implementation compatibility stops at the normalizer /
+   attribution rule 只约束 producer kind，implementation name/version 止于 normalizer；
+3. **Interchangeability:** mock fixtures now test evaluator purity only; Block 5
+   requires a real `py-spy`/PyStack pair on one stable controlled target /
+   mock 只验证 evaluator purity，正式验收要求真实双 producer 对照；
+4. **Identity recheck:** a failed post-capture recheck invalidates native
+   provenance and never emits `process_missing` / capture 后 identity 失败只使 native
+   provenance 无效，不产生主 verdict；
+5. **Vocabulary admission:** only `queue_wait`,
+   `communicator_destruction`, and `unknown` are emittable; four broader names
+   are reserved until a case row admits them / 当前只允许两个已命名分类与 `unknown`，其余
+   名称保留但不可输出；
+6. **Probe sequencing:** lab-local measurement and upstream instrumentation are
+   separate; upstream work waits for an explicit #197232 outcome / lab-local
+   measurement 与 upstream instrumentation 分离，后者等待 #197232 明确结果；
+7. **Verification environment:** the test count now names OS, Python,
+   `jsonschema`, and the absent `py-spy` executable, and the review command
+   installs the development extra / 测试数量补充完整环境与 dev-extra 前提。
+
 ## Decisions to approve / 需要确认的设计决策
 
 ### 1. Verdict evidence and attribution remain separate
@@ -63,23 +93,30 @@ new schema review and mutation tests.
 能力实验不修改 `observations.json`、`summary.json`、field-role registry 或
 `derive_verdict()`。未来如需集成，必须单独完成新 schema 审查和 mutation tests。
 
-### 3. Producer failure is an observation, not target state
+### 3. Attempt stage and outcome are separate
 
-`unsupported`, `permission_denied`, `timed_out`, `feature_disabled`,
-`empty_output`, and `execution_failed` are terminal producer outcomes. None
-means that the target thread, rank, or communicator was absent.
+Coordinator decisions (`capture_occupied`, `rate_limited`), preflight results
+(`unsupported`, `binary_missing`, `feature_disabled`), and execution outcomes
+(`produced`, `timeout`, `permission_denied`, `empty_output`,
+`execution_failed`) use disjoint stage/outcome pairs. Only the execution stage
+means the producer was invoked. None of the failure pairs means that the target
+thread, rank, or communicator was absent.
 
-上述失败类型都是 producer 的终态，不能被解释成目标 thread、rank 或 communicator
-不存在。
+coordinator decision、preflight result 与 execution outcome 使用互斥的
+stage/outcome pair。只有 execution 表示 producer 已实际调用；任何失败 pair 都不能被
+解释成目标 thread、rank 或 communicator 不存在。
 
 ### 4. Native interpretation is exact and version constrained
 
-Rules are data with explicit platform, producer, PyTorch/vLLM/NCCL, topology,
-and ordered-frame constraints. An unmatched input emits `unknown`; there is no
+Rules are data with explicit platform, producer kind, PyTorch/vLLM/NCCL,
+topology, and normalized ordered-frame constraints. They may never constrain
+producer implementation name or implementation version; those stop at the
+normalizer as provenance. An unmatched input emits `unknown`; there is no
 nearest-match or confidence-based fallback.
 
-规则以数据表达，并带 platform、producer、PyTorch/vLLM/NCCL、topology 和有序 frame
-约束。未匹配输入输出 `unknown`，不做 nearest-match，也不使用模糊 confidence 回退。
+规则可以约束 producer kind、platform、PyTorch/vLLM/NCCL、topology 与标准化有序
+frame，但不能读取或约束 producer implementation name/version；后两者只属于
+normalizer provenance。未匹配输入输出 `unknown`，不做 nearest-match。
 
 ### 5. Mature producers are evaluated before source probes
 
@@ -96,9 +133,14 @@ The candidate fact is the order among dump-responder stop, communicator
 destruction start/completion, peer request observation, and dump completion.
 #53859 and #196996 do not pass the probe admission gate.
 
+Block 5 may decide whether one lab-local measurement patch is needed after
+mature producers fail. An upstream-facing instrumentation proposal remains
+blocked until #197232 has an explicit maintainer outcome.
+
 当前唯一候选是 dump responder stop、communicator destruction start/complete、
 peer request observation 与 dump completion 的顺序。#53859 与 #196996 不满足
-probe gate。
+probe gate。成熟工具确认不足后，可以决定是否需要 lab-local measurement patch；但在
+#197232 获得明确 maintainer 结果前，不提出 upstream instrumentation。
 
 ### 7. Healthy/fault pairs are mandatory
 
@@ -162,7 +204,7 @@ for Block 5 are:
 - LLR-001/002: stable subject binding and bounded capture / 稳定主体绑定与有界采集；
 - LLR-003/004: mixed Python/native frames and explicit GIL `unknown` / 混合栈与显式
   GIL `unknown`；
-- LLR-005: typed degraded outcomes / 类型化降级结果；
+- LLR-005: disjoint attempt-stage/outcome pairs / 互斥的 attempt-stage/outcome pair；
 - LLR-006/007/008: closed, versioned, producer-independent interpretation / 关闭、
   带版本约束、与 producer 实现无关的解释；
 - LLR-009/010: lifecycle facts separated from communicator authority / 生命周期事实与
@@ -191,8 +233,10 @@ The most important falsification tests are:
 
 最重要的反证测试是：
 
-1. two producer implementations with identical normalized facts yield identical
-   attribution / 两个实现对等的 producer 产生相同 attribution；
+1. the real `py-spy` and PyStack paths capture one stable controlled target;
+   overlapping facts normalize identically and extra facts only increase
+   coverage / 真实 `py-spy` 与 PyStack 采集同一稳定受控目标；重叠事实标准化一致，额外
+   事实只能增加 coverage；
 2. version or frame mismatch yields `unknown` / 版本或 frame 不匹配输出 `unknown`；
 3. removing native evidence cannot change a sufficient v0.2 verdict / 删除 native
    evidence 不能改变已充分成立的 v0.2 verdict；
@@ -222,8 +266,15 @@ The most important falsification tests are:
 - [ ] only #196968 retains a possible probe candidate / 只有 #196968 保留 probe 候选；
 - [ ] native evidence cannot mutate the v0.2 verdict / native evidence 不能改变 v0.2
       verdict；
-- [ ] `unknown` and typed producer failure are terminal valid results / `unknown` 与
-      类型化 producer failure 是合法终态；
+- [ ] `unknown` and every valid staged outcome are terminal valid results /
+      `unknown` 与每个合法 staged outcome 都是合法终态；
+- [ ] coordinator, preflight, and execution outcomes cannot be confused / coordinator、
+      preflight 与 execution 结果不可混淆；
+- [ ] rules constrain producer kind but never implementation identity/version /
+      规则只可约束 producer kind，不得约束 implementation identity/version；
+- [ ] post-capture identity failure invalidates native binding without asserting
+      `process_missing` / capture 后 identity 失败只使 native binding 无效，不产生
+      `process_missing`；
 - [ ] every future capability points to a named Block 4 row / 未来每项能力均能指向
       Block 4 的具体行；
 - [ ] review approval authorizes Block 5 capability checks only, not integration
@@ -232,17 +283,25 @@ The most important falsification tests are:
 ## Review commands / 审查命令
 
 ```bash
+python -m pip install -e ".[dev]"
 git diff --check
 python -m unittest discover -s tests -v
 python -m compileall -q src tests
 ```
 
-Local verification on 2026-09-21: 210 tests passed, 2 platform-specific tests
-skipped; `compileall`, `git diff --check`, and relative-link resolution for the
-Block 4 review set passed.
+Local verification on 2026-09-21 used Windows 11
+`10.0.26200`, CPython `3.14.2`, and `jsonschema 4.26.0`; no `py-spy` executable
+was installed. In that environment, 210 tests passed and 2 platform-specific
+tests skipped. `compileall`, `git diff --check`, and relative-link resolution
+for the Block 4 review set passed. A clean checkout without the development
+dependencies may fail test-module import and must not be compared with these
+counts as if the environments were equivalent.
 
-2026-09-21 本地验证：210 个测试通过，2 个平台相关测试跳过；`compileall`、
-`git diff --check` 以及 Block 4 review 文档集合的相对链接解析均通过。
+2026-09-21 本地验证环境为 Windows 11 `10.0.26200`、CPython `3.14.2`、
+`jsonschema 4.26.0`，未安装 `py-spy` executable。该环境中 210 个测试通过，2 个
+平台相关测试跳过；`compileall`、`git diff --check` 和相对链接检查通过。未安装开发
+依赖的 clean checkout 可能在 test module import 阶段失败，不能把其测试数量与本结果
+视为同环境比较。
 
 This block is documentation-only. Runtime tests are regression checks, not
 evidence that the new native design has been implemented.

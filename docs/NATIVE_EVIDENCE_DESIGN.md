@@ -58,14 +58,18 @@ never raw frames or stderr.
 
 Producer kind declares the observation family, such as `stack_snapshot`,
 `flight_recorder`, or `nccl_ras`. Implementation name/version is provenance.
-The attribution evaluator consumes normalized facts and rule-set identity, not
-the implementation name.
+Attribution rules may constrain producer kind but shall never read or constrain
+implementation name or implementation version. The producer-specific
+normalizer owns format/version support; the attribution evaluator consumes only
+normalized facts, producer kind, target-runtime constraints, and rule-set
+identity.
 
 ### D-04 — classification is exact and version constrained
 
-Rules are data. A rule applies only when every declared version/topology
-constraint and ordered frame predicate matches. No substring-only root-cause
-classification, fuzzy score, or nearest match is allowed.
+Rules are data. A rule applies only when every declared target-runtime
+version/topology constraint and ordered normalized-frame predicate matches.
+Implementation-version checks stop at normalization. No substring-only
+root-cause classification, fuzzy score, or nearest match is allowed.
 
 ### D-05 — attribution and verdict remain separate
 
@@ -75,9 +79,10 @@ collective membership.
 
 ### D-06 — degraded operation is normal
 
-Missing binaries, unsupported platforms, ptrace denial, timeout, occupied
-capture slots, rate limiting, and empty output are valid terminal producer
-outcomes. They reduce attribution coverage; they do not fail the primary
+Coordinator rejection, preflight failure, and attempted execution are separate
+stages. Missing binaries, unsupported platforms, occupied capture slots, rate
+limiting, ptrace denial, timeout, and empty output retain their stage-specific
+meaning. They reduce attribution coverage; they do not fail the primary
 collector or become target-state evidence.
 
 ## 3. Experimental data model
@@ -106,8 +111,8 @@ The examples below are design shapes, not committed schemas.
     "binary_sha256": "64 lowercase hex"
   },
   "outcome": {
-    "state": "produced",
-    "error_kind": null,
+    "attempt_stage": "execution",
+    "outcome_code": "produced",
     "raw_output_sha256": "64 lowercase hex"
   }
 }
@@ -186,6 +191,7 @@ unknown stages, and identity changes.
 {
   "attribution_schema_version": "native-attribution-v0",
   "subject_binding_digest": "64 lowercase hex",
+  "capture_attempt_stage": "execution",
   "capture_outcome": "produced",
   "blocked_in": "communicator_destruction",
   "execution_domain": "mixed",
@@ -197,7 +203,9 @@ unknown stages, and identity changes.
 }
 ```
 
-Allowed `blocked_in` values are defined by LLR-006. `rule_match` is
+Only `queue_wait`, `communicator_destruction`, and `unknown` are currently
+emittable `blocked_in` values. Reserved values do not become valid outputs
+until a Block 4 row and taxonomy admission require them. `rule_match` is
 `exact | unmatched`; `unmatched` requires `blocked_in = unknown`. Coverage is a
 closed set, not a confidence score.
 
@@ -208,6 +216,7 @@ A rule record contains only declarative constraints:
 ```yaml
 rule_set_id: pytorch-pg-nccl-legacy-shutdown-v1
 applies_to:
+  producer_kind: stack_snapshot
   platform: linux
   pytorch_backend: nccl-legacy
   pytorch_revision_range: explicitly-reviewed-range
@@ -226,9 +235,11 @@ emits:
   blocked_in: communicator_destruction
 ```
 
-The actual version ranges shall be filled only after Block 5 captures are
-reviewed. A missing version, topology mismatch, missing required fact, forbidden
-fact, or frame mismatch produces `unknown`.
+The actual target-runtime version ranges shall be filled only after Block 5
+captures are reviewed. `producer_kind` is allowed here; implementation name and
+implementation version are forbidden. A missing target version, topology
+mismatch, missing required fact, forbidden fact, or frame mismatch produces
+`unknown`.
 
 ## 5. Capture orchestration
 
@@ -261,6 +272,11 @@ The coordinator records its monotonic bounds around the producer invocation and
 rechecks process start identity afterwards. Producer timestamps from another
 clock domain remain producer-local unless an explicit mapping exists.
 
+The post-capture identity recheck validates provenance only. If it fails, the
+native capture is unbound and cannot emit attribution. It never asserts
+`process_missing` and cannot override the process state recomputed by the v0.2
+verifier.
+
 Cross-host monotonic values are never directly compared. Cross-rank order uses
 logical stage or collective sequence where available.
 
@@ -283,6 +299,12 @@ without rebuilding vLLM or PyTorch. The experiment records:
 Success means PyStack supplies a normalized fact required by a Block 4 row. It
 does not mean PyStack becomes a mandatory dependency.
 
+The same controlled, stable target state shall also be captured through the
+released `py-spy` path. The comparison is performed at the normalizer boundary:
+overlapping facts must agree, while PyStack-only native or GIL facts may only
+increase coverage. Mock producers remain useful for evaluator tests but do not
+satisfy producer-interchangeability acceptance.
+
 ### Flight Recorder
 
 Reuse existing per-rank dump identity, collective sequence, and completion
@@ -303,6 +325,11 @@ would emit closed stage transitions at existing lifecycle boundaries. It would
 not unwind stacks, copy logs, sample arbitrary state, classify root cause, or
 change shutdown behavior.
 
+That decision has two scopes. A bounded lab-local measurement patch may test the
+evidence relation after mature tools fail. An upstream-facing probe proposal is
+separately blocked until #197232 receives an explicit maintainer outcome. A
+triage label, passing CI, an open PR, or silence does not close that gate.
+
 ## 7. Verification model
 
 The experimental verifier performs four independent checks:
@@ -316,16 +343,21 @@ The experimental verifier performs four independent checks:
 It then displays the attribution beside the separately recomputed v0.2 verdict.
 It never feeds the attribution into `derive_verdict()`.
 
+Before normalization, it also enforces the closed `attempt_stage ×
+outcome_code` matrix from LLR-005. Coordinator and preflight records never enter
+producer-output normalization because no producer output exists.
+
 ## 8. Required tests
 
 | Test | Required result |
 | --- | --- |
-| same normalized facts from mock producer A and B | identical attribution |
+| same normalized facts from mock producer A and B | identical evaluator output; evaluator purity only |
+| real `py-spy` and PyStack captures of one stable controlled target | overlapping facts normalize identically; extra facts only increase coverage |
 | producer B omits GIL state | same blocked location, reduced coverage, GIL `unknown` |
-| version outside rule range | `blocked_in = unknown` |
+| target-runtime version outside rule range | `blocked_in = unknown` |
 | frame shape unmatched | `blocked_in = unknown` |
 | lifecycle order invalid | verification failure |
-| process start identity changes after capture | binding failure |
+| process start identity changes after capture | native binding failure; no `process_missing` claim; v0.2 verdict unchanged |
 | raw path/frame/stderr injected into public sidecar | schema failure |
 | native sidecar removed from a sufficient v0.2 bundle | primary verdict unchanged |
 | high GPU utilization with flat progress | no-progress verdict unchanged |
@@ -344,7 +376,9 @@ It never feeds the attribution into `derive_verdict()`.
    permission requirements and it can answer a named #196968 communicator
    question.
 5. **Probe decision:** either record `existing_tools_sufficient`, or name the
-   single missing LLR-009 transition and design its smallest source patch.
+   single missing LLR-009 transition and design its smallest lab-local
+   measurement patch. Do not prepare an upstream instrumentation proposal while
+   #197232 lacks an explicit outcome.
 
 ## 10. Security and publication boundary
 
@@ -366,7 +400,7 @@ Proceed from capability check to an adapter only if:
 - the same fact has a negative control;
 - degraded operation is typed and bounded;
 - public normalization preserves the privacy boundary;
-- producer interchangeability can be tested.
+- real-producer interchangeability can be tested at the normalizer boundary.
 
 Proceed from adapter evaluation to a C++ probe only if the LLR-009 gate in
 [`LOW_LEVEL_CAPABILITY_REQUIREMENTS.md`](LOW_LEVEL_CAPABILITY_REQUIREMENTS.md)
@@ -378,12 +412,15 @@ safely with the evaluated producer.
 
 ## 中文设计摘要
 
-Block 5 先使用实验 sidecar，不修改 v0.2 bundle。采集工具只负责生成有界私有输出和
-类型化 producer outcome；normalizer 将其转换成与工具无关的 observation；带显式版本
-约束的数据规则产生关闭 attribution；现有 verifier 独立重算主 verdict。两条路径只在
-展示层并列，不能合并。
+Block 5 先使用实验 sidecar，不修改 v0.2 bundle。coordinator、preflight 与 execution
+使用关闭的 stage/outcome pair；只有 execution 才表示 producer 已调用。normalizer 将
+工具输出转换成与 implementation 无关的 observation；规则可以约束 producer kind 和
+target-runtime 版本，但不能约束 implementation name/version。现有 verifier 独立重算主
+verdict，两条路径只在展示层并列，不能合并。
 
-PyStack 首先用于验证 mixed Python/native frame 与 GIL state；Flight Recorder 继续负责
+PyStack 首先用于验证 mixed Python/native frame 与 GIL state，并与真实 `py-spy` 路径在
+同一稳定受控 target 上比较重叠 observation；Flight Recorder 继续负责
 已有 collective 逻辑事实；NCCL RAS 只在版本支持且能排除一个已命名解释时评估。只有
 三者都不能暴露 #196968 所需的 responder/shutdown 生命周期关系，才设计最小 C++ stage
-probe。未匹配版本或 frame 一律输出 `unknown`，原始栈、地址、路径和参数默认私有。
+probe。该 probe 默认是 lab-local measurement；upstream-facing 工作等待 #197232 明确
+结果。未匹配版本或 frame 一律输出 `unknown`，原始栈、地址、路径和参数默认私有。

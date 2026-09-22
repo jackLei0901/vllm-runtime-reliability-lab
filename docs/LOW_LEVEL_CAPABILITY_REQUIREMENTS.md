@@ -79,60 +79,67 @@ shall become `unknown`, not an inferred value.
 **Acceptance:** the same raw state maps deterministically; a producer without
 the capability yields weaker attribution without changing the primary verdict.
 
-### LLR-005 — typed producer outcome
+### LLR-005 — typed attempt stage and outcome
 
-Producer execution shall distinguish at least:
+The record shall separate where an attempt stopped from why it stopped. The
+closed pair is:
 
 ```text
-produced
-unsupported
-binary_missing
-permission_denied
-timeout
-feature_disabled
-empty_output
-execution_failed
-capture_occupied
-rate_limited
+attempt_stage = coordinator
+  outcome = capture_occupied | rate_limited
+
+attempt_stage = preflight
+  outcome = unsupported | binary_missing | feature_disabled
+
+attempt_stage = execution
+  outcome = produced | timeout | permission_denied | empty_output |
+            execution_failed
 ```
 
-The existing v0.2 stack adapter uses the narrower public set
-`binary_missing | permission_denied | timeout | empty_output |
-execution_failed`. Block 5 may evaluate a richer experimental vocabulary, but
-must not silently rewrite the frozen v0.2 schema.
+The producer is invoked only for `attempt_stage = execution`. Coordinator and
+preflight outcomes therefore make no statement about attach behavior or target
+state. The verifier shall reject every stage/outcome pair outside this matrix.
 
-**Acceptance:** every failed capability check has exactly one bounded outcome;
-missing output never becomes a negative target-state observation.
+The existing v0.2 stack adapter has a separate stack state and the narrower
+flat `error_kind` set `binary_missing | permission_denied | timeout |
+empty_output | execution_failed`. Block 5 may evaluate the staged experimental
+shape, but must not silently reinterpret or rewrite the frozen v0.2 schema.
+
+**Acceptance:** every capability check has exactly one valid stage/outcome pair;
+`capture_occupied` cannot be confused with an attach attempt, and missing
+output never becomes a negative target-state observation.
 
 ### LLR-006 — closed native attribution vocabulary
 
-Any publishable native interpretation shall use a closed value:
+Only the values required by current Block 4 rows are emittable:
 
 ```text
-python
 queue_wait
-ipc_wait
-collective_wait
 communicator_destruction
-watchdog_or_monitor
-cuda_synchronization
 unknown
 ```
 
-The vocabulary describes the sampled execution point, not root cause. New
-values require the taxonomy admission gate.
+`ipc_wait`, `collective_wait`, `watchdog_or_monitor`, and
+`cuda_synchronization` are reserved names and are not valid outputs until a
+Block 4 evidence row and taxonomy admission record require them. `python`
+belongs to `execution_domain`, not `blocked_in`. The vocabulary describes the
+sampled execution point, not root cause.
 
 **Acceptance:** an unmatched frame shape returns `unknown`; no fuzzy or
 nearest-category match is allowed.
 
 ### LLR-007 — version-constrained rules as data
 
-Frame and symbol interpretations shall be data records with explicit producer,
-vLLM, PyTorch, NCCL, platform, and symbol-shape constraints. Verifier code shall
-not branch on producer implementation names.
+Frame and symbol interpretations shall be data records with explicit producer
+**kind**, vLLM, PyTorch, NCCL, platform, topology, and normalized symbol-shape
+constraints. Attribution rules shall never constrain or read producer
+implementation name or implementation version. Implementation-specific version
+support belongs to the normalizer and is provenance, not an attribution input.
 
-**Acceptance:** changing an applicable version outside the declared range turns
-the attribution into `unknown` without changing the primary verdict.
+**Acceptance:** changing a target-runtime version outside the declared range
+turns the attribution into `unknown` without changing the primary verdict;
+changing producer implementation identity without changing normalized facts
+does not change attribution.
 
 ### LLR-008 — producer interchangeability
 
@@ -140,8 +147,11 @@ Two tools that normalize to the same observation shall produce the same
 attribution. A tool with less information may only produce a weaker attribution
 or `unknown`.
 
-**Acceptance:** fixture vectors from two named mock producers are identical
-after normalization and never require a tool-specific verifier branch.
+**Acceptance:** mock vectors prove only evaluator purity. Block 5 must also run
+the shipped `py-spy` path and candidate PyStack path against the same stable,
+controlled target state. Their overlapping facts must normalize identically;
+information available from only one tool may only increase coverage or leave a
+field `unknown`. No tool-specific verifier branch is allowed.
 
 ### LLR-009 — lifecycle transition evidence
 
@@ -177,6 +187,11 @@ collective sequence number, rank membership, or completion state.
 Native state, GIL state, communicator context, and hardware state shall not
 change the v0.2 primary verdict. They may select a separately versioned
 attribution or reduce its coverage.
+
+A post-capture process-identity recheck is provenance only. If it fails, the
+native capture binding is invalid and its attribution becomes unavailable; it
+does not emit `process_missing`. The v0.2 process producer remains the only
+source of primary process state.
 
 **Acceptance:** mutating or removing all native attribution while preserving the
 v0.2 decisional observations leaves the semantic verdict unchanged.
@@ -225,7 +240,7 @@ verdict.
 | --- | --- | --- | --- |
 | LLR-001/002 subject and bounds | required | required | required for multi-rank manifestation |
 | LLR-003/004 mixed stack and GIL | useful attribution | useful attribution | not required |
-| LLR-005 typed failure | required for degraded operation | required for optional stack | optional |
+| LLR-005 staged outcome | required for degraded operation | required for optional stack | optional |
 | LLR-006/007 closed versioned attribution | `communicator_destruction` candidate | `queue_wait` candidate | no native category required |
 | LLR-009 lifecycle transitions | required reusable fact | not required | not required |
 | LLR-010 communicator evidence | Flight Recorder first | not required | only for competing distributed explanations |
@@ -253,13 +268,27 @@ A source-level probe may be designed only when all of the following are true:
 The only current candidate is the #196968 dump-responder/shutdown-stage
 boundary. #53859 and #196996 do not currently satisfy this gate.
 
+The gate has two different outputs:
+
+- **Lab-local measurement:** after mature producers are proven insufficient,
+  Block 5 may specify one bounded experiment-only stage probe to test the
+  evidence relation. This does not make the probe a product dependency.
+- **Upstream-facing instrumentation:** no probe issue or PR is proposed until
+  #197232 has an explicit maintainer outcome. If the lifecycle framing is
+  rejected or superseded, the probe remains lab-local unless a maintainer
+  explicitly requests it. An open PR, triage label, CI state, or silence is not
+  an outcome.
+
+Block 5 exits with a probe decision and design boundary; it does not need to
+implement the expensive probe before that upstream gate closes.
+
 ## 6. Block 5 entry and exit criteria
 
 ### Entry
 
 - the three evidence-to-claim tables are accepted;
-- the target PID, environment, producer version, timeout, and output budget are
-  frozen before execution;
+- the target PID, environment, producer implementation/version as provenance,
+  timeout, and output budget are frozen before execution;
 - healthy and fault runs use the same normalized observation shape.
 
 ### Exit
@@ -267,7 +296,8 @@ boundary. #53859 and #196996 do not currently satisfy this gate.
 - PyStack capability is recorded for mixed frames, GIL state, attach permission,
   timeout, empty output, and subject binding;
 - each result states which Block 4 row it strengthens;
-- equivalent normalized observations are producer-independent;
+- the real `py-spy` and PyStack paths are compared on the same stable controlled
+  target, and overlapping normalized observations are producer-independent;
 - unsupported and permission-denied paths are first-class results;
 - the review concludes either `existing_tools_sufficient` or names exactly one
   irreducible lifecycle fact for probe design;
@@ -281,7 +311,8 @@ C++ probe；#53859 的主 verdict 已由 process/health/demand/progress 决定�
 只能增强归因；#196996 已在本地 dtype contract 边界完成机制证明，不需要 native
 采集。
 
-所有 Block 5 producer 必须满足：显式主体绑定、有界执行、失败原因类型化、原始栈默认
-私有、规则带版本约束、未匹配输出 `unknown`、工具实现身份不进入判定、缺失 producer
-只能降低 attribution coverage，不能改写 v0.2 verdict。只有成熟工具无法提供一个已命名
-的关闭状态转换时，才允许设计最小 C++ probe。
+所有 Block 5 producer 必须满足：显式主体绑定、有界执行、coordinator/preflight/
+execution 结果分层、原始栈默认私有、规则带目标版本约束、未匹配输出 `unknown`、工具
+implementation identity/version 不进入 attribution、缺失 producer 只能降低 coverage，
+不能改写 v0.2 verdict。只有成熟工具无法提供一个已命名的关闭状态转换时，才允许设计
+lab-local 最小 C++ probe；任何 upstream-facing probe 继续受 #197232 明确结果 gate 约束。
