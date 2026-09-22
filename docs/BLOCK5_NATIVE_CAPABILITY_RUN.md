@@ -1,7 +1,7 @@
 # Block 5 native capability run
 
-Status: Stage A real-producer smoke passed on Linux CPU; Stage B retained-vLLM
-execution pending a GPU environment.
+Status: Stage A real-producer smoke passed on Linux CPU; the first Stage B GPU
+entry stopped fail-closed at the retained build-identity gate.
 
 This block evaluates whether existing attach tools can supply the lower-level
 facts admitted by Block 4. It does not add native state to the v0.2 verdict,
@@ -99,9 +99,17 @@ identity remained stable. The repeated `py-spy` raw digests were identical.
 This closes only the Linux acquisition smoke gate. The public record remains
 `normalization_pending` with `claim = null`: no target-runtime rule was admitted
 and no producer-interchangeability or vLLM fault-attribution claim is made.
-Real Stage B still requires the retained #53859 healthy/fault pair on a GPU
-environment. Stage C remains gated behind Stage B and the reviewed join
-contract.
+The first Stage B entry used the retained #53859 GPU host, but the original
+dependency-pool installation target had been deleted. Reconstructing the same
+package versions did not reproduce the frozen RECORD identities: both arms had
+144 RECORD SHA-256 mismatches, six verified-file-count mismatches, and one
+extra distribution. The model and server were therefore never started. The
+public preflight result is
+[`../results/native-stack-pair-stage-b-preflight-20260922/README.md`](../results/native-stack-pair-stage-b-preflight-20260922/README.md).
+
+Real Stage B still requires either the original frozen dependency pool or a
+newly reviewed environment identity before the #53859 healthy/fault pair can
+run. Stage C remains gated behind Stage B and the reviewed join contract.
 
 ## Review commands
 
