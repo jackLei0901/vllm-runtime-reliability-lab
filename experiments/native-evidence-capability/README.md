@@ -1,7 +1,8 @@
 # Block 5 native-evidence capability run
 
-Status: capture harness ready; no real producer result has been recorded from
-the current Windows development host.
+Status: Stage A Linux CPU smoke and Stage B v2 scored RTX 4090 validation are
+complete. See
+[`../../results/native-stack-pair-stage-b-v2-20260922/README.md`](../../results/native-stack-pair-stage-b-v2-20260922/README.md).
 
 This experiment answers one bounded question: can real `py-spy` and PyStack
 captures of a deterministic held target satisfy the same attribution rule? It
@@ -71,6 +72,10 @@ content digests. It intentionally ends with:
 The capture command cannot claim interchangeability. That claim requires a
 reviewed normalizer, explicit target-runtime constraints, an admitted rule, and
 the A/B/A2 comparison in `dfxlab.native_evidence`.
+
+Stage B v2 supplies that reviewed path in `score_stage_b_pair.py` and
+`stage_b_queue_wait_rule.json`. The scorer verifies raw digests privately,
+normalizes only the admitted predicates, and publishes no raw frame text.
 
 An execution that times out, exceeds its output budget, or otherwise fails may
 retain a digest of bounded partial output. That digest identifies only the

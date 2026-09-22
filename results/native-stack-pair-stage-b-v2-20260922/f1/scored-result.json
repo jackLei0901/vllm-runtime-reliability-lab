@@ -1,0 +1,73 @@
+{
+  "attributions": [
+    {
+      "attribution": {
+        "attribution_schema_version": "native-attribution-v0",
+        "binding_status": "valid",
+        "blocked_in": "queue_wait",
+        "capture_attempt_stage": "execution",
+        "capture_outcome": "produced",
+        "coverage": [
+          "thread_state"
+        ],
+        "execution_domain": "mixed",
+        "gil_state": "unknown",
+        "raw_output_sha256": "7f067770d0da9a2fcd822a82342037f386672765f1cb16b60e01282cf3616b6c",
+        "rule_match": "exact",
+        "rule_set_id": "vllm-53859-stage-b-v2-queue-wait-v1",
+        "subject_binding_digest": "9c23fa6d825ab9cba5990deb01726ffc3981a2c5811f88cb59416808cc499d1c"
+      },
+      "label": "py-spy-a"
+    },
+    {
+      "attribution": {
+        "attribution_schema_version": "native-attribution-v0",
+        "binding_status": "valid",
+        "blocked_in": "queue_wait",
+        "capture_attempt_stage": "execution",
+        "capture_outcome": "produced",
+        "coverage": [
+          "thread_state"
+        ],
+        "execution_domain": "mixed",
+        "gil_state": "unknown",
+        "raw_output_sha256": "3a351a03e8e7146313cce819982a4c09df393c289f3ff0d89ce45a231b55cb30",
+        "rule_match": "exact",
+        "rule_set_id": "vllm-53859-stage-b-v2-queue-wait-v1",
+        "subject_binding_digest": "9c23fa6d825ab9cba5990deb01726ffc3981a2c5811f88cb59416808cc499d1c"
+      },
+      "label": "pystack-b"
+    },
+    {
+      "attribution": {
+        "attribution_schema_version": "native-attribution-v0",
+        "binding_status": "valid",
+        "blocked_in": "queue_wait",
+        "capture_attempt_stage": "execution",
+        "capture_outcome": "produced",
+        "coverage": [
+          "thread_state"
+        ],
+        "execution_domain": "mixed",
+        "gil_state": "unknown",
+        "raw_output_sha256": "7f067770d0da9a2fcd822a82342037f386672765f1cb16b60e01282cf3616b6c",
+        "rule_match": "exact",
+        "rule_set_id": "vllm-53859-stage-b-v2-queue-wait-v1",
+        "subject_binding_digest": "9c23fa6d825ab9cba5990deb01726ffc3981a2c5811f88cb59416808cc499d1c"
+      },
+      "label": "py-spy-a2"
+    }
+  ],
+  "cell": "fault",
+  "pairing": {
+    "coverage_equal": true,
+    "frame_sequence_compared": false,
+    "not_scorable_reason": null,
+    "pairing_result": "interchangeable",
+    "stability_control_passed": true
+  },
+  "raw_stack_published": false,
+  "result": "fault_pair_passed",
+  "rule_set_id": "vllm-53859-stage-b-v2-queue-wait-v1",
+  "schema_version": "stage-b-v2-scored-pair-v0"
+}

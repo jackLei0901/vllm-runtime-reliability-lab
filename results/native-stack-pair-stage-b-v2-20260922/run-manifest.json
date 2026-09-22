@@ -1,0 +1,165 @@
+{
+  "acquisition": {
+    "max_output_bytes": 1048576,
+    "raw_private": true,
+    "sequence": [
+      "py-spy-a",
+      "pystack-b",
+      "py-spy-a2"
+    ],
+    "timeout_seconds": 5
+  },
+  "adapter": {
+    "path": "/root/autodl-tmp/lab-block5-v2-456d425/experiments/native-evidence-capability/stage_b_pair_adapter.py",
+    "sha256": "2551f75de844382fca5a8ba550c1e2d6443702d3f4fee163613a295b73b245c9"
+  },
+  "adapter_commit": "0926aac",
+  "build_identity": {
+    "base": "787a9713f7dde6abd92b79052e37fbc7e4a199bd5c1c79e5ea21791e33ba4bcf",
+    "fix": "8ffd726fd9b1202ca421f310d0f7173ccef4f4e75c82298777bb0612a5df864d"
+  },
+  "contract_commit": "5909d9e",
+  "environment": {
+    "archive": "/root/autodl-tmp/stage-b-v2-environment-final.tar.zst",
+    "archive_restore_test": "passed_after_torchvision_addition",
+    "archive_sha256": "9587dd979225c6df4dc3a8c91f3e4c1d0ee08488d7e2620f2ca6eb67f236bb32",
+    "canonical_paths": [
+      "/root/stage1-runtime/base-env",
+      "/root/stage1-runtime/fix-env",
+      "/root/stage1-runtime/dependency-pool",
+      "/root/autodl-tmp/venv43639"
+    ],
+    "install_command": [
+      "/root/autodl-tmp/venv43639/bin/python",
+      "-m",
+      "pip",
+      "install",
+      "--no-deps",
+      "-r",
+      "/root/stage1-runtime/stage-b-v2-freeze/pool-requirements.txt"
+    ],
+    "installer": "pip 26.0.1",
+    "requirements_sha256": "d800bfa005733ff37e5c02daf864d234a92a41fb6a36cf69cf30d75a5305b7b4",
+    "wheelhouse_manifest_sha256": "2c39bee76e0dc7b6cea6c7412571351d32189fc738a35b8600f707345b84fae5"
+  },
+  "execution_commit": "456d425",
+  "execution_path_prefix": [
+    "/root/stage1-runtime/block5-tools/bin",
+    "/root/autodl-tmp/venv43639/bin"
+  ],
+  "exploratory": {
+    "control_capture_record_sha256": "301c19c3c63fc72d2279f6e684978973524cd740a695b522cdad9a0832b65d6e",
+    "control_score_sha256": "80876d12cb77af3308ba5df4ea9fc7e0c9980ef514362de177130acc477ccde7",
+    "fault_capture_record_sha256": "cf8bdf6b26466c8a7be0571a7ec99c6bc78a08c3b364a2df3f7eba649f785205",
+    "fault_score_sha256": "982624658bdb29beaad3d8a6361ed8bcf4d1a645ee00b9c85834cbb1b4064e1a"
+  },
+  "host": {
+    "compute_capability": "8.9",
+    "driver": "580.105.08",
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "kernel": "5.15.0-78-generic",
+    "os": "Ubuntu 22.04.4 LTS",
+    "ptrace_scope": "1"
+  },
+  "input_wheel": {
+    "path": "/root/stage1-runtime/vllm-0.1.1.dev19+g22258a26b-cp38-abi3-manylinux_2_28_x86_64.whl",
+    "sha256": "1d7b69a0bc85dacd9722e2af896b6a1b602e6b4712e1ea9e81b4b4ea9fcab978"
+  },
+  "inputs": {
+    "request_sha256": "7c03c12789e99f1758885199fc8ac71a237f1abbfa5303146700821582ca05da",
+    "server_command_sha256": "2c56e1828cd153adcd5b841ce02808c1f0116fe55b42a635a870175008aba7aa"
+  },
+  "model": {
+    "file_count": 13,
+    "file_manifest_sha256": "aef8c9c1b3f6d622ee79c580fd2a65596e74d95dbc20b5bd000de528967d8a50",
+    "path": "/root/autodl-tmp/models/Qwen3-4B-Instruct-2507-v2",
+    "repository": "Qwen/Qwen3-4B-Instruct-2507",
+    "revision": "cdbee75f17c01a7cc42f958dc650907174af0554"
+  },
+  "normalizer": {
+    "admitted_commit": "456d425",
+    "path": "experiments/native-evidence-capability/score_stage_b_pair.py",
+    "sha256": "fe0b7d5d8d029028dad9d4b9c9a77a575708f6745c2cbdd97819efc329b5989d"
+  },
+  "post_run_identity": {
+    "base": "787a9713f7dde6abd92b79052e37fbc7e4a199bd5c1c79e5ea21791e33ba4bcf",
+    "fix": "8ffd726fd9b1202ca421f310d0f7173ccef4f4e75c82298777bb0612a5df864d"
+  },
+  "post_run_identity_matches_pre_run": true,
+  "preflight_history": [
+    {
+      "cause": "missing_torchvision_before_server_ready",
+      "cell": "exploratory-c0",
+      "classification": "server_not_ready",
+      "native_capture_attempted": false
+    },
+    {
+      "cause": "frozen_ninja_binary_not_on_execution_path",
+      "cell": "exploratory-c0-v2",
+      "classification": "server_not_ready",
+      "native_capture_attempted": false
+    },
+    {
+      "cause": "login_shell_watcher_not_authorized_under_yama_scope_1",
+      "cell": "exploratory-c0-v3",
+      "classification": "pass",
+      "native_capture_outcomes": [
+        "permission_denied",
+        "permission_denied",
+        "permission_denied"
+      ]
+    }
+  ],
+  "producers": {
+    "py-spy": {
+      "path": "/root/stage1-runtime/block5-tools/bin/py-spy",
+      "sha256": "9b4d1f39b2a47ae44f4c6a46f615dcc0287d7755beba5065f32391951e07d594",
+      "version": "0.4.2"
+    },
+    "pystack": {
+      "path": "/root/stage1-runtime/block5-tools/bin/pystack",
+      "sha256": "a5ad0554f0244553c7d53053eb2f380556fb13e125be6e195b2ba7e86217fe02",
+      "version": "1.7.1"
+    }
+  },
+  "rule": {
+    "admitted_commit": "456d425",
+    "path": "experiments/native-evidence-capability/stage_b_queue_wait_rule.json",
+    "sha256": "9c2612d3171e150c9a8fdd910ca3772315915af18bdbead582244330284c958f"
+  },
+  "runtime": {
+    "backend": "nccl",
+    "cuda": "13.0",
+    "nccl": "2.29.7",
+    "python": "3.12.3",
+    "python_path": "/root/stage1-runtime/base-env/bin/python",
+    "python_sha256": "0c05a22b0b180580a76437114a95cf138f67c8f46245acad26017c803b42b8c1",
+    "pytorch": "2.13.0+cu130",
+    "topology": "single_gpu",
+    "torchvision": "0.28.0+cu130",
+    "vllm": "0.1.dev1+g9935dfceb"
+  },
+  "schema_version": "stage-b-v2-run-manifest-v0",
+  "scored_results": {
+    "scored-c0": {
+      "pair/capture-record.json": "cb885ccf8495168adc758523ce4597a44837e86e3ed129b20f099374ff288b3f",
+      "scored-result.json": "9340d3048a77e3e256da55c25a2e97926a29e57256439680a75706b7e9e7e625",
+      "summary.json": "ef177044f0797ce94fe9acc4f57a92cb6a8bb363c818ba77ecf69659889abb2f"
+    },
+    "scored-f1": {
+      "pair/capture-record.json": "3e0b66df75ddc953580331adae3647d993b020465f1c0abe62dcca1557283a08",
+      "scored-result.json": "f58f2b553867137097c788c6433b38b66749f909509c5536632bb77374ee20af",
+      "summary.json": "883341f615ea73ce281e9133a07dffc10b7f1658ff0becaed2f8d0cbb02dea9b"
+    }
+  },
+  "source": {
+    "allowed_fix_files": [
+      "tests/distributed/test_events.py",
+      "vllm/distributed/kv_events.py"
+    ],
+    "base_commit": "9935dfceb7535eb4b95d29e9b8d1c83c5f918d5f",
+    "base_tree": "b7061e73a6ed4773e16bd2ae3acf47aebfd1342d",
+    "fix_commit": "6bf585185a38354285165164286cb137908f6437",
+    "fix_tree": "46bc6e191b14ce12a04827454b4588ea5d3a435f"
+  }
+}

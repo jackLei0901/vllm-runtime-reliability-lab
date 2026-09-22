@@ -578,14 +578,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--private-dir", type=Path, required=True)
     parser.add_argument("--summary", type=Path, required=True)
     parser.add_argument("--py-spy", default="py-spy")
-    parser.add_argument(
-        "--capture-control-stack",
-        action="store_true",
-        help=(
-            "capture through the observer process before the control request; "
-            "reserved for the Stage B native-producer capability run"
-        ),
-    )
     return parser.parse_args()
 
 
@@ -593,8 +585,6 @@ def main() -> int:
     args = parse_args()
     if os.name != "posix":
         raise SystemExit("Stage 1 campaign requires POSIX process groups")
-    if args.capture_control_stack and args.trigger != "control":
-        raise SystemExit("--capture-control-stack requires --trigger control")
     if CELL_ORDER[args.cell_index] != (args.source_arm, args.trigger):
         raise SystemExit("cell index does not match the frozen execution order")
     expected_tree = BASE_TREE if args.source_arm == "base" else FIX_TREE
@@ -725,13 +715,6 @@ def main() -> int:
                         "EngineCore process identity changed before request"
                     )
                 engine_identity = (ready["pid"], ready["start_time_ticks"])
-                stack = {"available": None, "match": None, "raw_sha256": None}
-                if args.trigger == "control" and args.capture_control_stack:
-                    stack = capture_stack(
-                        args.py_spy,
-                        ready["pid"],
-                        args.private_dir / "enginecore-stack.txt",
-                    )
                 observer = StreamObserver()
                 stream_thread = threading.Thread(
                     target=consume_stream,
@@ -741,6 +724,7 @@ def main() -> int:
                 stream_thread.start()
 
                 stalled = False
+                stack = {"available": None, "match": None, "raw_sha256": None}
                 health_during_stall: str | None = None
                 release_offset: float | None = None
                 progress_count_at_release = 0

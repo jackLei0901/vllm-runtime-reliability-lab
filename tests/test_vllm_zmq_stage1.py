@@ -214,38 +214,6 @@ class Stage1CampaignTest(unittest.TestCase):
         self.assertTrue(detect({"choices": [{"delta": {"content": "x"}}]}))
         self.assertTrue(detect({"choices": [{"text": "x"}]}))
 
-    def test_stage_b_control_capture_is_explicit_opt_in(self) -> None:
-        argv = [
-            "stage1_campaign.py",
-            "--source-arm",
-            "base",
-            "--trigger",
-            "control",
-            "--cell-index",
-            "1",
-            "--server-workdir",
-            "/tmp/base",
-            "--server-command-json",
-            "/tmp/command.json",
-            "--request-json",
-            "/tmp/request.json",
-            "--build-identity-json",
-            "/tmp/build.json",
-            "--health-url",
-            "http://127.0.0.1/health",
-            "--stream-url",
-            "http://127.0.0.1/v1/completions",
-            "--private-dir",
-            "/tmp/private",
-            "--summary",
-            "/tmp/summary.json",
-            "--capture-control-stack",
-        ]
-        with patch.object(sys, "argv", argv):
-            args = self.campaign.parse_args()
-        self.assertTrue(args.capture_control_stack)
-        self.assertEqual(args.trigger, "control")
-
     def test_command_file_is_closed_json_array(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = Path(temporary) / "command.json"

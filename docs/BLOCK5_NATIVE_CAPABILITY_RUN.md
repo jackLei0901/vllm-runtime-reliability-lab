@@ -1,9 +1,8 @@
 # Block 5 native capability run
 
-Status: Stage A real-producer smoke passed on Linux CPU; the first Stage B GPU
-entry stopped fail-closed at the retained build-identity gate. The retained
-route is closed under the currently available artifacts, and a Stage B v2
-reviewed-baseline contract is prepared but not authorized for execution.
+Status: Stage A real-producer smoke and Stage B v2 scored GPU validation passed.
+The original retained-environment route remains closed at its build-identity
+gate; Stage B v2 is a separately identified reviewed baseline.
 
 This block evaluates whether existing attach tools can supply the lower-level
 facts admitted by Block 4. It does not add native state to the v0.2 verdict,
@@ -109,9 +108,33 @@ extra distribution. The model and server were therefore never started. The
 public preflight result is
 [`../results/native-stack-pair-stage-b-preflight-20260922/README.md`](../results/native-stack-pair-stage-b-preflight-20260922/README.md).
 
-Real Stage B still requires either the original frozen dependency pool or a
-newly reviewed environment identity before the #53859 healthy/fault pair can
-run. Stage C remains gated behind Stage B and the reviewed join contract.
+Stage B v2 then created and restore-tested a new immutable environment archive,
+froze the model revision and per-file hashes, and ran the #53859 healthy/fault
+pair on one RTX 4090. The scored result is published at
+[`../results/native-stack-pair-stage-b-v2-20260922/README.md`](../results/native-stack-pair-stage-b-v2-20260922/README.md):
+
+- C0 completed 64 tokens with zero dropped batches; all three captures were
+  usable but did not satisfy the fault-only rule;
+- F1 kept `/health` at 2xx while progress stalled; py-spy A, PyStack B, and
+  py-spy A2 all exactly satisfied the admitted `publisher -> queue put ->
+  condition wait` predicates and emitted `blocked_in=queue_wait`;
+- A/A2 stability passed, the cross-producer result was `interchangeable`, and
+  frame-sequence equality was explicitly not compared;
+- cleanup removed both EngineCore subjects and process groups, and post-run
+  base/fix build identities matched the pre-run restored identities.
+
+The scored execution is pinned to commit `456d425`, which temporarily added an
+explicit Stage-B-only control-capture option to the campaign process so its
+children inherited the EngineCore's scoped ptrace authorization. The main
+branch restores the frozen Stage 1 campaign immediately afterward; this keeps
+the published Stage 1 R3 implementation hash verifiable. Reproduction of this
+specific Stage B result must therefore check out the pinned execution commit.
+
+Raw stacks and server logs remain private. The public evidence contains typed
+capture outcomes, bounded provenance, raw digests, normalized attribution, and
+the scored comparison only. Stage C remains gated on a separately reviewed
+multi-producer join contract; an upstream-facing C++ probe still requires an
+explicit #197232 outcome.
 
 The environment decision and next contract are recorded separately:
 
@@ -129,7 +152,10 @@ The environment decision and next contract are recorded separately:
 ```bash
 python -m unittest \
   tests.test_native_evidence \
-  tests.test_native_producers -v
+  tests.test_native_producers \
+  tests.test_stage_b_pair_adapter \
+  tests.test_stage_b_pair_scoring \
+  tests.test_vllm_zmq_stage1 -v
 python -m compileall -q src tests \
   experiments/native-evidence-capability
 ruff check \
@@ -137,16 +163,17 @@ ruff check \
   src/dfxlab/native_producers.py \
   tests/test_native_evidence.py \
   tests/test_native_producers.py \
-  experiments/native-evidence-capability/run_stack_pair.py
+  tests/test_stage_b_pair_scoring.py \
+  experiments/native-evidence-capability/run_stack_pair.py \
+  experiments/native-evidence-capability/score_stage_b_pair.py
 ```
 
 ## 中文审阅摘要
 
-Block 5 Stage A 已把底层证据合同变成可执行代码，但尚未声称 PyStack 或 `py-spy`
-能够解释真实 vLLM fault。实验 sidecar 与 v0.2 verdict 完全隔离；stage/outcome 在
-normalization 前校验；PID start ticks 在采集前后核对；原始输出只进入 private 目录；
-implementation name/version 不参与 attribution；未匹配版本或 frame 必须输出
-`unknown`。真实验证首先复用 #53859 Stage 1 的 healthy/fault pair，并采用
-`py-spy A -> PyStack B -> py-spy A2` 稳定性控制。只有该管线通过后，才进入
-#196968 lifecycle gap；C++ probe 仍受成熟工具不足证明和 #197232 upstream outcome
-双重 gate 约束。
+Block 5 Stage B v2 已在真实 RTX 4090 环境完成 #53859 healthy/fault pair。C0 三次
+采集均未命中 fault-only rule；F1 的 py-spy A、PyStack B、py-spy A2 均精确命中
+`publisher -> queue put -> condition wait`，输出 `blocked_in=queue_wait`，A/A2
+稳定性通过，cross-producer comparison 为 `interchangeable`。实验 sidecar 仍与
+v0.2 verdict 完全隔离，原始 stack 与 server log 不公开，运行后 build identity 与
+运行前一致。Stage C 仍需要单独评审 join contract；C++ probe 仍受成熟工具不足证明
+和 #197232 upstream outcome 双重 gate 约束。

@@ -1,0 +1,67 @@
+{
+  "attributions": [
+    {
+      "attribution": {
+        "attribution_schema_version": "native-attribution-v0",
+        "binding_status": "valid",
+        "blocked_in": "unknown",
+        "capture_attempt_stage": "execution",
+        "capture_outcome": "produced",
+        "coverage": [],
+        "execution_domain": "unknown",
+        "gil_state": "unknown",
+        "raw_output_sha256": "f8e3cc8e6dcedeb184412a0852536c673aca3badf1c9f45abcfde108096128a6",
+        "rule_match": "unmatched",
+        "rule_set_id": null,
+        "subject_binding_digest": "418bb8148f4399f0b3c646b04d43311676c60f629d98b9b7f94d33550ce2d762"
+      },
+      "label": "py-spy-a"
+    },
+    {
+      "attribution": {
+        "attribution_schema_version": "native-attribution-v0",
+        "binding_status": "valid",
+        "blocked_in": "unknown",
+        "capture_attempt_stage": "execution",
+        "capture_outcome": "produced",
+        "coverage": [],
+        "execution_domain": "unknown",
+        "gil_state": "unknown",
+        "raw_output_sha256": "285a8780c834adc68cfb92539d7b1e565c7b7a86badae48da4fefc8769994355",
+        "rule_match": "unmatched",
+        "rule_set_id": null,
+        "subject_binding_digest": "418bb8148f4399f0b3c646b04d43311676c60f629d98b9b7f94d33550ce2d762"
+      },
+      "label": "pystack-b"
+    },
+    {
+      "attribution": {
+        "attribution_schema_version": "native-attribution-v0",
+        "binding_status": "valid",
+        "blocked_in": "unknown",
+        "capture_attempt_stage": "execution",
+        "capture_outcome": "produced",
+        "coverage": [],
+        "execution_domain": "unknown",
+        "gil_state": "unknown",
+        "raw_output_sha256": "f8e3cc8e6dcedeb184412a0852536c673aca3badf1c9f45abcfde108096128a6",
+        "rule_match": "unmatched",
+        "rule_set_id": null,
+        "subject_binding_digest": "418bb8148f4399f0b3c646b04d43311676c60f629d98b9b7f94d33550ce2d762"
+      },
+      "label": "py-spy-a2"
+    }
+  ],
+  "cell": "control",
+  "pairing": {
+    "coverage_equal": true,
+    "frame_sequence_compared": false,
+    "not_scorable_reason": "no_admitted_rule",
+    "pairing_result": "not_scorable",
+    "stability_control_passed": true
+  },
+  "raw_stack_published": false,
+  "result": "negative_control_passed",
+  "rule_set_id": "vllm-53859-stage-b-v2-queue-wait-v1",
+  "schema_version": "stage-b-v2-scored-pair-v0"
+}

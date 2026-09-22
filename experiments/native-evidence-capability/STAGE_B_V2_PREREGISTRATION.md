@@ -103,6 +103,10 @@ producer must be a descendant of the EngineCore-authorized campaign process.
 An attach launched independently by a login-shell watcher is not an admissible
 substitute, even when it targets the same PID and start ticks.
 
+The scored execution of that opt-in is immutable at commit `456d425`. It is
+removed again on the main branch after the run so the older Stage 1 R3 campaign
+hash remains independently verifiable.
+
 A timed-out or unavailable producer, identity change, released hold, output
 budget exhaustion, or failed cleanup makes the cell `not_scorable`. It is not
 retried inside the same result directory.

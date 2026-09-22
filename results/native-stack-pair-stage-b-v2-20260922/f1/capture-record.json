@@ -1,0 +1,115 @@
+{
+  "captures": [
+    {
+      "capture": {
+        "outcome": {
+          "attempt_stage": "execution",
+          "outcome_code": "produced",
+          "raw_output_sha256": "7f067770d0da9a2fcd822a82342037f386672765f1cb16b60e01282cf3616b6c"
+        },
+        "producer": {
+          "binary_sha256": "9b4d1f39b2a47ae44f4c6a46f615dcc0287d7755beba5065f32391951e07d594",
+          "implementation_name": "py-spy",
+          "implementation_version": "0.4.2",
+          "kind": "stack_snapshot",
+          "platform": "linux"
+        },
+        "schema_version": "native-evidence-experiment-v0",
+        "subject": {
+          "declared_rank": null,
+          "declared_role": "engine_core",
+          "post_capture_identity_value": "1668003721",
+          "process_identity_kind": "linux_proc_start_ticks",
+          "process_identity_value": "1668003721"
+        },
+        "window": {
+          "coordinator_timeout_ns": 7000000000,
+          "end_monotonic_ns": 16680066387402648,
+          "max_output_bytes": 1048576,
+          "producer_timeout_ns": 5000000000,
+          "start_monotonic_ns": 16680066005857178
+        }
+      },
+      "label": "py-spy-a"
+    },
+    {
+      "capture": {
+        "outcome": {
+          "attempt_stage": "execution",
+          "outcome_code": "produced",
+          "raw_output_sha256": "3a351a03e8e7146313cce819982a4c09df393c289f3ff0d89ce45a231b55cb30"
+        },
+        "producer": {
+          "binary_sha256": "a5ad0554f0244553c7d53053eb2f380556fb13e125be6e195b2ba7e86217fe02",
+          "implementation_name": "pystack",
+          "implementation_version": "1.7.1",
+          "kind": "stack_snapshot",
+          "platform": "linux"
+        },
+        "schema_version": "native-evidence-experiment-v0",
+        "subject": {
+          "declared_rank": null,
+          "declared_role": "engine_core",
+          "post_capture_identity_value": "1668003721",
+          "process_identity_kind": "linux_proc_start_ticks",
+          "process_identity_value": "1668003721"
+        },
+        "window": {
+          "coordinator_timeout_ns": 7000000000,
+          "end_monotonic_ns": 16680067441371855,
+          "max_output_bytes": 1048576,
+          "producer_timeout_ns": 5000000000,
+          "start_monotonic_ns": 16680066388336911
+        }
+      },
+      "label": "pystack-b"
+    },
+    {
+      "capture": {
+        "outcome": {
+          "attempt_stage": "execution",
+          "outcome_code": "produced",
+          "raw_output_sha256": "7f067770d0da9a2fcd822a82342037f386672765f1cb16b60e01282cf3616b6c"
+        },
+        "producer": {
+          "binary_sha256": "9b4d1f39b2a47ae44f4c6a46f615dcc0287d7755beba5065f32391951e07d594",
+          "implementation_name": "py-spy",
+          "implementation_version": "0.4.2",
+          "kind": "stack_snapshot",
+          "platform": "linux"
+        },
+        "schema_version": "native-evidence-experiment-v0",
+        "subject": {
+          "declared_rank": null,
+          "declared_role": "engine_core",
+          "post_capture_identity_value": "1668003721",
+          "process_identity_kind": "linux_proc_start_ticks",
+          "process_identity_value": "1668003721"
+        },
+        "window": {
+          "coordinator_timeout_ns": 7000000000,
+          "end_monotonic_ns": 16680067841015041,
+          "max_output_bytes": 1048576,
+          "producer_timeout_ns": 5000000000,
+          "start_monotonic_ns": 16680067442591133
+        }
+      },
+      "label": "py-spy-a2"
+    }
+  ],
+  "claim": null,
+  "pairing_status": "normalization_pending",
+  "schema_version": "native-producer-pair-capture-v0",
+  "sequence": [
+    "py-spy-a",
+    "pystack-b",
+    "py-spy-a2"
+  ],
+  "target_runtime": {
+    "nccl_version": "2.29.7",
+    "pytorch_backend": "nccl",
+    "pytorch_version": "2.13.0+cu130",
+    "topology": "single_gpu",
+    "vllm_version": "0.1.dev1+g9935dfceb"
+  }
+}
