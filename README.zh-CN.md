@@ -11,6 +11,9 @@
 - [`REQUIREMENTS.md`](REQUIREMENTS.md)：当前英文需求基线；
 - [`TEST_PLAN.md`](TEST_PLAN.md)：当前英文测试计划。
 - [`docs/V0.2_FIELD_ROLES.md`](docs/V0.2_FIELD_ROLES.md)：机器校验的公开字段角色审计。
+- [`docs/V0.2_LAUNCH_POST.md`](docs/V0.2_LAUNCH_POST.md) 与
+  [`docs/V0.2_LAUNCH_POST.zh-CN.md`](docs/V0.2_LAUNCH_POST.zh-CN.md)：可直接发布的
+  中英文 v0.2 技术入口。
 
 ## 先看结果
 

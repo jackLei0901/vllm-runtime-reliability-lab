@@ -441,8 +441,9 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 - [`TEST_PLAN.md`](TEST_PLAN.md): CPU and GPU validation matrix.
 - [`docs/V0.2_RELEASE_PLAN.md`](docs/V0.2_RELEASE_PLAN.md): bounded v0.2 payload
   and release gates.
-- [`docs/V0.2_LAUNCH_POST.md`](docs/V0.2_LAUNCH_POST.md): restrained launch copy
-  with the exact clean-install replay command.
+- [`docs/V0.2_LAUNCH_POST.md`](docs/V0.2_LAUNCH_POST.md) and
+  [`docs/V0.2_LAUNCH_POST.zh-CN.md`](docs/V0.2_LAUNCH_POST.zh-CN.md): restrained
+  English and Chinese launch copy with the exact clean-install replay command.
 - [`docs/V0.2_FIELD_ROLES.md`](docs/V0.2_FIELD_ROLES.md): machine-checked
   decisional and non-decisional public-field audit.
 - [`docs/ADOPTION_PLAN.md`](docs/ADOPTION_PLAN.md): focused external-reuse plan
