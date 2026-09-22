@@ -1,6 +1,7 @@
 # Block 5 native capability run
 
-Status: Stage A implemented; Linux real-producer execution pending.
+Status: Stage A real-producer smoke passed on Linux CPU; Stage B retained-vLLM
+execution pending a GPU environment.
 
 This block evaluates whether existing attach tools can supply the lower-level
 facts admitted by Block 4. It does not add native state to the v0.2 verdict,
@@ -87,11 +88,20 @@ non-scorable and its only permitted conclusion is `join_contract_required`.
 
 ## Current environment result
 
-The Windows development host has neither `py-spy` nor PyStack available, and
-PyStack supports Linux targets. Therefore Stage A uses mocks only to validate
-contract mechanics. It makes no producer-capability claim. Real Stage B/C
-records must be created on the existing Linux experiment host and reviewed
-before normalization rules are added.
+The Windows development host still uses mocks for contract regression. A
+Linux CPU-only host then ran the real producer sequence against a deterministic
+condition-wait target at
+[`../results/native-stack-pair-stage-a-cpu-20260922/README.md`](../results/native-stack-pair-stage-a-cpu-20260922/README.md).
+With target-scoped ptrace authorization, `py-spy 0.4.2`, PyStack `1.7.1`, and
+the repeated `py-spy` capture all produced bounded private output while process
+identity remained stable. The repeated `py-spy` raw digests were identical.
+
+This closes only the Linux acquisition smoke gate. The public record remains
+`normalization_pending` with `claim = null`: no target-runtime rule was admitted
+and no producer-interchangeability or vLLM fault-attribution claim is made.
+Real Stage B still requires the retained #53859 healthy/fault pair on a GPU
+environment. Stage C remains gated behind Stage B and the reviewed join
+contract.
 
 ## Review commands
 
