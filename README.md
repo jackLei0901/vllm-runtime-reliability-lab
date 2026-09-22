@@ -460,6 +460,8 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
   and [`docs/NATIVE_EVIDENCE_DESIGN.md`](docs/NATIVE_EVIDENCE_DESIGN.md):
   requirements and a sidecar-first design for evaluating native-state producers
   without changing the v0.2 verdict.
+- [`docs/BLOCK5_NATIVE_CAPABILITY_RUN.md`](docs/BLOCK5_NATIVE_CAPABILITY_RUN.md):
+  executable-contract status and the retained-case Linux capability matrix.
 - [`docs/reviews/EVIDENCE_TO_CLAIM_BLOCK4_REVIEW.md`](docs/reviews/EVIDENCE_TO_CLAIM_BLOCK4_REVIEW.md):
   unified English/Chinese Block 4 review entry.
 - [`docs/ADOPTION_PLAN.md`](docs/ADOPTION_PLAN.md): focused external-reuse plan

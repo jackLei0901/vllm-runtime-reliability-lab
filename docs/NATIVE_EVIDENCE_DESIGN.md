@@ -1,7 +1,8 @@
 # Native-state evidence design
 
-Status: design candidate for Block 5 capability experiments. No implementation
-or public schema migration is authorized by this document.
+Status: design baseline for Block 5 capability experiments. The experimental
+contract and bounded acquisition boundary are implemented; no public schema
+migration or target-runtime attribution rule is authorized by this document.
 
 ## 1. Design goal
 
@@ -97,12 +98,16 @@ The examples below are design shapes, not committed schemas.
   "subject": {
     "process_identity_kind": "linux_proc_start_ticks",
     "process_identity_value": "123456",
+    "post_capture_identity_value": "123456",
     "declared_role": "engine_core",
     "declared_rank": null
   },
   "window": {
     "start_monotonic_ns": 100,
-    "end_monotonic_ns": 200
+    "end_monotonic_ns": 200,
+    "producer_timeout_ns": 5000000000,
+    "coordinator_timeout_ns": 7000000000,
+    "max_output_bytes": 1048576
   },
   "producer": {
     "kind": "stack_snapshot",
@@ -133,20 +138,20 @@ execution attempt may return `permission_denied`.
 
 ### 3.2 Normalized stack facts
 
-Private normalization may produce multiple thread facts:
+Private normalization may produce multiple thread facts. Frame classes retain
+only the interleaved ordering needed by rule predicates:
 
 ```json
 {
   "thread_ref": "capture-local opaque id",
   "execution_domain": "mixed",
   "gil_state": "waiting",
-  "native_frame_shape": [
-    "module:symbol-class",
-    "module:symbol-class"
+  "ordered_frame_classes": [
+    "python:publisher",
+    "python:queue-put",
+    "native:condition-wait"
   ],
-  "python_frame_shape": [
-    "package:function-class"
-  ]
+  "lifecycle_facts": []
 }
 ```
 
@@ -198,6 +203,7 @@ unknown stages, and identity changes.
 {
   "attribution_schema_version": "native-attribution-v0",
   "subject_binding_digest": "64 lowercase hex",
+  "binding_status": "valid",
   "capture_attempt_stage": "execution",
   "capture_outcome": "produced",
   "blocked_in": "communicator_destruction",
@@ -225,9 +231,11 @@ rule_set_id: pytorch-pg-nccl-legacy-shutdown-v1
 applies_to:
   producer_kind: stack_snapshot
   platform: linux
-  pytorch_backend: nccl-legacy
-  pytorch_revision_range: explicitly-reviewed-range
-  nccl_version_range: explicitly-reviewed-range
+  vllm_versions: [none]
+  pytorch_versions: [explicitly-reviewed-version]
+  pytorch_backends: [nccl-legacy]
+  nccl_versions: [explicitly-reviewed-version]
+  topologies: [two-rank-single-host]
 requires:
   ordered_frame_classes:
     - process-group-destroy
@@ -242,11 +250,12 @@ emits:
   blocked_in: communicator_destruction
 ```
 
-The actual target-runtime version ranges shall be filled only after Block 5
-captures are reviewed. `producer_kind` is allowed here; implementation name and
-implementation version are forbidden. A missing target version, topology
-mismatch, missing required fact, forbidden fact, or frame mismatch produces
-`unknown`.
+The Stage A evaluator uses explicit reviewed-version allowlists rather than
+open-ended semantic ranges. Wider ranges may be admitted only after Block 5
+captures establish compatibility. `producer_kind` is allowed here;
+implementation name and implementation version are forbidden. A missing target
+version, topology mismatch, missing required fact, forbidden fact, or frame
+mismatch produces `unknown`.
 
 ## 5. Capture orchestration
 
@@ -370,7 +379,7 @@ producer-output normalization because no producer output exists.
 | same-tool captures bracketing the other producer on a held target | same rule predicates and `blocked_in`, or `target_not_stable` with no interchangeability claim |
 | real `py-spy` and PyStack captures after stability passes | same applicable rule predicates and `blocked_in`; frame sequences may differ; coverage is explicit |
 | producer B omits GIL state | same blocked location, reduced coverage, GIL `unknown` |
-| target-runtime version outside rule range | `blocked_in = unknown` |
+| target-runtime version outside rule allowlist | `blocked_in = unknown` |
 | frame shape unmatched | `blocked_in = unknown` |
 | lifecycle order invalid | verification failure |
 | process start identity changes after capture | native binding failure; no `process_missing` claim; v0.2 verdict unchanged |
