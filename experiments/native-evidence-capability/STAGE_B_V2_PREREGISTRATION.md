@@ -89,6 +89,13 @@ identical before and after every capture and across A/B/A2 within one cell.
 - sequence: no unrelated command between A, B, and A2;
 - hold invariant: the injected held marker must remain asserted through A2.
 
+For F1, `stage_b_pair_adapter.py` occupies the frozen Stage 1 runner's existing
+`py-spy dump --pid PID` slot. The adapter runs the full A/B/A2 sequence before
+returning the first py-spy output to the unchanged runner, so the runner cannot
+release the held marker between producers. The adapter output directory and
+runtime identity fields are supplied through its closed required environment.
+Its file digest and exact environment values are part of the run manifest.
+
 A timed-out or unavailable producer, identity change, released hold, output
 budget exhaustion, or failed cleanup makes the cell `not_scorable`. It is not
 retried inside the same result directory.
