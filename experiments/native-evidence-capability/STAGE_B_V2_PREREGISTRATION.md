@@ -124,6 +124,17 @@ captures remain `unknown`; nearest-match attribution is forbidden.
 The healthy and fault observations are both required. A frame or predicate
 seen in C0 cannot be the sole discriminator for F1.
 
+The private exploratory C0/F1 capture admitted exactly one rule before the
+scored run: [`stage_b_queue_wait_rule.json`](stage_b_queue_wait_rule.json).
+Its ordered predicates are `python:publisher -> python:queue-put ->
+native:condition-wait`, constrained to the exact runtime versions in the rule.
+The implementation-blind normalizer accepts either root-first or leaf-first
+stack presentation, requires all three anchors in one thread, and fails closed
+if more than one thread satisfies them. C0 showed only an input-queue `get`
+wait; F1 showed the admitted publisher/put/condition chain in both producer
+formats. GIL state remains `unknown` because neither retained output provided a
+reviewed GIL-state token.
+
 ## Execution gates
 
 Run in this order and stop at the first failure:

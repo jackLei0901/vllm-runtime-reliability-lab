@@ -1,0 +1,36 @@
+{
+  "applies_to": {
+    "nccl_versions": [
+      "2.29.7"
+    ],
+    "platform": "linux",
+    "producer_kind": "stack_snapshot",
+    "pytorch_backends": [
+      "nccl"
+    ],
+    "pytorch_versions": [
+      "2.13.0+cu130"
+    ],
+    "topologies": [
+      "single_gpu"
+    ],
+    "vllm_versions": [
+      "0.1.dev1+g9935dfceb"
+    ]
+  },
+  "emits": {
+    "blocked_in": "queue_wait"
+  },
+  "forbids": {
+    "lifecycle_stages": []
+  },
+  "requires": {
+    "lifecycle_stages": [],
+    "ordered_frame_classes": [
+      "python:publisher",
+      "python:queue-put",
+      "native:condition-wait"
+    ]
+  },
+  "rule_set_id": "vllm-53859-stage-b-v2-queue-wait-v1"
+}
