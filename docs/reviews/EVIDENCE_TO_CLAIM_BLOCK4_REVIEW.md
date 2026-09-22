@@ -317,7 +317,7 @@ python -m unittest discover -s tests -v
 python -m compileall -q src tests
 ```
 
-Local verification on 2026-09-21 used Windows 11
+Local verification on 2026-09-21 against source state `ac4f14b` used Windows 11
 `10.0.26200`, CPython `3.14.2`, and `jsonschema 4.26.0`; no `py-spy` executable
 was installed. In that environment, 210 tests passed and 2 platform-specific
 tests skipped. `compileall`, `git diff --check`, and relative-link resolution
@@ -327,20 +327,23 @@ compared with this run as if the environments were equivalent. CPython 3.14.2
 is outside the release CI matrix, which currently covers 3.10, 3.12, and 3.13;
 this is a local regression result, not an added support claim.
 
-A second run used CPython 3.14.2 with `-S` and `PYTHONPATH=src;tests` to simulate
+A second run against the same source state used CPython 3.14.2 with `-S` and
+`PYTHONPATH=src;tests` to simulate
 the absence of site packages, including `jsonschema`. It ran all 210 discovered
 tests with 14 explicit skips and no import errors; the external-writer tests
 continued to run rather than being skipped transitively.
 
-2026-09-21 本地验证环境为 Windows 11 `10.0.26200`、CPython `3.14.2`、
+2026-09-21 针对源码状态 `ac4f14b` 的本地验证环境为 Windows 11
+`10.0.26200`、CPython `3.14.2`、
 `jsonschema 4.26.0`，未安装 `py-spy` executable。该环境中 210 个测试通过，2 个
 平台相关测试跳过；`compileall`、`git diff --check` 和相对链接检查通过。未安装开发
 依赖的 clean checkout 会跳过依赖 jsonschema 的测试，不能把其测试数量与本结果视为
 同环境比较。CPython 3.14.2 不在 release CI 的 3.10/3.12/3.13 matrix 内，因此这里只是
 本地回归结果，不新增支持声明。
 
-另一次使用 CPython 3.14.2、`-S` 和 `PYTHONPATH=src;tests` 模拟无 site-packages
-环境：仍发现并运行 210 个测试，其中 14 个显式 skip，没有 import error；
+另一次针对同一源码状态使用 CPython 3.14.2、`-S` 和
+`PYTHONPATH=src;tests` 模拟无 site-packages 环境：仍发现并运行 210 个测试，
+其中 14 个显式 skip，没有 import error；
 external-writer 测试继续执行，没有被传递性跳过。
 
 This block is documentation-only. Runtime tests are regression checks, not

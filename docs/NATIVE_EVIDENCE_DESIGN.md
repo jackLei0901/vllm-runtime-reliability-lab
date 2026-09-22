@@ -445,10 +445,11 @@ producer-output normalization because no producer output exists.
 4. **NCCL RAS:** run only if the available environment satisfies its version and
    permission requirements and it can answer a named #196968 communicator
    question.
-5. **Probe decision:** either record `existing_tools_sufficient`, or name the
-   single missing LLR-009 transition and design its smallest lab-local
-   measurement patch. Do not prepare an upstream instrumentation proposal while
-   #197232 lacks an explicit outcome.
+5. **Probe decision:** record `join_contract_required` by default. Only after
+   the identity/window join contract is reviewed may the case record
+   `existing_tools_sufficient`, or name the single missing LLR-009 transition
+   and design its smallest lab-local measurement patch. Do not prepare an
+   upstream instrumentation proposal while #197232 lacks an explicit outcome.
 
 ## 10. Security and publication boundary
 

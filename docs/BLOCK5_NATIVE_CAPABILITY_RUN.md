@@ -70,7 +70,9 @@ Only after Stage B validates the acquisition/normalization pipeline:
    lifecycle-flag evidence;
 3. decide whether mature producers expose the responder/shutdown relation in
    LLR-009;
-4. conclude `existing_tools_sufficient`, or name exactly one missing lifecycle
+4. record `join_contract_required` as the default exit. Only after the
+   identity/window join contract is reviewed may the case conclude
+   `existing_tools_sufficient`, or name exactly one missing lifecycle
    transition for a bounded lab-local probe.
 
 An upstream-facing probe remains blocked until #197232 has an explicit
@@ -80,7 +82,8 @@ gate.
 Stack and lifecycle evidence remain separate producer records. Stage C must
 define and review an explicit identity/window join whose public result retains
 both source digests. A stack capture cannot carry lifecycle flags, and its raw
-digest cannot vouch for them.
+digest cannot vouch for them. Until that review is complete, Stage C is
+non-scorable and its only permitted conclusion is `join_contract_required`.
 
 ## Current environment result
 

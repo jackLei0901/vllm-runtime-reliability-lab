@@ -31,6 +31,7 @@ PAIRING_RESULTS = {
     "producer_disagreement",
     "target_not_stable",
 }
+NOT_SCORABLE_REASONS = {"no_admitted_rule", "unusable_capture"}
 LIFECYCLE_STAGES = {
     "dump_responder_active",
     "dump_responder_stopped",
@@ -359,6 +360,11 @@ def _rule_matches(
         raise NativeEvidenceError("non-stack rule requires stack frames")
     if lifecycle_requirements and applies["producer_kind"] != "lifecycle_stage_flags":
         raise NativeEvidenceError("non-lifecycle rule requires lifecycle facts")
+    if (
+        forbids["lifecycle_stages"]
+        and applies["producer_kind"] != "lifecycle_stage_flags"
+    ):
+        raise NativeEvidenceError("non-lifecycle rule has dead lifecycle forbids")
     emits = _closed(rule["emits"], {"blocked_in"}, "rule emits")
     if emits["blocked_in"] not in BLOCKED_IN - {"unknown"}:
         raise NativeEvidenceError("rule emits an unadmitted attribution")
@@ -562,9 +568,12 @@ def compare_capture_triplet(
         for value in values
     )
     if not usable:
+        reason = "unusable_capture"
+        if reason not in NOT_SCORABLE_REASONS:
+            raise AssertionError("internal not-scorable vocabulary error")
         return {
             "pairing_result": "not_scorable",
-            "not_scorable_reason": "unusable_capture",
+            "not_scorable_reason": reason,
             "stability_control_passed": False,
             "frame_sequence_compared": False,
             "coverage_equal": set(first["coverage"]) == set(candidate["coverage"]),
@@ -594,6 +603,8 @@ def compare_capture_triplet(
         reason = None
     if result not in PAIRING_RESULTS:
         raise AssertionError("internal pairing vocabulary error")
+    if reason is not None and reason not in NOT_SCORABLE_REASONS:
+        raise AssertionError("internal not-scorable vocabulary error")
     return {
         "pairing_result": result,
         "not_scorable_reason": reason,

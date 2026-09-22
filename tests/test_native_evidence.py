@@ -5,6 +5,7 @@ import hashlib
 import unittest
 
 from dfxlab.native_evidence import (
+    NOT_SCORABLE_REASONS,
     NativeEvidenceError,
     compare_capture_triplet,
     evaluate_attribution,
@@ -225,6 +226,12 @@ class NativeAttributionTest(unittest.TestCase):
         with self.assertRaisesRegex(NativeEvidenceError, "mixes provenance"):
             evaluate_attribution(capture(), observation(), target(), [mixed])
 
+    def test_stack_rule_rejects_dead_lifecycle_forbid(self) -> None:
+        dead_constraint = rule()
+        dead_constraint["forbids"]["lifecycle_stages"] = ["dump_completed"]
+        with self.assertRaisesRegex(NativeEvidenceError, "dead lifecycle forbids"):
+            evaluate_attribution(capture(), observation(), target(), [dead_constraint])
+
     def test_stack_observation_cannot_launder_lifecycle_facts(self) -> None:
         facts = observation()
         facts["lifecycle_facts"] = [
@@ -296,6 +303,12 @@ class ProducerPairingTest(unittest.TestCase):
         )
         self.assertEqual("not_scorable", result["pairing_result"])
         self.assertEqual("no_admitted_rule", result["not_scorable_reason"])
+
+    def test_not_scorable_reason_vocabulary_is_closed(self) -> None:
+        self.assertEqual(
+            {"no_admitted_rule", "unusable_capture"},
+            NOT_SCORABLE_REASONS,
+        )
 
 
 if __name__ == "__main__":

@@ -326,8 +326,10 @@ implement the expensive probe before that upstream gate closes.
 - after that control passes, both tools satisfy the same rule predicates and
   emit the same `blocked_in`, while frame sequences and coverage may differ;
 - unsupported and permission-denied paths are first-class results;
-- the review concludes either `existing_tools_sufficient` or names exactly one
-  irreducible lifecycle fact for probe design;
+- before an identity/window join contract is reviewed, the review concludes
+  `join_contract_required`; only after that gate may it conclude
+  `existing_tools_sufficient` or name exactly one irreducible lifecycle fact
+  for probe design;
 - no code is merged merely because more native data was collected.
 
 ## 中文审阅摘要
