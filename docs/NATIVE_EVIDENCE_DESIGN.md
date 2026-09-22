@@ -82,9 +82,9 @@ collective membership.
 
 Coordinator rejection, preflight failure, and attempted execution are separate
 stages. Missing binaries, unsupported platforms, occupied capture slots, rate
-limiting, ptrace denial, timeout, and empty output retain their stage-specific
-meaning. They reduce attribution coverage; they do not fail the primary
-collector or become target-state evidence.
+limiting, ptrace denial, timeout, output-budget exhaustion, and empty output
+retain their stage-specific meaning. They reduce attribution coverage; they do
+not fail the primary collector or become target-state evidence.
 
 ## 3. Experimental data model
 
@@ -113,7 +113,8 @@ The examples below are design shapes, not committed schemas.
     "kind": "stack_snapshot",
     "implementation_name": "pystack",
     "implementation_version": "reviewed-version",
-    "binary_sha256": "64 lowercase hex"
+    "binary_sha256": "64 lowercase hex",
+    "platform": "linux"
   },
   "outcome": {
     "attempt_stage": "execution",
@@ -135,6 +136,10 @@ invoked. For execution, it is non-null when output exists; `produced` requires
 a non-null digest. `not_requested × disabled` is the explicit opt-out record.
 Yama scope and similar permission hints are provenance only; only an actual
 execution attempt may return `permission_denied`.
+
+`timeout`, `output_budget_exceeded`, and `execution_failed` may carry a digest
+of bounded partial output. The digest vouches only for those retained bytes; it
+does not upgrade the outcome or make the partial output normalizable.
 
 ### 3.2 Normalized stack facts
 
@@ -170,6 +175,11 @@ holding | waiting | dropping | unknown
 Addresses, arguments, local variables, full paths, arbitrary function names,
 and thread names do not enter the publishable shape.
 
+A `stack_snapshot` observation must have an empty `lifecycle_facts` list.
+Lifecycle transitions come from a separate `lifecycle_stage_flags` capture;
+attaching them to stack output would falsely make the stack digest appear to
+vouch for independently produced facts.
+
 ### 3.3 Lifecycle facts
 
 Lifecycle facts are distinct from stack classifications:
@@ -195,7 +205,8 @@ dump_completed
 ```
 
 The evaluator rejects duplicate logical sequence positions, impossible order,
-unknown stages, and identity changes.
+unknown stages, and identity changes. A lifecycle-stage record contains no
+stack frames, execution domain, or GIL claim.
 
 ### 3.4 Public attribution projection
 
@@ -206,12 +217,12 @@ unknown stages, and identity changes.
   "binding_status": "valid",
   "capture_attempt_stage": "execution",
   "capture_outcome": "produced",
-  "blocked_in": "communicator_destruction",
+  "blocked_in": "queue_wait",
   "execution_domain": "mixed",
-  "gil_state": "unknown",
-  "rule_set_id": "pytorch-pg-nccl-legacy-shutdown-v1",
+  "gil_state": "waiting",
+  "rule_set_id": "vllm-zmq-queue-wait-v1",
   "rule_match": "exact",
-  "coverage": ["thread_state", "lifecycle_stage"],
+  "coverage": ["thread_state", "gil_state"],
   "raw_output_sha256": "64 lowercase hex"
 }
 ```
@@ -224,30 +235,27 @@ closed set, not a confidence score.
 
 ## 4. Rule representation
 
-A rule record contains only declarative constraints:
+A Stage A single-producer rule contains only declarative constraints:
 
 ```yaml
-rule_set_id: pytorch-pg-nccl-legacy-shutdown-v1
+rule_set_id: vllm-zmq-queue-wait-v1
 applies_to:
   producer_kind: stack_snapshot
   platform: linux
-  vllm_versions: [none]
+  vllm_versions: [explicitly-reviewed-version]
   pytorch_versions: [explicitly-reviewed-version]
-  pytorch_backends: [nccl-legacy]
-  nccl_versions: [explicitly-reviewed-version]
-  topologies: [two-rank-single-host]
+  pytorch_backends: [not-applicable]
+  nccl_versions: [not-applicable]
+  topologies: [single-process]
 requires:
   ordered_frame_classes:
-    - process-group-destroy
-    - communicator-destroy-or-abort
-  lifecycle_stages:
-    - dump_responder_stopped
-    - communicator_destroy_started
+    - python:queue-put
+    - native:condition-wait
+  lifecycle_stages: []
 forbids:
-  lifecycle_stages:
-    - communicator_destroy_completed
+  lifecycle_stages: []
 emits:
-  blocked_in: communicator_destruction
+  blocked_in: queue_wait
 ```
 
 The Stage A evaluator uses explicit reviewed-version allowlists rather than
@@ -256,6 +264,36 @@ captures establish compatibility. `producer_kind` is allowed here;
 implementation name and implementation version are forbidden. A missing target
 version, topology mismatch, missing required fact, forbidden fact, or frame
 mismatch produces `unknown`.
+
+A rule with neither a required frame predicate nor a required lifecycle
+predicate is invalid rather than universally matching. A Stage A rule may use
+one predicate family only: stack rules cannot require lifecycle stages, and
+lifecycle rules cannot require stack frames.
+
+### 4.1 Stage C multi-producer join
+
+The #196968 attribution cannot be represented by pretending stage flags came
+from PyStack. Stage C therefore uses separate capture records:
+
+```text
+stack_snapshot capture ----------+
+                                 +--> explicit joined attribution
+lifecycle_stage_flags capture ---+
+```
+
+The join must verify the same subject-binding digest, compatible incident
+windows, target-runtime identity, and each source's own typed outcome. Its
+public projection must retain a closed list of source producer kinds, subject
+bindings, and raw-content digests. A single `raw_output_sha256` is insufficient
+for a joined claim. The current Stage A evaluator deliberately has no joined
+rule path; Stage C remains non-scorable until that separate join contract and
+its contradiction tests are reviewed.
+
+Producer comparison also has a closed non-claim result. `not_scorable` with
+reason `no_admitted_rule` is returned when all three attributions are
+`unmatched`; reason `unusable_capture` is returned when any capture did not
+produce usable, identity-bound evidence. Neither result is producer
+interchangeability.
 
 ## 5. Capture orchestration
 
@@ -281,6 +319,10 @@ The capture coordinator keeps:
 
 Additional triggers return `capture_occupied` or `rate_limited`. They do not
 queue unbounded work or attach again.
+
+The `platform` constraint currently names the observer/producer platform. The
+Stage B same-PID-namespace requirement makes it identical to the target host;
+cross-host collection would require separate observer and target fields.
 
 ### 5.3 Clock and identity
 
@@ -376,12 +418,15 @@ producer-output normalization because no producer output exists.
 | Test | Required result |
 | --- | --- |
 | same normalized facts from mock producer A and B | identical evaluator output; evaluator purity only |
+| all three attributions unmatched because no rule is admitted | `not_scorable`, never `interchangeable` |
+| rule has no required frame or lifecycle predicate | verification failure |
 | same-tool captures bracketing the other producer on a held target | same rule predicates and `blocked_in`, or `target_not_stable` with no interchangeability claim |
 | real `py-spy` and PyStack captures after stability passes | same applicable rule predicates and `blocked_in`; frame sequences may differ; coverage is explicit |
 | producer B omits GIL state | same blocked location, reduced coverage, GIL `unknown` |
 | target-runtime version outside rule allowlist | `blocked_in = unknown` |
 | frame shape unmatched | `blocked_in = unknown` |
 | lifecycle order invalid | verification failure |
+| lifecycle facts attached to a stack observation | verification failure |
 | process start identity changes after capture | native binding failure; no `process_missing` claim; v0.2 verdict unchanged |
 | raw path/frame/stderr injected into public sidecar | schema failure |
 | native sidecar removed from a sufficient v0.2 bundle | primary verdict unchanged |

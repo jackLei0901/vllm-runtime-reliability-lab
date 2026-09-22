@@ -210,6 +210,34 @@ class NativeAttributionTest(unittest.TestCase):
                 capture(), observation(), target(), [rule(), duplicate]
             )
 
+    def test_rule_without_required_predicate_fails_closed(self) -> None:
+        empty = rule()
+        empty["requires"] = {
+            "ordered_frame_classes": [],
+            "lifecycle_stages": [],
+        }
+        with self.assertRaisesRegex(NativeEvidenceError, "no required predicate"):
+            evaluate_attribution(capture(), observation(), target(), [empty])
+
+    def test_single_producer_rule_cannot_mix_provenance(self) -> None:
+        mixed = rule()
+        mixed["requires"]["lifecycle_stages"] = ["dump_responder_stopped"]
+        with self.assertRaisesRegex(NativeEvidenceError, "mixes provenance"):
+            evaluate_attribution(capture(), observation(), target(), [mixed])
+
+    def test_stack_observation_cannot_launder_lifecycle_facts(self) -> None:
+        facts = observation()
+        facts["lifecycle_facts"] = [
+            {
+                "component": "process_group_nccl",
+                "stage": "dump_responder_stopped",
+                "logical_sequence": 1,
+                "observed": True,
+            }
+        ]
+        with self.assertRaisesRegex(NativeEvidenceError, "lifecycle provenance"):
+            evaluate_attribution(capture(), facts, target(), [rule()])
+
 
 class ProducerPairingTest(unittest.TestCase):
     def attribution(self) -> dict:
@@ -254,10 +282,20 @@ class ProducerPairingTest(unittest.TestCase):
 
     def test_unusable_attribution_cannot_enter_pair(self) -> None:
         first = self.attribution()
-        candidate = copy.deepcopy(first)
-        candidate["capture_outcome"] = "timeout"
-        with self.assertRaisesRegex(NativeEvidenceError, "unusable"):
-            compare_capture_triplet(first, candidate, copy.deepcopy(first))
+        timed_out = capture()
+        timed_out["outcome"]["outcome_code"] = "timeout"
+        candidate = evaluate_attribution(timed_out, None, target(), [rule()])
+        result = compare_capture_triplet(first, candidate, copy.deepcopy(first))
+        self.assertEqual("not_scorable", result["pairing_result"])
+        self.assertEqual("unusable_capture", result["not_scorable_reason"])
+
+    def test_three_unmatched_attributions_are_not_scorable(self) -> None:
+        unmatched = evaluate_attribution(capture(), observation(), target(), [])
+        result = compare_capture_triplet(
+            unmatched, copy.deepcopy(unmatched), copy.deepcopy(unmatched)
+        )
+        self.assertEqual("not_scorable", result["pairing_result"])
+        self.assertEqual("no_admitted_rule", result["not_scorable_reason"])
 
 
 if __name__ == "__main__":

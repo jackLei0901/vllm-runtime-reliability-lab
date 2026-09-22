@@ -21,7 +21,14 @@ Implemented in:
 
 No target-runtime rule ships in Stage A. A rule can be admitted only after the
 real healthy/fault captures establish an exact normalized shape and version
-boundary. Until then every captured record ends with no attribution claim.
+boundary. Until then every captured record ends with no attribution claim, and
+three `unmatched` attributions evaluate to `not_scorable`, never
+`interchangeable`.
+
+The first contract review also fixed five pre-run failure modes: vacuous
+interchangeability without a rule, predicate-free universal rules,
+stack/lifecycle provenance conflation, case-sensitive version provenance, and
+output-budget exhaustion being collapsed into generic execution failure.
 
 ## Stage B — #53859 retained reproducer
 
@@ -45,7 +52,7 @@ Pre-register before execution:
 The run is not scorable when:
 
 - the target identity changes;
-- any capture is not `execution × produced`;
+- any capture is not `execution × produced` (`not_scorable`, not an exception);
 - A and A2 do not satisfy the same applicable predicates and attribution;
 - the held marker is released during the three captures;
 - a target or producer version was not frozen before execution.
@@ -69,6 +76,11 @@ Only after Stage B validates the acquisition/normalization pipeline:
 An upstream-facing probe remains blocked until #197232 has an explicit
 maintainer outcome. Open status, CI, labels, or silence do not satisfy that
 gate.
+
+Stack and lifecycle evidence remain separate producer records. Stage C must
+define and review an explicit identity/window join whose public result retains
+both source digests. A stack capture cannot carry lifecycle flags, and its raw
+digest cannot vouch for them.
 
 ## Current environment result
 

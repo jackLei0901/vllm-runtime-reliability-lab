@@ -5,6 +5,7 @@ import os
 import platform
 import re
 import shutil
+import signal
 import subprocess
 import time
 from pathlib import Path
@@ -13,6 +14,7 @@ from typing import Any
 from dfxlab.native_evidence import CAPTURE_SCHEMA, validate_capture
 
 IMPLEMENTATIONS = {"py-spy", "pystack"}
+_SIGXFSZ = getattr(signal, "SIGXFSZ", 25)
 _PERMISSION_MARKERS = (
     b"permission denied",
     b"operation not permitted",
@@ -59,7 +61,10 @@ def _version(binary: str) -> str | None:
         if output
         else []
     )
-    return tokens[-1].decode("ascii", errors="ignore") if tokens else None
+    if not tokens:
+        return None
+    normalized = tokens[-1].decode("ascii", errors="ignore").lower()
+    return normalized or None
 
 
 def _command(implementation: str, binary: str, pid: int) -> list[str]:
@@ -71,6 +76,8 @@ def _command(implementation: str, binary: str, pid: int) -> list[str]:
 
 
 def _limit_output(max_output_bytes: int):
+    # This runs only in the deliberately single-threaded Linux capture child.
+    # Python documents preexec_fn as unsafe when the parent has multiple threads.
     def apply_limit() -> None:
         import resource
 
@@ -231,7 +238,15 @@ def capture_native_stack(
                 else:
                     stream.flush()
                     private_bytes = private_output.read_bytes().lower()
-                    if any(marker in private_bytes for marker in _PERMISSION_MARKERS):
+                    if return_code in {
+                        -_SIGXFSZ,
+                        128 + _SIGXFSZ,
+                    } or any(
+                        marker in private_bytes
+                        for marker in (b"file too large", b"file size limit exceeded")
+                    ):
+                        outcome = "output_budget_exceeded"
+                    elif any(marker in private_bytes for marker in _PERMISSION_MARKERS):
                         outcome = "permission_denied"
 
     end_ns = time.monotonic_ns()

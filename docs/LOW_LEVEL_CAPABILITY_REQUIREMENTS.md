@@ -95,8 +95,8 @@ attempt_stage = preflight
   outcome = unsupported | binary_missing | feature_disabled
 
 attempt_stage = execution
-  outcome = produced | timeout | permission_denied | empty_output |
-            execution_failed
+  outcome = produced | timeout | output_budget_exceeded |
+            permission_denied | empty_output | execution_failed
 ```
 
 The producer is invoked only for `attempt_stage = execution`. Coordinator and
@@ -119,7 +119,9 @@ shape, but must not silently reinterpret or rewrite the frozen v0.2 schema.
 `capture_occupied` cannot be confused with an attach attempt, and missing
 output never becomes a negative target-state observation.
 `raw_output_sha256` is null for `not_requested`, coordinator, and preflight;
-`execution × produced` requires a non-null digest.
+`execution × produced` requires a non-null digest. A failed execution may retain
+a digest of bounded partial output, but that digest does not make the attempt
+`produced`.
 
 ### LLR-006 — closed native attribution vocabulary
 
@@ -148,10 +150,10 @@ constraints. Attribution rules shall never constrain or read producer
 implementation name or implementation version. Implementation-specific version
 support belongs to the normalizer and is provenance, not an attribution input.
 
-**Acceptance:** changing a target-runtime version outside the declared range
-turns the attribution into `unknown` without changing the primary verdict;
-changing producer implementation identity without changing normalized facts
-does not change attribution.
+**Acceptance:** changing a target-runtime version outside the explicit reviewed
+allowlist turns the attribution into `unknown` without changing the primary
+verdict; changing producer implementation identity without changing normalized
+facts does not change attribution.
 
 ### LLR-008 — producer interchangeability
 
@@ -169,7 +171,9 @@ satisfy the same applicable rule predicates and emit the same `blocked_in`.
 Their normalized frame sequences need not be identical, and tool-only detail
 may change declared coverage. No tool-specific verifier branch is allowed.
 `target_not_stable` is a pairing-level experiment result, not a producer
-stage/outcome code.
+stage/outcome code. A triplet with no admitted rule, or with any unusable
+capture, is `not_scorable`; three `unmatched` results shall never be called
+`interchangeable`.
 
 ### LLR-009 — lifecycle transition evidence
 
@@ -186,6 +190,9 @@ dump_completed
 
 Each transition shall be process/rank bound and ordered within one monotonic or
 logical sequence domain. Free-text logging is insufficient for a public claim.
+Lifecycle flags and stack facts remain separate producer records. A
+single-producer stack observation cannot carry lifecycle facts, and a future
+joined attribution must retain every source binding and raw-content digest.
 
 **Acceptance:** invalid order, duplicate terminal stages, or missing identity
 fails closed. The record can distinguish `producer_missing` from

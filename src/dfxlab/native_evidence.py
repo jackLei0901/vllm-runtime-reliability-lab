@@ -15,6 +15,7 @@ STAGE_OUTCOMES = {
     "execution": {
         "produced",
         "timeout",
+        "output_budget_exceeded",
         "permission_denied",
         "empty_output",
         "execution_failed",
@@ -26,6 +27,7 @@ BLOCKED_IN = {"queue_wait", "communicator_destruction", "unknown"}
 COVERAGE = {"thread_state", "gil_state", "lifecycle_stage"}
 PAIRING_RESULTS = {
     "interchangeable",
+    "not_scorable",
     "producer_disagreement",
     "target_not_stable",
 }
@@ -155,7 +157,12 @@ def validate_capture(capture: dict[str, Any]) -> dict[str, Any]:
         },
         "producer",
     )
-    if producer["kind"] not in {"stack_snapshot", "flight_recorder", "nccl_ras"}:
+    if producer["kind"] not in {
+        "stack_snapshot",
+        "flight_recorder",
+        "nccl_ras",
+        "lifecycle_stage_flags",
+    }:
         raise NativeEvidenceError("unknown producer kind")
     _bounded_token(producer["implementation_name"], "implementation name")
     _bounded_token(
@@ -186,7 +193,9 @@ def validate_capture(capture: dict[str, Any]) -> dict[str, Any]:
     return capture
 
 
-def validate_observation(observation: dict[str, Any]) -> dict[str, Any]:
+def validate_observation(
+    observation: dict[str, Any], producer_kind: str
+) -> dict[str, Any]:
     _closed(
         observation,
         {
@@ -239,6 +248,23 @@ def validate_observation(observation: dict[str, Any]) -> dict[str, Any]:
             and stage_sequences[before] >= stage_sequences[after]
         ):
             raise NativeEvidenceError("invalid lifecycle order")
+    if producer_kind not in {
+        "stack_snapshot",
+        "flight_recorder",
+        "nccl_ras",
+        "lifecycle_stage_flags",
+    }:
+        raise NativeEvidenceError("unknown observation producer kind")
+    if producer_kind != "lifecycle_stage_flags" and facts:
+        raise NativeEvidenceError(
+            "non-lifecycle observation carries lifecycle provenance"
+        )
+    if producer_kind != "stack_snapshot" and (
+        frames
+        or observation["execution_domain"] != "unknown"
+        or observation["gil_state"] != "unknown"
+    ):
+        raise NativeEvidenceError("non-stack observation carries stack provenance")
     return observation
 
 
@@ -276,6 +302,7 @@ def _rule_matches(
         "stack_snapshot",
         "flight_recorder",
         "nccl_ras",
+        "lifecycle_stage_flags",
     }:
         raise NativeEvidenceError("unknown rule producer kind")
     if applies["platform"] not in {"linux", "windows", "darwin"}:
@@ -322,6 +349,16 @@ def _rule_matches(
             raise NativeEvidenceError("rule predicate is not a list")
         for value in values:
             _bounded_token(value, "rule predicate")
+    frame_requirements = requires["ordered_frame_classes"]
+    lifecycle_requirements = requires["lifecycle_stages"]
+    if not frame_requirements and not lifecycle_requirements:
+        raise NativeEvidenceError("rule has no required predicate")
+    if frame_requirements and lifecycle_requirements:
+        raise NativeEvidenceError("single-producer rule mixes provenance")
+    if frame_requirements and applies["producer_kind"] != "stack_snapshot":
+        raise NativeEvidenceError("non-stack rule requires stack frames")
+    if lifecycle_requirements and applies["producer_kind"] != "lifecycle_stage_flags":
+        raise NativeEvidenceError("non-lifecycle rule requires lifecycle facts")
     emits = _closed(rule["emits"], {"blocked_in"}, "rule emits")
     if emits["blocked_in"] not in BLOCKED_IN - {"unknown"}:
         raise NativeEvidenceError("rule emits an unadmitted attribution")
@@ -459,7 +496,7 @@ def evaluate_attribution(
     if usable:
         if observation is None:
             raise NativeEvidenceError("produced capture lacks normalized observation")
-        validate_observation(observation)
+        validate_observation(observation, capture["producer"]["kind"])
     elif observation is not None:
         raise NativeEvidenceError("unusable capture has normalized observation")
 
@@ -515,14 +552,23 @@ def compare_capture_triplet(
     """Compare A/B/A2 at rule-match level, never by raw frame equality."""
 
     signature_keys = ("rule_set_id", "rule_match", "blocked_in")
-    for value in (first, candidate, repeat):
+    values = (first, candidate, repeat)
+    for value in values:
         validate_attribution(value)
-        if (
-            value["binding_status"] != "valid"
-            or value["capture_attempt_stage"] != "execution"
-            or value["capture_outcome"] != "produced"
-        ):
-            raise NativeEvidenceError("pair contains unusable attribution")
+    usable = all(
+        value["binding_status"] == "valid"
+        and value["capture_attempt_stage"] == "execution"
+        and value["capture_outcome"] == "produced"
+        for value in values
+    )
+    if not usable:
+        return {
+            "pairing_result": "not_scorable",
+            "not_scorable_reason": "unusable_capture",
+            "stability_control_passed": False,
+            "frame_sequence_compared": False,
+            "coverage_equal": set(first["coverage"]) == set(candidate["coverage"]),
+        }
     same_subject = (
         len(
             {
@@ -536,14 +582,21 @@ def compare_capture_triplet(
     stable = same_subject and all(first[key] == repeat[key] for key in signature_keys)
     if not stable:
         result = "target_not_stable"
+        reason = None
+    elif all(value["rule_match"] == "unmatched" for value in values):
+        result = "not_scorable"
+        reason = "no_admitted_rule"
     elif all(first[key] == candidate[key] for key in signature_keys):
         result = "interchangeable"
+        reason = None
     else:
         result = "producer_disagreement"
+        reason = None
     if result not in PAIRING_RESULTS:
         raise AssertionError("internal pairing vocabulary error")
     return {
         "pairing_result": result,
+        "not_scorable_reason": reason,
         "stability_control_passed": stable,
         "frame_sequence_compared": False,
         "coverage_equal": set(first["coverage"]) == set(candidate["coverage"]),

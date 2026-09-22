@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from dfxlab.native_producers import capture_native_stack
+from dfxlab.native_producers import _SIGXFSZ, _version, capture_native_stack
 
 
 class _CompletedProcess:
@@ -37,6 +37,13 @@ class _TimedOutProcess(_CompletedProcess):
 
 
 class NativeProducerTest(unittest.TestCase):
+    def test_version_is_normalized_before_public_validation(self) -> None:
+        completed = subprocess.CompletedProcess(
+            ["pystack", "--version"], 0, b"pystack 1.8.0-RC1\n", b""
+        )
+        with patch("dfxlab.native_producers.subprocess.run", return_value=completed):
+            self.assertEqual("1.8.0-rc1", _version("pystack"))
+
     def test_non_linux_is_preflight_unsupported(self) -> None:
         with (
             patch("dfxlab.native_producers.linux_start_ticks", return_value="10"),
@@ -208,6 +215,46 @@ class NativeProducerTest(unittest.TestCase):
                 )
         self.assertEqual("execution", result["outcome"]["attempt_stage"])
         self.assertEqual("timeout", result["outcome"]["outcome_code"])
+        self.assertIsNotNone(result["outcome"]["raw_output_sha256"])
+
+    def test_output_budget_exhaustion_is_not_execution_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            binary = root / "pystack"
+            binary.write_bytes(b"binary")
+            output = root / "private" / "capture.txt"
+
+            def popen(command, **kwargs):
+                return _CompletedProcess(
+                    command,
+                    payload=b"x" * 32,
+                    return_code=-_SIGXFSZ,
+                    **kwargs,
+                )
+
+            with (
+                patch(
+                    "dfxlab.native_producers.linux_start_ticks",
+                    side_effect=["10", "10"],
+                ),
+                patch("dfxlab.native_producers.platform.system", return_value="Linux"),
+                patch("dfxlab.native_producers.shutil.which", return_value=str(binary)),
+                patch("dfxlab.native_producers._version", return_value="1.7.1"),
+                patch("dfxlab.native_producers.subprocess.Popen", side_effect=popen),
+                patch(
+                    "dfxlab.native_producers.time.monotonic_ns",
+                    side_effect=[100, 150],
+                ),
+            ):
+                result = capture_native_stack(
+                    implementation="pystack",
+                    pid=123,
+                    expected_start_ticks="10",
+                    private_output=output,
+                    declared_role="engine_core",
+                    max_output_bytes=32,
+                )
+        self.assertEqual("output_budget_exceeded", result["outcome"]["outcome_code"])
         self.assertIsNotNone(result["outcome"]["raw_output_sha256"])
 
 

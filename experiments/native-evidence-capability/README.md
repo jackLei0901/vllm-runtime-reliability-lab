@@ -18,6 +18,9 @@ py-spy A -> PyStack B -> py-spy A2
 A and A2 must later satisfy the same rule predicates and emit the same
 `blocked_in`. Otherwise the result is `target_not_stable` and B is not judged.
 Frame-sequence equality is deliberately not an acceptance condition.
+When no rule has been admitted, three `unmatched` results are `not_scorable`,
+not `interchangeable`. An unavailable or failed capture is also
+`not_scorable`.
 
 ## Environment
 
@@ -68,6 +71,16 @@ content digests. It intentionally ends with:
 The capture command cannot claim interchangeability. That claim requires a
 reviewed normalizer, explicit target-runtime constraints, an admitted rule, and
 the A/B/A2 comparison in `dfxlab.native_evidence`.
+
+An execution that times out, exceeds its output budget, or otherwise fails may
+retain a digest of bounded partial output. That digest identifies only the
+retained bytes; it does not change the typed outcome to `produced` and partial
+output is not eligible for attribution.
+
+The rule `platform` field describes the observer/producer platform. In this
+runbook the observer and target share a PID namespace and host, so it is also
+the target platform; that equivalence must not be assumed for a future
+cross-host collector.
 
 ## First case
 
