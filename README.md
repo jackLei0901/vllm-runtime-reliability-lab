@@ -36,6 +36,9 @@ The evidence changed the conclusion in each case:
 presented as a lab discovery. `#52178` is a separate lifecycle fix for which the
 lab supplied process-level validation.
 
+The cross-case synthesis is available in
+[Failures that never reach the supervisor](docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.md).
+
 ## Five-minute replay — no GPU required
 
 The replay does not rerun a GPU experiment. It verifies the closed file set,
@@ -444,6 +447,10 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 - [`docs/V0.2_LAUNCH_POST.md`](docs/V0.2_LAUNCH_POST.md) and
   [`docs/V0.2_LAUNCH_POST.zh-CN.md`](docs/V0.2_LAUNCH_POST.zh-CN.md): restrained
   English and Chinese launch copy with the exact clean-install replay command.
+- [`docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.md`](docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.md)
+  and its [Chinese version](docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.zh-CN.md):
+  a synthesis of four failure signals that lost meaning across process, rank,
+  health, or diagnostic boundaries.
 - [`docs/V0.2_FIELD_ROLES.md`](docs/V0.2_FIELD_ROLES.md): machine-checked
   decisional and non-decisional public-field audit.
 - [`docs/ADOPTION_PLAN.md`](docs/ADOPTION_PLAN.md): focused external-reuse plan
@@ -455,7 +462,8 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
 
 ## Status
 
-This branch is the `v0.2.0` release candidate. It ships bounded no-progress
+The published [`v0.2.0` release](https://github.com/jackLei0901/vllm-runtime-reliability-lab/releases/tag/v0.2.0)
+ships bounded no-progress
 collection, offline verification, and the no-GPU published-result replay; it is
 not a production monitor or a general cross-process joiner. Paired overhead,
 fresh KV-pressure, cross-host correlation, long-duration, and production-utility

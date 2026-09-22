@@ -1,6 +1,6 @@
 # vLLM Runtime Reliability Lab 中文指南
 
-> 当前版本：`v0.2.0` release candidate
+> 当前版本：已发布 [`v0.2.0`](https://github.com/jackLei0901/vllm-runtime-reliability-lab/releases/tag/v0.2.0)
 > 当前定位：可公开安装和复现的研究型 Alpha，不是生产监控产品。
 
 相关文档：
@@ -14,6 +14,9 @@
 - [`docs/V0.2_LAUNCH_POST.md`](docs/V0.2_LAUNCH_POST.md) 与
   [`docs/V0.2_LAUNCH_POST.zh-CN.md`](docs/V0.2_LAUNCH_POST.zh-CN.md)：可直接发布的
   中英文 v0.2 技术入口。
+- [`docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.md`](docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.md)
+  与[中文版](docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.zh-CN.md)：四类故障信号在
+  进程、rank、health 或诊断边界上丢失语义的综合文章。
 
 ## 先看结果
 
@@ -38,6 +41,8 @@ producer missing != participant missing
 
 `#49869` 是独立的 upstream 成果，不属于 Lab 发现；`#52178` 是 Lab 提供系统级
 验证的独立 lifecycle 修复。
+
+四个案例的共同结构见[《没有到达 supervisor 的故障》](docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.zh-CN.md)。
 
 ### 五分钟无 GPU replay
 
