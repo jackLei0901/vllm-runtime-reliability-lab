@@ -7,7 +7,12 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from dfxlab.native_producers import _SIGXFSZ, _version, capture_native_stack
+from dfxlab.native_producers import (
+    _SIGXFSZ,
+    _command,
+    _version,
+    capture_native_stack,
+)
 
 
 class _CompletedProcess:
@@ -37,6 +42,12 @@ class _TimedOutProcess(_CompletedProcess):
 
 
 class NativeProducerTest(unittest.TestCase):
+    def test_py_spy_dump_command_uses_supported_arguments(self) -> None:
+        self.assertEqual(
+            ["/bin/py-spy", "dump", "--pid", "123", "--native"],
+            _command("py-spy", "/bin/py-spy", 123),
+        )
+
     def test_version_is_normalized_before_public_validation(self) -> None:
         completed = subprocess.CompletedProcess(
             ["pystack", "--version"], 0, b"pystack 1.8.0-RC1\n", b""

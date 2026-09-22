@@ -71,7 +71,7 @@ def _command(implementation: str, binary: str, pid: int) -> list[str]:
     if implementation == "pystack":
         return [binary, "remote", "--no-color", "--native-all", str(pid)]
     if implementation == "py-spy":
-        return [binary, "dump", "--pid", str(pid), "--native", "--idle"]
+        return [binary, "dump", "--pid", str(pid), "--native"]
     raise ValueError("unknown stack producer implementation")
 
 
