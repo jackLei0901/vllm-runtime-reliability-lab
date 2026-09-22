@@ -453,6 +453,15 @@ The remaining GPU validation plan is in [`TEST_PLAN.md`](TEST_PLAN.md).
   health, or diagnostic boundaries.
 - [`docs/V0.2_FIELD_ROLES.md`](docs/V0.2_FIELD_ROLES.md): machine-checked
   decisional and non-decisional public-field audit.
+- [`docs/EVIDENCE_TO_CLAIM_BLOCK4.md`](docs/EVIDENCE_TO_CLAIM_BLOCK4.md):
+  evidence-to-claim, forbidden-inference, corroboration, and contradiction
+  tables for #196968, #53859/#53883, and #196996.
+- [`docs/LOW_LEVEL_CAPABILITY_REQUIREMENTS.md`](docs/LOW_LEVEL_CAPABILITY_REQUIREMENTS.md)
+  and [`docs/NATIVE_EVIDENCE_DESIGN.md`](docs/NATIVE_EVIDENCE_DESIGN.md):
+  requirements and a sidecar-first design for evaluating native-state producers
+  without changing the v0.2 verdict.
+- [`docs/reviews/EVIDENCE_TO_CLAIM_BLOCK4_REVIEW.md`](docs/reviews/EVIDENCE_TO_CLAIM_BLOCK4_REVIEW.md):
+  unified English/Chinese Block 4 review entry.
 - [`docs/ADOPTION_PLAN.md`](docs/ADOPTION_PLAN.md): focused external-reuse plan
   and scorecard.
 - [`docs/case-studies/flight-recorder-missing-rank-DRAFT.md`](docs/case-studies/flight-recorder-missing-rank-DRAFT.md):

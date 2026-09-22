@@ -17,6 +17,13 @@
 - [`docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.md`](docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.md)
   与[中文版](docs/FAILURES_THAT_NEVER_REACH_THE_SUPERVISOR.zh-CN.md)：四类故障信号在
   进程、rank、health 或诊断边界上丢失语义的综合文章。
+- [`docs/EVIDENCE_TO_CLAIM_BLOCK4.md`](docs/EVIDENCE_TO_CLAIM_BLOCK4.md)：
+  #196968、#53859/#53883 与 #196996 的 evidence-to-claim、禁止推断、印证和反证表。
+- [`docs/LOW_LEVEL_CAPABILITY_REQUIREMENTS.md`](docs/LOW_LEVEL_CAPABILITY_REQUIREMENTS.md)
+  与 [`docs/NATIVE_EVIDENCE_DESIGN.md`](docs/NATIVE_EVIDENCE_DESIGN.md)：不改变 v0.2
+  verdict 的底层能力需求与 sidecar-first native evidence 设计。
+- [`docs/reviews/EVIDENCE_TO_CLAIM_BLOCK4_REVIEW.md`](docs/reviews/EVIDENCE_TO_CLAIM_BLOCK4_REVIEW.md)：
+  Block 4 统一中英 review 入口。
 
 ## 先看结果
 

@@ -1,0 +1,250 @@
+# Block 4 evidence-to-claim review / Block 4 证据到结论统一 Review
+
+Status: complete for repository review; no runtime implementation and no new
+upstream claim.
+
+状态：仓库内文档产物已完成，可开始审查；本 Block 不包含运行时代码，也没有新增
+upstream claim。
+
+## Review order / 审查顺序
+
+1. [`../EVIDENCE_TO_CLAIM_BLOCK4.md`](../EVIDENCE_TO_CLAIM_BLOCK4.md) — the
+   normative three-case claim tables / 三案规范化 claim 表；
+2. [`../LOW_LEVEL_CAPABILITY_REQUIREMENTS.md`](../LOW_LEVEL_CAPABILITY_REQUIREMENTS.md)
+   — requirements derived from unresolved distinctions / 从剩余判定缺口反推的底层能力需求；
+3. [`../NATIVE_EVIDENCE_DESIGN.md`](../NATIVE_EVIDENCE_DESIGN.md) — proposed
+   Block 5 sidecar and producer-evaluation design / Block 5 sidecar 与 producer
+   评估设计。
+
+Read the claim tables first. If a capability cannot point to a row it makes
+more discriminating, reject the capability before reviewing its mechanics.
+
+先审 claim 表。如果某项能力不能指出它让哪一行判断更可区分，应在讨论实现方式之前
+直接拒绝该能力。
+
+## Block 4 outcome / Block 4 结果
+
+The three existing cases now use one review shape:
+
+三个现有案例现在统一使用以下审查结构：
+
+```text
+observation
+  -> allowed inference
+  -> forbidden inference
+  -> required corroboration
+  -> contradiction
+  -> verdict or insufficient_evidence
+```
+
+| Case / 案例 | Bounded claim / 有界结论 | Lower-level decision / 底层能力结论 |
+| --- | --- | --- |
+| PyTorch #196968 / proposed #197232 | a peer dump request existed; rank 1 remained present while its legacy Flight Recorder producer was unavailable during teardown; missing dump did not prove missing participation / peer dump request 确实存在；rank 1 仍在 teardown 中存活，但 dump producer 已不可用；缺 dump 不能证明未参与 | lifecycle relation may require one minimal stage probe, but only after PyStack, Flight Recorder and NCCL RAS are shown insufficient / 生命周期关系可能需要一个最小 stage probe，但必须先证明成熟工具不足 |
+| vLLM #53859 / proposed #53883 | one real EngineCore was alive and health-responsive while admitted work stopped; proposed fix restored liveness with four dropped batches / 真实 EngineCore 存活且 health 2xx，但已进入的请求停止推进；提议修复恢复活性并丢弃四个 batch | no native fact is required for the verdict; native state is attribution only / 主 verdict 不需要 native fact；底层状态只做归因 |
+| PyTorch #196996 | the mixed-gradient-dtype correctness failure reproduces on one GPU and can present as a distributed hang when ranks diverge / mixed-gradient-dtype correctness failure 可单卡复现，并可在 rank 分歧时表现为分布式 hang | existing structured dtype and assertion evidence is sufficient; no generic native probe / 现有 dtype 与 assertion 结构化证据已足够，不需要通用 native probe |
+
+## Decisions to approve / 需要确认的设计决策
+
+### 1. Verdict evidence and attribution remain separate
+
+Native stacks, GIL state, NCCL RAS, lifecycle stages, and hardware context do
+not change the v0.2 verdict. They may produce a separately versioned
+attribution or reduce attribution coverage.
+
+native stack、GIL state、NCCL RAS、lifecycle stage 和硬件上下文不改变 v0.2
+verdict。它们只能产生独立版本的 attribution，或降低 attribution coverage。
+
+### 2. Block 5 starts with a sidecar
+
+Capability experiments do not modify `observations.json`, `summary.json`, the
+field-role registry, or `derive_verdict()`. Any future integration requires a
+new schema review and mutation tests.
+
+能力实验不修改 `observations.json`、`summary.json`、field-role registry 或
+`derive_verdict()`。未来如需集成，必须单独完成新 schema 审查和 mutation tests。
+
+### 3. Producer failure is an observation, not target state
+
+`unsupported`, `permission_denied`, `timed_out`, `feature_disabled`,
+`empty_output`, and `execution_failed` are terminal producer outcomes. None
+means that the target thread, rank, or communicator was absent.
+
+上述失败类型都是 producer 的终态，不能被解释成目标 thread、rank 或 communicator
+不存在。
+
+### 4. Native interpretation is exact and version constrained
+
+Rules are data with explicit platform, producer, PyTorch/vLLM/NCCL, topology,
+and ordered-frame constraints. An unmatched input emits `unknown`; there is no
+nearest-match or confidence-based fallback.
+
+规则以数据表达，并带 platform、producer、PyTorch/vLLM/NCCL、topology 和有序 frame
+约束。未匹配输入输出 `unknown`，不做 nearest-match，也不使用模糊 confidence 回退。
+
+### 5. Mature producers are evaluated before source probes
+
+The order is PyStack, retained Flight Recorder evidence, and NCCL RAS where the
+installed version supports it. A C++ probe is admitted only for a closed
+lifecycle transition none of them can expose.
+
+顺序是 PyStack、已有 Flight Recorder evidence，以及版本支持时的 NCCL RAS。只有它们
+都无法暴露一个关闭生命周期转换时，才允许 C++ probe。
+
+### 6. Only #196968 currently has a probe candidate
+
+The candidate fact is the order among dump-responder stop, communicator
+destruction start/completion, peer request observation, and dump completion.
+#53859 and #196996 do not pass the probe admission gate.
+
+当前唯一候选是 dump responder stop、communicator destruction start/complete、
+peer request observation 与 dump completion 的顺序。#53859 与 #196996 不满足
+probe gate。
+
+### 7. Healthy/fault pairs are mandatory
+
+A frame or stage seen in both healthy and fault windows cannot be the sole
+discriminator. Block 5 must retain paired observations using the same producer
+and applicable version family.
+
+healthy 与 fault window 都出现的 frame/stage 不能单独作为判据。Block 5 必须用同一
+producer 和适用版本族保留成对观察。
+
+### 8. Capture flow control is part of correctness
+
+One active capture per target, a fixed timeout/output budget, cooldown, and
+per-incident quota prevent a repeated no-progress trigger from repeatedly
+attaching to a wedged process.
+
+每个 target 只允许一个 active capture，并设置固定 timeout/output budget、cooldown 和
+per-incident quota，避免 no-progress 每轮判断都重复 attach 已卡住的进程。
+
+## Claim-by-claim review questions / 逐项审查问题
+
+### #196968
+
+- Does process identity plus a bounded external stack justify participant
+  presence without claiming collective participation? / 稳定进程 identity 与有界外部栈是否
+  足以证明 participant 仍在，同时不推断 collective participation？
+- Are the stage flags sufficient to claim producer lifecycle loss, or is an
+  additional source-native transition required? / 当前 stage flags 是否足以证明 producer
+  生命周期丢失，还是需要额外 source-native transition？
+- Is the missing artifact set demonstrably closed? / 缺失 artifact 的预期集合是否真正封闭？
+- Does any sentence accidentally present #197232 as accepted or merged? / 是否有任何表述
+  把 #197232 提前写成已接受或已合入？
+
+### #53859 / #53883
+
+- Can the verdict be recomputed without reading the stack? It must be yes. /
+  不读取 stack 是否仍能重算 verdict？答案必须是 yes。
+- Is request/service scope explicit wherever progress is discussed? / 所有 progress
+  表述是否明确 request 或 service scope？
+- Are four dropped batches described only as the deterministic cell result, not
+  a production rate? / 四个 dropped batch 是否只被描述为确定性 cell 结果，而非生产率？
+- Is the case consistently described as independent validation? / 是否始终明确这是独立验证？
+
+### #196996
+
+- Does the single-GPU evidence prove the local mechanism without claiming the
+  source of fp32 in the organic run? / 单卡证据是否只证明本地机制，而未声称已解释 organic
+  run 中 fp32 的来源？
+- Does the two-rank result distinguish exact local assertion from peer
+  non-completion? / 双卡结果是否区分本地精确 assertion 与 peer non-completion？
+- Is native capture correctly rejected as unnecessary for the current claim? /
+  是否正确拒绝把 native capture 作为当前 claim 的必要条件？
+
+## Requirements review / 需求说明审查
+
+The requirements document defines fifteen requirements. The load-bearing ones
+for Block 5 are:
+
+需求说明包含十五项要求，其中 Block 5 的关键项是：
+
+- LLR-001/002: stable subject binding and bounded capture / 稳定主体绑定与有界采集；
+- LLR-003/004: mixed Python/native frames and explicit GIL `unknown` / 混合栈与显式
+  GIL `unknown`；
+- LLR-005: typed degraded outcomes / 类型化降级结果；
+- LLR-006/007/008: closed, versioned, producer-independent interpretation / 关闭、
+  带版本约束、与 producer 实现无关的解释；
+- LLR-009/010: lifecycle facts separated from communicator authority / 生命周期事实与
+  communicator 权威来源分离；
+- LLR-011/012: verdict isolation and privacy / verdict 隔离与隐私边界；
+- LLR-013/014: flow control and paired controls / 采集流控与成对控制。
+
+Reject the requirements if they imply a general instrumentation framework or
+if any item cannot be traced to a Block 4 distinction.
+
+如果这些需求暗示建设通用 instrumentation framework，或者某项无法追溯到 Block 4 的
+判定缺口，应拒绝该需求。
+
+## Design review / 设计说明审查
+
+The proposed design has four layers: bounded producer acquisition, common
+normalization, version-constrained attribution, and the unchanged v0.2
+verifier. Block 5 writes an experimental sidecar and displays attribution beside
+the verdict; the two are never merged.
+
+设计分为四层：有界 producer acquisition、通用 normalization、带版本约束的
+attribution，以及保持不变的 v0.2 verifier。Block 5 写 experimental sidecar，并把
+attribution 与 verdict 并列展示，两者不合并。
+
+The most important falsification tests are:
+
+最重要的反证测试是：
+
+1. two producer implementations with identical normalized facts yield identical
+   attribution / 两个实现对等的 producer 产生相同 attribution；
+2. version or frame mismatch yields `unknown` / 版本或 frame 不匹配输出 `unknown`；
+3. removing native evidence cannot change a sufficient v0.2 verdict / 删除 native
+   evidence 不能改变已充分成立的 v0.2 verdict；
+4. invalid lifecycle order fails verification / 非法 lifecycle 顺序验证失败；
+5. public output rejects raw frames, paths, stderr, arguments, and addresses /
+   public output 拒绝 raw frame、路径、stderr、参数与地址；
+6. repeated triggers respect occupancy and cooldown / 重复 trigger 遵守 occupancy 与
+   cooldown。
+
+## Deliberate non-deliverables / 本 Block 明确不交付
+
+- no PyStack adapter implementation / 不实现 PyStack adapter；
+- no C++ source probe / 不增加 C++ probe；
+- no v0.2 schema or verdict change / 不修改 v0.2 schema 或 verdict；
+- no native root-cause classifier / 不建设 native 根因分类器；
+- no DCGM/NVML collector / 不增加 DCGM/NVML collector；
+- no new issue or experiment area / 不新增 issue 或实验领域；
+- no publication of the #196968 full case study / 不发布 #196968 完整 case study。
+
+## Acceptance checklist / 验收清单
+
+- [ ] All three cases have subject, interval, producer, contradiction, and
+      insufficient-evidence paths / 三案均包含主体、窗口、producer、反证和证据不足路径；
+- [ ] #53859/#53883 remains independent validation / 保持独立验证定位；
+- [ ] #197232 remains an open proposed fix pending explicit outcome / 在明确结果前保持
+      open proposed fix 表述；
+- [ ] only #196968 retains a possible probe candidate / 只有 #196968 保留 probe 候选；
+- [ ] native evidence cannot mutate the v0.2 verdict / native evidence 不能改变 v0.2
+      verdict；
+- [ ] `unknown` and typed producer failure are terminal valid results / `unknown` 与
+      类型化 producer failure 是合法终态；
+- [ ] every future capability points to a named Block 4 row / 未来每项能力均能指向
+      Block 4 的具体行；
+- [ ] review approval authorizes Block 5 capability checks only, not integration
+      / review 通过只授权 Block 5 capability check，不授权产品集成。
+
+## Review commands / 审查命令
+
+```bash
+git diff --check
+python -m unittest discover -s tests -v
+python -m compileall -q src tests
+```
+
+Local verification on 2026-09-21: 210 tests passed, 2 platform-specific tests
+skipped; `compileall`, `git diff --check`, and relative-link resolution for the
+Block 4 review set passed.
+
+2026-09-21 本地验证：210 个测试通过，2 个平台相关测试跳过；`compileall`、
+`git diff --check` 以及 Block 4 review 文档集合的相对链接解析均通过。
+
+This block is documentation-only. Runtime tests are regression checks, not
+evidence that the new native design has been implemented.
+
+本 Block 只有文档变化。运行测试只用于回归检查，不代表 native design 已经实现。

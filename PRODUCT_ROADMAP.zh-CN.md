@@ -97,6 +97,14 @@ observation
   -> verdict or insufficient_evidence
 ```
 
+Block 4 已将三案固定为
+[`docs/EVIDENCE_TO_CLAIM_BLOCK4.md`](docs/EVIDENCE_TO_CLAIM_BLOCK4.md)，并从剩余
+判定缺口反推
+[`docs/LOW_LEVEL_CAPABILITY_REQUIREMENTS.md`](docs/LOW_LEVEL_CAPABILITY_REQUIREMENTS.md)
+和 [`docs/NATIVE_EVIDENCE_DESIGN.md`](docs/NATIVE_EVIDENCE_DESIGN.md)。该结果只完成
+claim 与 capability contract；PyStack/NCCL RAS capability check 和任何最小 probe
+仍属于后续阶段。
+
 ### E1 通过条件
 
 - 三个案例均列出主体、时间窗口、producer 和反证；
