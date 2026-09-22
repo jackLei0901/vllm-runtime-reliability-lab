@@ -96,6 +96,13 @@ release the held marker between producers. The adapter output directory and
 runtime identity fields are supplied through its closed required environment.
 Its file digest and exact environment values are part of the run manifest.
 
+For C0, the same runner uses the Stage-B-only `--capture-control-stack` opt-in
+to invoke that adapter after health and EngineCore identity are bound but before
+the control request starts. This is required under Yama scope 1: the attach
+producer must be a descendant of the EngineCore-authorized campaign process.
+An attach launched independently by a login-shell watcher is not an admissible
+substitute, even when it targets the same PID and start ticks.
+
 A timed-out or unavailable producer, identity change, released hold, output
 budget exhaustion, or failed cleanup makes the cell `not_scorable`. It is not
 retried inside the same result directory.
