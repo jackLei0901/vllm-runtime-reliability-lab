@@ -1,7 +1,9 @@
 # Block 5 native capability run
 
 Status: Stage A real-producer smoke passed on Linux CPU; the first Stage B GPU
-entry stopped fail-closed at the retained build-identity gate.
+entry stopped fail-closed at the retained build-identity gate. The retained
+route is closed under the currently available artifacts, and a Stage B v2
+reviewed-baseline contract is prepared but not authorized for execution.
 
 This block evaluates whether existing attach tools can supply the lower-level
 facts admitted by Block 4. It does not add native state to the v0.2 verdict,
@@ -110,6 +112,17 @@ public preflight result is
 Real Stage B still requires either the original frozen dependency pool or a
 newly reviewed environment identity before the #53859 healthy/fault pair can
 run. Stage C remains gated behind Stage B and the reviewed join contract.
+
+The environment decision and next contract are recorded separately:
+
+- [`STAGE_B_IDENTITY_POSTMORTEM.md`](STAGE_B_IDENTITY_POSTMORTEM.md) explains
+  why matching distribution versions did not restore the reviewed identity;
+- [`../experiments/native-evidence-capability/STAGE_B_V2_PREREGISTRATION.md`](../experiments/native-evidence-capability/STAGE_B_V2_PREREGISTRATION.md)
+  freezes the permitted claims, required artifacts, C0/F1 cells, and stop rules
+  for a new reviewed baseline;
+- [`MATCHING_VERSIONS_ARE_NOT_RUNTIME_IDENTITY.md`](MATCHING_VERSIONS_ARE_NOT_RUNTIME_IDENTITY.md)
+  and its [Chinese version](MATCHING_VERSIONS_ARE_NOT_RUNTIME_IDENTITY.zh-CN.md)
+  are publication drafts, not additional experimental evidence.
 
 ## Review commands
 
