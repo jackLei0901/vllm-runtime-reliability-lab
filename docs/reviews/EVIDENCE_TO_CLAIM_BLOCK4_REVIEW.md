@@ -73,6 +73,28 @@ resolves them as follows:
    `jsonschema`, and the absent `py-spy` executable, and the review command
    installs the development extra / 测试数量补充完整环境与 dev-extra 前提。
 
+A follow-up review added four contract corrections and two test/CI notes:
+
+后续 review 又补充了四项 contract 修正和两项 test/CI 说明：
+
+1. `permission_denied` is execution-only; Yama and other preflight permission
+   hints are provenance and cannot gate attach / `permission_denied` 只能来自实际
+   execution，Yama 等预检信息不阻止 attach；
+2. opt-out is the explicit pair `not_requested × disabled`, with no raw-output
+   digest / opt-out 使用显式 pair，且不存在 raw-output digest；
+3. sequential producer comparison is bracketed by a same-tool stability
+   control; instability terminates the comparison without a claim / 顺序双工具对照先做
+   同工具稳定性控制，不稳定时不产生 interchangeability 结论；
+4. cross-tool acceptance compares applicable rule predicates and `blocked_in`,
+   not normalized frame-sequence equality / 跨工具验收比较 rule predicate 与
+   `blocked_in`，不要求 frame sequence 完全相同；
+5. CPython 3.14.2 is explicitly a local regression run outside the release CI
+   matrix / CPython 3.14.2 明确属于 release CI matrix 之外的本地回归；
+6. `test_external_schema` now skips its jsonschema-dependent class when the dev
+   extra is absent, so `test_external_writer` no longer fails transitively while
+   importing its shared fixture / 缺少 dev extra 时 external-schema 测试按类 skip，
+   external-writer 不再因共享 fixture import 连带报错。
+
 ## Decisions to approve / 需要确认的设计决策
 
 ### 1. Verdict evidence and attribution remain separate
@@ -95,16 +117,20 @@ new schema review and mutation tests.
 
 ### 3. Attempt stage and outcome are separate
 
-Coordinator decisions (`capture_occupied`, `rate_limited`), preflight results
+Explicit opt-out is `not_requested × disabled`. Coordinator decisions
+(`capture_occupied`, `rate_limited`), preflight results
 (`unsupported`, `binary_missing`, `feature_disabled`), and execution outcomes
 (`produced`, `timeout`, `permission_denied`, `empty_output`,
 `execution_failed`) use disjoint stage/outcome pairs. Only the execution stage
 means the producer was invoked. None of the failure pairs means that the target
-thread, rank, or communicator was absent.
+thread, rank, or communicator was absent. Preflight permission hints are
+provenance only; only execution may return `permission_denied`. Raw-output
+digests are null whenever execution did not occur.
 
-coordinator decision、preflight result 与 execution outcome 使用互斥的
-stage/outcome pair。只有 execution 表示 producer 已实际调用；任何失败 pair 都不能被
-解释成目标 thread、rank 或 communicator 不存在。
+显式 opt-out 使用 `not_requested × disabled`。coordinator decision、preflight result
+与 execution outcome 使用互斥 pair。只有 execution 表示 producer 已实际调用并可返回
+`permission_denied`；preflight 权限信息只属于 provenance。未执行时 raw-output digest
+必须为 null，任何失败 pair 都不能被解释成目标不存在。
 
 ### 4. Native interpretation is exact and version constrained
 
@@ -233,10 +259,12 @@ The most important falsification tests are:
 
 最重要的反证测试是：
 
-1. the real `py-spy` and PyStack paths capture one stable controlled target;
-   overlapping facts normalize identically and extra facts only increase
-   coverage / 真实 `py-spy` 与 PyStack 采集同一稳定受控目标；重叠事实标准化一致，额外
-   事实只能增加 coverage；
+1. sequential real-producer captures are first bracketed by a same-tool
+   stability control; after it passes, `py-spy` and PyStack must satisfy the
+   same rule predicates and emit the same `blocked_in`, while frame sequences
+   and coverage may differ / 顺序采集先通过同工具前后夹持的稳定性控制；通过后真实
+   `py-spy` 与 PyStack 必须满足相同 rule predicate 并输出相同 `blocked_in`，但 frame
+   sequence 与 coverage 可以不同；
 2. version or frame mismatch yields `unknown` / 版本或 frame 不匹配输出 `unknown`；
 3. removing native evidence cannot change a sufficient v0.2 verdict / 删除 native
    evidence 不能改变已充分成立的 v0.2 verdict；
@@ -294,14 +322,26 @@ Local verification on 2026-09-21 used Windows 11
 was installed. In that environment, 210 tests passed and 2 platform-specific
 tests skipped. `compileall`, `git diff --check`, and relative-link resolution
 for the Block 4 review set passed. A clean checkout without the development
-dependencies may fail test-module import and must not be compared with these
-counts as if the environments were equivalent.
+dependencies may skip jsonschema-dependent tests, so its count must not be
+compared with this run as if the environments were equivalent. CPython 3.14.2
+is outside the release CI matrix, which currently covers 3.10, 3.12, and 3.13;
+this is a local regression result, not an added support claim.
+
+A second run used CPython 3.14.2 with `-S` and `PYTHONPATH=src;tests` to simulate
+the absence of site packages, including `jsonschema`. It ran all 210 discovered
+tests with 14 explicit skips and no import errors; the external-writer tests
+continued to run rather than being skipped transitively.
 
 2026-09-21 本地验证环境为 Windows 11 `10.0.26200`、CPython `3.14.2`、
 `jsonschema 4.26.0`，未安装 `py-spy` executable。该环境中 210 个测试通过，2 个
 平台相关测试跳过；`compileall`、`git diff --check` 和相对链接检查通过。未安装开发
-依赖的 clean checkout 可能在 test module import 阶段失败，不能把其测试数量与本结果
-视为同环境比较。
+依赖的 clean checkout 会跳过依赖 jsonschema 的测试，不能把其测试数量与本结果视为
+同环境比较。CPython 3.14.2 不在 release CI 的 3.10/3.12/3.13 matrix 内，因此这里只是
+本地回归结果，不新增支持声明。
+
+另一次使用 CPython 3.14.2、`-S` 和 `PYTHONPATH=src;tests` 模拟无 site-packages
+环境：仍发现并运行 210 个测试，其中 14 个显式 skip，没有 import error；
+external-writer 测试继续执行，没有被传递性跳过。
 
 This block is documentation-only. Runtime tests are regression checks, not
 evidence that the new native design has been implemented.

@@ -85,6 +85,9 @@ The record shall separate where an attempt stopped from why it stopped. The
 closed pair is:
 
 ```text
+attempt_stage = not_requested
+  outcome = disabled
+
 attempt_stage = coordinator
   outcome = capture_occupied | rate_limited
 
@@ -98,16 +101,25 @@ attempt_stage = execution
 
 The producer is invoked only for `attempt_stage = execution`. Coordinator and
 preflight outcomes therefore make no statement about attach behavior or target
-state. The verifier shall reject every stage/outcome pair outside this matrix.
+state. `not_requested × disabled` records explicit operator opt-out and is not
+missing evidence from a requested capture. The verifier shall reject every
+stage/outcome pair outside this matrix.
+
+Permission is established only by an execution attempt. Preflight observations
+such as Linux Yama `ptrace_scope` are provenance and shall not gate the producer
+or emit `permission_denied`: a target may grant scoped authorization even when
+the system setting looks restrictive.
 
 The existing v0.2 stack adapter has a separate stack state and the narrower
 flat `error_kind` set `binary_missing | permission_denied | timeout |
 empty_output | execution_failed`. Block 5 may evaluate the staged experimental
 shape, but must not silently reinterpret or rewrite the frozen v0.2 schema.
 
-**Acceptance:** every capability check has exactly one valid stage/outcome pair;
+**Acceptance:** every capture plan has exactly one valid stage/outcome pair;
 `capture_occupied` cannot be confused with an attach attempt, and missing
 output never becomes a negative target-state observation.
+`raw_output_sha256` is null for `not_requested`, coordinator, and preflight;
+`execution × produced` requires a non-null digest.
 
 ### LLR-006 — closed native attribution vocabulary
 
@@ -147,11 +159,17 @@ Two tools that normalize to the same observation shall produce the same
 attribution. A tool with less information may only produce a weaker attribution
 or `unknown`.
 
-**Acceptance:** mock vectors prove only evaluator purity. Block 5 must also run
-the shipped `py-spy` path and candidate PyStack path against the same stable,
-controlled target state. Their overlapping facts must normalize identically;
-information available from only one tool may only increase coverage or leave a
-field `unknown`. No tool-specific verifier branch is allowed.
+**Acceptance:** mock vectors prove only evaluator purity. The real comparison
+uses a deterministic held target and sequential captures because the occupancy
+rule forbids simultaneous attach. A same-tool capture before and after the
+other tool must satisfy the same rule predicates and emit the same
+`blocked_in`; otherwise the experiment reports `target_not_stable` and makes no
+interchangeability claim. If the stability control passes, both tools must
+satisfy the same applicable rule predicates and emit the same `blocked_in`.
+Their normalized frame sequences need not be identical, and tool-only detail
+may change declared coverage. No tool-specific verifier branch is allowed.
+`target_not_stable` is a pairing-level experiment result, not a producer
+stage/outcome code.
 
 ### LLR-009 — lifecycle transition evidence
 
@@ -296,8 +314,10 @@ implement the expensive probe before that upstream gate closes.
 - PyStack capability is recorded for mixed frames, GIL state, attach permission,
   timeout, empty output, and subject binding;
 - each result states which Block 4 row it strengthens;
-- the real `py-spy` and PyStack paths are compared on the same stable controlled
-  target, and overlapping normalized observations are producer-independent;
+- sequential `py-spy`/PyStack captures are bracketed by a same-tool stability
+  control on a deterministic held target;
+- after that control passes, both tools satisfy the same rule predicates and
+  emit the same `blocked_in`, while frame sequences and coverage may differ;
 - unsupported and permission-denied paths are first-class results;
 - the review concludes either `existing_tools_sufficient` or names exactly one
   irreducible lifecycle fact for probe design;

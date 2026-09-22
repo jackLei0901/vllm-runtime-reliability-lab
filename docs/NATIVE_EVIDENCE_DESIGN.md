@@ -124,6 +124,13 @@ and classified as non-decisional provenance. Evaluators must not branch on
 them. The current v0.2 optional stack adapter invokes `py-spy`; evaluating
 PyStack in Block 5 does not silently replace that released adapter.
 
+For `not_requested`, coordinator, and preflight stages,
+`raw_output_sha256` is required to be `null` because the producer was not
+invoked. For execution, it is non-null when output exists; `produced` requires
+a non-null digest. `not_requested × disabled` is the explicit opt-out record.
+Yama scope and similar permission hints are provenance only; only an actual
+execution attempt may return `permission_denied`.
+
 ### 3.2 Normalized stack facts
 
 Private normalization may produce multiple thread facts:
@@ -299,11 +306,19 @@ without rebuilding vLLM or PyTorch. The experiment records:
 Success means PyStack supplies a normalized fact required by a Block 4 row. It
 does not mean PyStack becomes a mandatory dependency.
 
-The same controlled, stable target state shall also be captured through the
-released `py-spy` path. The comparison is performed at the normalizer boundary:
-overlapping facts must agree, while PyStack-only native or GIL facts may only
-increase coverage. Mock producers remain useful for evaluator tests but do not
-satisfy producer-interchangeability acceptance.
+The released `py-spy` path and PyStack necessarily attach sequentially. The
+target is therefore held in a deterministic blocked state, and one tool
+brackets the other with a repeat capture, for example
+`py-spy A -> PyStack B -> py-spy A2`. A/A2 must satisfy the same rule predicates
+and emit the same `blocked_in`; otherwise the pairing result is
+`target_not_stable` and says nothing about interchangeability.
+
+If the stability control passes, comparison occurs at the rule-match level:
+both tools must satisfy the same required predicates and emit the same
+`blocked_in`, with coverage declared separately. Their normalized frame
+sequences are not required to be identical because unwinders may differ in
+inlined-frame recovery and demangling. Mock producers remain useful for
+evaluator tests but do not satisfy interchangeability acceptance.
 
 ### Flight Recorder
 
@@ -352,7 +367,8 @@ producer-output normalization because no producer output exists.
 | Test | Required result |
 | --- | --- |
 | same normalized facts from mock producer A and B | identical evaluator output; evaluator purity only |
-| real `py-spy` and PyStack captures of one stable controlled target | overlapping facts normalize identically; extra facts only increase coverage |
+| same-tool captures bracketing the other producer on a held target | same rule predicates and `blocked_in`, or `target_not_stable` with no interchangeability claim |
+| real `py-spy` and PyStack captures after stability passes | same applicable rule predicates and `blocked_in`; frame sequences may differ; coverage is explicit |
 | producer B omits GIL state | same blocked location, reduced coverage, GIL `unknown` |
 | target-runtime version outside rule range | `blocked_in = unknown` |
 | frame shape unmatched | `blocked_in = unknown` |

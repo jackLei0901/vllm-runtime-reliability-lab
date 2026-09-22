@@ -2,7 +2,11 @@ import json
 import unittest
 from pathlib import Path
 
-from jsonschema import Draft202012Validator, FormatChecker
+try:
+    from jsonschema import Draft202012Validator, FormatChecker
+except ImportError:  # The project declares jsonschema in its dev extra.
+    Draft202012Validator = None
+    FormatChecker = None
 
 from dfxlab.external_schema import (
     ExternalIncidentArtifact,
@@ -46,6 +50,7 @@ def artifact() -> ExternalIncidentArtifact:
     )
 
 
+@unittest.skipIf(Draft202012Validator is None, "jsonschema dev extra is unavailable")
 class ExternalSchemaTest(unittest.TestCase):
     def test_valid_artifact(self) -> None:
         payload = artifact().to_dict()
