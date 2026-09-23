@@ -181,12 +181,19 @@ For #196968, the required reusable fact is the relation among:
 
 ```text
 dump_responder_active
-dump_responder_stopped
+dump_responder_stop_requested
 communicator_destroy_started
 communicator_destroy_completed
 peer_dump_request_observed
 dump_completed
 ```
+
+`dump_responder_active` means the default process group's monitor has entered
+dump-signal polling with the feature enabled; configuration alone is not an
+observation. `dump_responder_stop_requested` records the call that requests
+monitor termination, not thread exit. The relative order of that request and
+communicator destruction differs between unpatched and proposed-fix arms and
+must be constrained by source-versioned rule data, not a global invariant.
 
 Each transition shall be process/rank bound and ordered within one monotonic or
 logical sequence domain. Free-text logging is insufficient for a public claim.

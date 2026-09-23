@@ -34,15 +34,14 @@ PAIRING_RESULTS = {
 NOT_SCORABLE_REASONS = {"no_admitted_rule", "unusable_capture"}
 LIFECYCLE_STAGES = {
     "dump_responder_active",
-    "dump_responder_stopped",
+    "dump_responder_stop_requested",
     "communicator_destroy_started",
     "communicator_destroy_completed",
     "peer_dump_request_observed",
     "dump_completed",
 }
 LIFECYCLE_ORDER = (
-    ("dump_responder_active", "dump_responder_stopped"),
-    ("dump_responder_stopped", "communicator_destroy_started"),
+    ("dump_responder_active", "dump_responder_stop_requested"),
     ("communicator_destroy_started", "communicator_destroy_completed"),
     ("peer_dump_request_observed", "dump_completed"),
 )
@@ -286,19 +285,21 @@ def _rule_matches(
 ) -> bool:
     _closed(rule, {"rule_set_id", "applies_to", "requires", "forbids", "emits"}, "rule")
     _bounded_token(rule["rule_set_id"], "rule-set id")
-    applies = _closed(
-        rule["applies_to"],
-        {
-            "producer_kind",
-            "platform",
-            "vllm_versions",
-            "pytorch_versions",
-            "pytorch_backends",
-            "nccl_versions",
-            "topologies",
-        },
-        "rule applies_to",
-    )
+    applies_keys = {
+        "producer_kind",
+        "platform",
+        "vllm_versions",
+        "pytorch_versions",
+        "pytorch_backends",
+        "nccl_versions",
+        "topologies",
+    }
+    if (
+        isinstance(rule["applies_to"], dict)
+        and rule["applies_to"].get("producer_kind") == "lifecycle_stage_flags"
+    ):
+        applies_keys.add("pytorch_source_revisions")
+    applies = _closed(rule["applies_to"], applies_keys, "rule applies_to")
     if applies["producer_kind"] not in {
         "stack_snapshot",
         "flight_recorder",
@@ -320,6 +321,15 @@ def _rule_matches(
             raise NativeEvidenceError(f"empty rule constraint: {name}")
         for value in values:
             _bounded_token(value, f"rule {name}")
+    if applies["producer_kind"] == "lifecycle_stage_flags":
+        revisions = applies["pytorch_source_revisions"]
+        if not isinstance(revisions, list) or not revisions:
+            raise NativeEvidenceError("empty rule source revision constraint")
+        for revision in revisions:
+            if not isinstance(revision, str) or not re.fullmatch(
+                r"[0-9a-f]{40}", revision
+            ):
+                raise NativeEvidenceError("invalid rule source revision")
     if applies["producer_kind"] != capture["producer"]["kind"]:
         return False
     if applies["platform"] != capture["producer"]["platform"]:
@@ -334,12 +344,17 @@ def _rule_matches(
     for rule_key, target_key in target_keys.items():
         if target.get(target_key) not in applies[rule_key]:
             return False
+    if (
+        applies["producer_kind"] == "lifecycle_stage_flags"
+        and target.get("pytorch_source_revision")
+        not in applies["pytorch_source_revisions"]
+    ):
+        return False
 
-    requires = _closed(
-        rule["requires"],
-        {"ordered_frame_classes", "lifecycle_stages"},
-        "rule requires",
-    )
+    requires_keys = {"ordered_frame_classes", "lifecycle_stages"}
+    if applies["producer_kind"] == "lifecycle_stage_flags":
+        requires_keys.add("lifecycle_order")
+    requires = _closed(rule["requires"], requires_keys, "rule requires")
     forbids = _closed(rule["forbids"], {"lifecycle_stages"}, "rule forbids")
     for values in (
         requires["ordered_frame_classes"],
@@ -352,6 +367,21 @@ def _rule_matches(
             _bounded_token(value, "rule predicate")
     frame_requirements = requires["ordered_frame_classes"]
     lifecycle_requirements = requires["lifecycle_stages"]
+    lifecycle_order = requires.get("lifecycle_order", [])
+    if not isinstance(lifecycle_order, list):
+        raise NativeEvidenceError("invalid rule lifecycle order")
+    seen_pairs = set()
+    for pair in lifecycle_order:
+        if (
+            not isinstance(pair, list)
+            or len(pair) != 2
+            or any(stage not in LIFECYCLE_STAGES for stage in pair)
+            or pair[0] == pair[1]
+            or tuple(pair) in seen_pairs
+            or not set(pair) <= set(lifecycle_requirements)
+        ):
+            raise NativeEvidenceError("invalid rule lifecycle order")
+        seen_pairs.add(tuple(pair))
     if not frame_requirements and not lifecycle_requirements:
         raise NativeEvidenceError("rule has no required predicate")
     if frame_requirements and lifecycle_requirements:
@@ -375,8 +405,16 @@ def _rule_matches(
     stages = {
         fact["stage"] for fact in observation["lifecycle_facts"] if fact["observed"]
     }
-    return set(requires["lifecycle_stages"]) <= stages and not (
+    if not set(lifecycle_requirements) <= stages or (
         set(forbids["lifecycle_stages"]) & stages
+    ):
+        return False
+    sequences = {
+        fact["stage"]: fact["logical_sequence"]
+        for fact in observation["lifecycle_facts"]
+    }
+    return all(
+        sequences[before] < sequences[after] for before, after in lifecycle_order
     )
 
 
@@ -392,19 +430,25 @@ def _binding_digest(subject: dict[str, Any]) -> str:
 
 
 def validate_target_runtime(target: dict[str, Any]) -> dict[str, Any]:
-    _closed(
-        target,
-        {
-            "vllm_version",
-            "pytorch_version",
-            "pytorch_backend",
-            "nccl_version",
-            "topology",
-        },
-        "target runtime",
-    )
-    for name, value in target.items():
+    base_keys = {
+        "vllm_version",
+        "pytorch_version",
+        "pytorch_backend",
+        "nccl_version",
+        "topology",
+    }
+    if not isinstance(target, dict) or set(target) not in (
+        base_keys,
+        base_keys | {"pytorch_source_revision"},
+    ):
+        raise NativeEvidenceError("target runtime shape changed")
+    for name in base_keys:
+        value = target[name]
         _bounded_token(value, f"target {name}")
+    if "pytorch_source_revision" in target:
+        revision = target["pytorch_source_revision"]
+        if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+            raise NativeEvidenceError("invalid target source revision")
     return target
 
 

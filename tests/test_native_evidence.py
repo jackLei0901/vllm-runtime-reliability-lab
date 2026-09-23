@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import json
 import unittest
+from pathlib import Path
 
 from dfxlab.native_evidence import (
     NOT_SCORABLE_REASONS,
@@ -10,6 +12,7 @@ from dfxlab.native_evidence import (
     compare_capture_triplet,
     evaluate_attribution,
     validate_capture,
+    validate_observation,
 )
 
 DIGEST = hashlib.sha256(b"raw stack").hexdigest()
@@ -135,6 +138,31 @@ class NativeCaptureContractTest(unittest.TestCase):
 
 
 class NativeAttributionTest(unittest.TestCase):
+    def test_published_stage_b_rule_keeps_legacy_stack_shape(self) -> None:
+        path = (
+            Path(__file__).resolve().parents[1]
+            / "experiments"
+            / "native-evidence-capability"
+            / "stage_b_queue_wait_rule.json"
+        )
+        raw = path.read_bytes()
+        self.assertEqual(
+            "9c2612d3171e150c9a8fdd910ca3772315915af18bdbead582244330284c958f",
+            hashlib.sha256(raw).hexdigest(),
+        )
+        published_rule = json.loads(raw)
+        runtime = {
+            "vllm_version": "0.1.dev1+g9935dfceb",
+            "pytorch_version": "2.13.0+cu130",
+            "pytorch_backend": "nccl",
+            "nccl_version": "2.29.7",
+            "topology": "single_gpu",
+        }
+        result = evaluate_attribution(
+            capture(), observation(), runtime, [published_rule]
+        )
+        self.assertEqual("exact", result["rule_match"])
+
     def test_exact_rule_emits_closed_attribution(self) -> None:
         result = evaluate_attribution(capture(), observation(), target(), [rule()])
         self.assertEqual("queue_wait", result["blocked_in"])
@@ -186,22 +214,154 @@ class NativeAttributionTest(unittest.TestCase):
 
     def test_invalid_lifecycle_order_fails_closed(self) -> None:
         facts = observation()
+        facts["ordered_frame_classes"] = []
+        facts["execution_domain"] = "unknown"
+        facts["gil_state"] = "unknown"
         facts["lifecycle_facts"] = [
             {
                 "component": "process_group_nccl",
-                "stage": "dump_responder_stopped",
-                "logical_sequence": 2,
+                "stage": "communicator_destroy_completed",
+                "logical_sequence": 1,
                 "observed": True,
             },
             {
                 "component": "process_group_nccl",
                 "stage": "communicator_destroy_started",
-                "logical_sequence": 1,
+                "logical_sequence": 2,
                 "observed": True,
             },
         ]
         with self.assertRaisesRegex(NativeEvidenceError, "lifecycle order"):
-            evaluate_attribution(capture(), facts, target(), [rule()])
+            validate_observation(facts, "lifecycle_stage_flags")
+
+    def test_fix_arm_destroy_before_stop_request_is_valid(self) -> None:
+        facts = observation()
+        facts["ordered_frame_classes"] = []
+        facts["execution_domain"] = "unknown"
+        facts["gil_state"] = "unknown"
+        facts["lifecycle_facts"] = [
+            {
+                "component": "process_group_nccl",
+                "stage": stage,
+                "logical_sequence": sequence,
+                "observed": True,
+            }
+            for sequence, stage in enumerate(
+                (
+                    "dump_responder_active",
+                    "communicator_destroy_started",
+                    "communicator_destroy_completed",
+                    "dump_responder_stop_requested",
+                )
+            )
+        ]
+        self.assertIs(validate_observation(facts, "lifecycle_stage_flags"), facts)
+
+    def test_unpatched_order_is_versioned_rule_predicate(self) -> None:
+        value = capture()
+        value["producer"]["kind"] = "lifecycle_stage_flags"
+        facts = observation()
+        facts["ordered_frame_classes"] = []
+        facts["execution_domain"] = "unknown"
+        facts["gil_state"] = "unknown"
+        facts["lifecycle_facts"] = [
+            {
+                "component": "process_group_nccl",
+                "stage": stage,
+                "logical_sequence": sequence,
+                "observed": True,
+            }
+            for sequence, stage in enumerate(
+                ("dump_responder_stop_requested", "communicator_destroy_started")
+            )
+        ]
+        base_rule = rule()
+        base_rule["applies_to"]["producer_kind"] = "lifecycle_stage_flags"
+        base_rule["applies_to"]["pytorch_versions"] = ["2.13.0"]
+        base_rule["applies_to"]["pytorch_source_revisions"] = ["a" * 40]
+        base_rule["requires"] = {
+            "ordered_frame_classes": [],
+            "lifecycle_stages": [
+                "dump_responder_stop_requested",
+                "communicator_destroy_started",
+            ],
+            "lifecycle_order": [
+                ["dump_responder_stop_requested", "communicator_destroy_started"]
+            ],
+        }
+        base_rule["emits"]["blocked_in"] = "communicator_destruction"
+        base_target = target()
+        base_target["pytorch_source_revision"] = "a" * 40
+        result = evaluate_attribution(value, facts, base_target, [base_rule])
+        self.assertEqual("exact", result["rule_match"])
+        reversed_facts = copy.deepcopy(facts)
+        reversed_facts["lifecycle_facts"][0]["logical_sequence"] = 2
+        reversed_facts["lifecycle_facts"][1]["logical_sequence"] = 1
+        result = evaluate_attribution(value, reversed_facts, base_target, [base_rule])
+        self.assertEqual("unmatched", result["rule_match"])
+        other_version = copy.deepcopy(base_target)
+        other_version["pytorch_version"] = "2.15.0a0+fix"
+        result = evaluate_attribution(value, facts, other_version, [base_rule])
+        self.assertEqual("unmatched", result["rule_match"])
+        other_revision = copy.deepcopy(base_target)
+        other_revision["pytorch_source_revision"] = "b" * 40
+        result = evaluate_attribution(value, facts, other_revision, [base_rule])
+        self.assertEqual("unmatched", result["rule_match"])
+
+    def test_lifecycle_rule_rejects_order_outside_required_stages(self) -> None:
+        value = capture()
+        value["producer"]["kind"] = "lifecycle_stage_flags"
+        facts = observation()
+        facts["ordered_frame_classes"] = []
+        facts["execution_domain"] = "unknown"
+        facts["gil_state"] = "unknown"
+        facts["lifecycle_facts"] = [
+            {
+                "component": "process_group_nccl",
+                "stage": "dump_responder_stop_requested",
+                "logical_sequence": 1,
+                "observed": True,
+            }
+        ]
+        bad = rule()
+        bad["applies_to"]["producer_kind"] = "lifecycle_stage_flags"
+        bad["applies_to"]["pytorch_source_revisions"] = ["a" * 40]
+        bad["requires"] = {
+            "ordered_frame_classes": [],
+            "lifecycle_stages": ["dump_responder_stop_requested"],
+            "lifecycle_order": [
+                ["dump_responder_stop_requested", "communicator_destroy_started"]
+            ],
+        }
+        runtime = target()
+        runtime["pytorch_source_revision"] = "a" * 40
+        with self.assertRaisesRegex(NativeEvidenceError, "rule lifecycle order"):
+            evaluate_attribution(value, facts, runtime, [bad])
+
+    def test_lifecycle_rule_requires_exact_source_revision(self) -> None:
+        value = capture()
+        value["producer"]["kind"] = "lifecycle_stage_flags"
+        facts = observation()
+        facts["ordered_frame_classes"] = []
+        facts["execution_domain"] = "unknown"
+        facts["gil_state"] = "unknown"
+        facts["lifecycle_facts"] = [
+            {
+                "component": "process_group_nccl",
+                "stage": "dump_responder_stop_requested",
+                "logical_sequence": 1,
+                "observed": True,
+            }
+        ]
+        lifecycle_rule = rule()
+        lifecycle_rule["applies_to"]["producer_kind"] = "lifecycle_stage_flags"
+        lifecycle_rule["requires"] = {
+            "ordered_frame_classes": [],
+            "lifecycle_stages": ["dump_responder_stop_requested"],
+            "lifecycle_order": [],
+        }
+        with self.assertRaisesRegex(NativeEvidenceError, "rule applies_to shape"):
+            evaluate_attribution(value, facts, target(), [lifecycle_rule])
 
     def test_ambiguous_rules_fail_closed(self) -> None:
         duplicate = copy.deepcopy(rule())
@@ -222,7 +382,7 @@ class NativeAttributionTest(unittest.TestCase):
 
     def test_single_producer_rule_cannot_mix_provenance(self) -> None:
         mixed = rule()
-        mixed["requires"]["lifecycle_stages"] = ["dump_responder_stopped"]
+        mixed["requires"]["lifecycle_stages"] = ["dump_responder_stop_requested"]
         with self.assertRaisesRegex(NativeEvidenceError, "mixes provenance"):
             evaluate_attribution(capture(), observation(), target(), [mixed])
 
@@ -237,7 +397,7 @@ class NativeAttributionTest(unittest.TestCase):
         facts["lifecycle_facts"] = [
             {
                 "component": "process_group_nccl",
-                "stage": "dump_responder_stopped",
+                "stage": "dump_responder_stop_requested",
                 "logical_sequence": 1,
                 "observed": True,
             }

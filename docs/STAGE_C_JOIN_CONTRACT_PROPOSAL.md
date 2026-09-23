@@ -56,8 +56,7 @@ it does not make a claim about later files.
 
 For the unpatched arm, the retained shutdown marker records that
 `heartbeatMonitor_->stop()` was called, **not** that the monitor thread had
-already exited. The candidate stage name `dump_responder_stopped` must not be
-read as proof of thread exit. Source ordering plus this marker and bounded
+already exited. Source ordering plus this marker and bounded
 non-response can support the missing-producer observation for this run; they
 do not establish the precise exit instant or prove that the responder was
 unavailable at every instant of communicator destruction.

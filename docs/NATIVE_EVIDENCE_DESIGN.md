@@ -187,7 +187,7 @@ Lifecycle facts are distinct from stack classifications:
 ```json
 {
   "component": "process_group_nccl",
-  "stage": "dump_responder_stopped",
+  "stage": "dump_responder_stop_requested",
   "logical_sequence": 3,
   "observed": true
 }
@@ -197,12 +197,21 @@ Closed candidate stages for the #196968 experiment are:
 
 ```text
 dump_responder_active
-dump_responder_stopped
+dump_responder_stop_requested
 communicator_destroy_started
 communicator_destroy_completed
 peer_dump_request_observed
 dump_completed
 ```
+
+`dump_responder_active` records entry into the default process group's enabled
+dump-signal polling loop, not merely a configured option or an inferred live
+thread. `dump_responder_stop_requested` records a termination request; it is
+not a thread-exit event. Only active-before-stop-requested,
+destroy-started-before-destroy-completed, and request-observed-before-dump-
+completed are globally ordered when both events are present. The relative
+order of stop request and communicator destruction belongs in an exact
+source-versioned lifecycle rule.
 
 The evaluator rejects duplicate logical sequence positions, impossible order,
 unknown stages, and identity changes. A lifecycle-stage record contains no
@@ -269,6 +278,21 @@ A rule with neither a required frame predicate nor a required lifecycle
 predicate is invalid rather than universally matching. A Stage A rule may use
 one predicate family only: stack rules cannot require lifecycle stages, and
 lifecycle rules cannot require stack frames.
+
+Existing stack rules retain this exact shape, preserving the published Stage B
+rule digest. A `lifecycle_stage_flags` rule instead requires an additional
+`requires.lifecycle_order` list of `[before, after]` stage pairs. Both stages
+must also appear in that rule's required lifecycle stages, and the rule's
+`applies_to.pytorch_versions` and
+`applies_to.pytorch_source_revisions` must pin the tested build and exact
+40-character source commit; the lifecycle target record must carry the same
+source revision. Stack rules and their target records keep their published
+shape. For the unpatched
+legacy arm only, a reviewed rule may require
+`dump_responder_stop_requested -> communicator_destroy_started`. The proposed
+fix's successful order is different and remains valid at the observation
+layer; no global validator may impose the unpatched order. No Stage C rule is
+admitted by this design text alone.
 
 ### 4.1 Stage C multi-producer join
 
@@ -426,6 +450,8 @@ producer-output normalization because no producer output exists.
 | target-runtime version outside rule allowlist | `blocked_in = unknown` |
 | frame shape unmatched | `blocked_in = unknown` |
 | lifecycle order invalid | verification failure |
+| fix-arm destroy-started and destroy-completed before stop-requested | valid lifecycle observation; no unpatched-order rejection |
+| unpatched stop-requested before destroy-started | matches only an exact source-revision-constrained lifecycle rule |
 | lifecycle facts attached to a stack observation | verification failure |
 | process start identity changes after capture | native binding failure; no `process_missing` claim; v0.2 verdict unchanged |
 | raw path/frame/stderr injected into public sidecar | schema failure |
