@@ -5,12 +5,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = (
-    ROOT
-    / "experiments"
-    / "native-evidence-capability"
-    / "score_stage_b_pair.py"
-)
+SCRIPT = ROOT / "experiments" / "native-evidence-capability" / "score_stage_b_pair.py"
 SPEC = importlib.util.spec_from_file_location("stage_b_pair_scoring", SCRIPT)
 assert SPEC is not None and SPEC.loader is not None
 scoring = importlib.util.module_from_spec(SPEC)

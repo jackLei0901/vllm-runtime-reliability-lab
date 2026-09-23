@@ -10,7 +10,6 @@ from pathlib import Path
 
 from dfxlab.native_producers import linux_start_ticks
 
-
 REQUIRED_ENV = {
     "DFX_STAGE_B_NCCL_VERSION",
     "DFX_STAGE_B_OUTPUT",

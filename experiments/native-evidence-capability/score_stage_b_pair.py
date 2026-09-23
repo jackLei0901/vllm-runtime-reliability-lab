@@ -22,7 +22,9 @@ ANCHORS = {
         r"(?:\bpublish\b.*vllm/distributed/kv_events\.py|"
         r"vllm/distributed/kv_events\.py.*\bin publish\b)"
     ),
-    "python:queue-put": re.compile(r"(?:\bput \(queue\.py:140\)|queue\.py\", line 140, in put)"),
+    "python:queue-put": re.compile(
+        r"(?:\bput \(queue\.py:140\)|queue\.py\", line 140, in put)"
+    ),
     "native:condition-wait": re.compile(r"\bPyThread_acquire_lock_timed\b"),
 }
 RAW_NAMES = {
@@ -81,9 +83,7 @@ def score(
             by_label[label], observation, capture_record["target_runtime"], [rule]
         )
         attributions.append({"label": label, "attribution": attribution})
-    pairing = compare_capture_triplet(
-        *(item["attribution"] for item in attributions)
-    )
+    pairing = compare_capture_triplet(*(item["attribution"] for item in attributions))
     matches = [item["attribution"]["rule_match"] for item in attributions]
     if cell == "control":
         passed = matches == ["unmatched", "unmatched", "unmatched"] and pairing == {

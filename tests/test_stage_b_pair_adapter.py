@@ -4,7 +4,6 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-
 SCRIPT = (
     Path(__file__).parents[1]
     / "experiments"
@@ -38,7 +37,9 @@ class StageBPairAdapterTest(unittest.TestCase):
             adapter.required_environment(values)
 
     @mock.patch.object(adapter, "linux_start_ticks", return_value=None)
-    def test_dead_target_fails_before_output_creation(self, _identity: mock.Mock) -> None:
+    def test_dead_target_fails_before_output_creation(
+        self, _identity: mock.Mock
+    ) -> None:
         values = {name: name.lower() for name in adapter.REQUIRED_ENV}
         with mock.patch.dict(os.environ, values, clear=True):
             self.assertEqual(adapter.main(["dump", "--pid", "17"]), 1)

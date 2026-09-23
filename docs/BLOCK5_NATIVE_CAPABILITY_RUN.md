@@ -86,6 +86,10 @@ define and review an explicit identity/window join whose public result retains
 both source digests. A stack capture cannot carry lifecycle flags, and its raw
 digest cannot vouch for them. Until that review is complete, Stage C is
 non-scorable and its only permitted conclusion is `join_contract_required`.
+The initial, unapproved join proposal is
+[`STAGE_C_JOIN_CONTRACT_PROPOSAL.md`](STAGE_C_JOIN_CONTRACT_PROPOSAL.md).
+The corresponding C++ source-reading exercise is
+[`reviews/C10D_SHUTDOWN_SOURCE_REVIEW.md`](reviews/C10D_SHUTDOWN_SOURCE_REVIEW.md).
 
 ## Current environment result
 
