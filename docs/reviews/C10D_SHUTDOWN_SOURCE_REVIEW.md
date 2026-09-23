@@ -18,10 +18,14 @@ bounded result already recorded in
 2. Shutdown sets `terminateProcessGroup_`, notifies and joins the watchdog
    before communicator destruction (around 1581-1589). The watchdog lifetime
    and peer dump-signal responder lifetime are distinct.
-3. In the fetched unpatched source, shutdown stops the heartbeat monitor
-   immediately after watchdog join, then destroys communicators. Since the
-   default process group's monitor checks the shared dump key, this ordering
-   removes the responder before the potentially blocking destruction window.
+3. In the fetched unpatched source, shutdown calls
+   `heartbeatMonitor_->stop()` immediately after watchdog join, then destroys
+   communicators **without joining the monitor between those operations**.
+   Since the default process group's monitor checks the shared dump key, this
+   ordering requests responder termination before the potentially blocking
+   destruction window. The exact instant the monitor exits, and therefore its
+   availability at every point in that window, remains indeterminate from
+   source ordering alone.
 4. In the proposed branch, `monitorDumpSignalsDuringShutdown()` enables a
    bounded responder only for the default process group when dump-on-timeout
    is enabled (around 1590-1610 and 1821-1835). The loop checks the store,
@@ -39,9 +43,10 @@ bounded result already recorded in
 
 ## Mechanism and alternative explanations
 
-The source establishes an ordering gap in the unpatched legacy backend:
-responder termination is requested before communicator destruction. The
-retained experiment establishes that rank 1 remained present during teardown
+The source establishes an ordering risk in the unpatched legacy backend:
+responder termination is requested before communicator destruction, without
+an intervening monitor join. The retained experiment establishes that rank 1
+remained present during teardown
 and did not produce the requested dump. Joining those claims requires the
 independent identity/window contract in
 [`../STAGE_C_JOIN_CONTRACT_PROPOSAL.md`](../STAGE_C_JOIN_CONTRACT_PROPOSAL.md).
@@ -66,8 +71,9 @@ No new csrc instrumentation is justified by this source reading alone.
 
 这次底层能力建设是对现有 #196968 c10d seam 的 C++ 源码级分析，而非新增 issue。
 关键次序：graceful shutdown 先 finalize/waitReady，再 join watchdog，随后进入
-communicator destruction；未修复版本在 destruction 前要求 heartbeat monitor
-停止，而 default PG 的 peer dump responder 正在该 monitor 中。提议修复只在该窗口
+communicator destruction；未修复版本在 destruction 前请求 heartbeat monitor
+停止，但没有先 join，因此仅凭源码无法确定 responder 在该窗口的精确退出时刻。
+default PG 的 peer dump responder 位于该 monitor 中。提议修复只在该窗口
 保留有界 responder，且不做 Python 栈符号化或 communicator dump。`stop()` 只是
 发出终止信号，不能单凭它断言线程已经退出；外部 Python 栈也不能证明精确卡在
 `ncclCommDestroy`。下一步必须先评审跨 producer 的 identity/window join，不能
