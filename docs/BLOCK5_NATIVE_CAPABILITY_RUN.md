@@ -90,6 +90,11 @@ The initial, unapproved join proposal is
 [`STAGE_C_JOIN_CONTRACT_PROPOSAL.md`](STAGE_C_JOIN_CONTRACT_PROPOSAL.md).
 The corresponding C++ source-reading exercise is
 [`reviews/C10D_SHUTDOWN_SOURCE_REVIEW.md`](reviews/C10D_SHUTDOWN_SOURCE_REVIEW.md).
+The retained-input audit found that the existing #196968 artifacts cannot
+retroactively satisfy that proposal; see
+[`STAGE_C_RETAINED_INPUT_AUDIT_2026-09-23.md`](STAGE_C_RETAINED_INPUT_AUDIT_2026-09-23.md).
+Stage C therefore remains `join_contract_required`, with no retrospective
+join verifier or GPU run authorized by the retained evidence.
 
 ## Current environment result
 

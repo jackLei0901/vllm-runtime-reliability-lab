@@ -3,7 +3,9 @@
 Status: **proposal only**. Stage C remains `join_contract_required`; this
 document does not admit a cross-producer attribution, authorize a C++ probe, or
 change the v0.2 verdict. The target is the existing #196968 two-rank teardown
-case, not a new fault campaign.
+case, not a new fault campaign. The
+[`2026-09-23 retained-input audit`](STAGE_C_RETAINED_INPUT_AUDIT_2026-09-23.md)
+found that existing artifacts cannot retroactively satisfy this proposal.
 
 ## Question and source boundary
 
