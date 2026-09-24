@@ -47,6 +47,8 @@ observations, blocking-stack claim, and measured trade-off from the published
 #53859 campaign.
 
 ```bash
+git clone --branch v0.2.0 --depth 1 https://github.com/jackLei0901/vllm-runtime-reliability-lab.git
+cd vllm-runtime-reliability-lab
 python -m pip install .  # installs distribution vllm-runtime-dfx-lab
 vllm-dfx replay results/vllm-zmq-backpressure-stage1-r3-20260916
 ```

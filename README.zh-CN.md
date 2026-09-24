@@ -58,6 +58,8 @@ fail-closed 重放：校验封闭文件集合、SHA-256、base/fix 身份、prog
 stack 结论和事件丢失代价。
 
 ```bash
+git clone --branch v0.2.0 --depth 1 https://github.com/jackLei0901/vllm-runtime-reliability-lab.git
+cd vllm-runtime-reliability-lab
 python -m pip install .  # 安装 distribution vllm-runtime-dfx-lab
 vllm-dfx replay results/vllm-zmq-backpressure-stage1-r3-20260916
 ```
