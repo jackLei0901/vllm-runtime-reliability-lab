@@ -1,6 +1,13 @@
 # Lab 发展计划
 
 > 2026-09-21 修订：从“扩大采集和部署能力”转向“故障分类、领域解释和可证伪判断”。
+> 2026-09-23 目标更新：成为推理运行时可靠性领域可信赖的贡献者；
+> `v0.2.0` 已发布，以下历史发布门槛保留为审计记录，不再是待办项。
+
+长期目标的可观察证据是：Lab 的可复核结论影响 upstream 决策；别人能复算、
+质疑或沿用证据规则；作者在同一 vLLM runtime 领域持续合入修复、审阅他人 PR
+并维护质量。Stars、功能数量及 Collaborator/committer 头衔都不是选题依据。
+后者若发生，是持续贡献的结果，不是 Lab 单独授予的身份。
 
 ## 1. 定位
 
@@ -59,9 +66,9 @@ Lab 的独立价值按重要性排序：
 
 `unknown` 是合法的终态，不是等待随意补分类的临时错误。
 
-## 4. 当前基线：完成 v0.2，而不是扩展 v0.2
+## 4. 当前基线：维护已发布的 v0.2，而不是扩展产品面
 
-v0.2 的范围已经冻结为：
+已发布 `v0.2.0` 的范围冻结为：
 
 - CPU-only published-result replay；
 - bounded `collect` 与 offline `verify`；
@@ -70,8 +77,10 @@ v0.2 的范围已经冻结为：
 - closed-shape bundle、内容摘要和 fail-closed verdict；
 - #53859/#53883 的归档 base/fix 重放。
 
-发布前只完成版本、干净构建、跨平台 replay transcript、不可变链接和 release hashes。
-PyStack、NCCL RAS、DCGM、通用 trigger bus、部署模板及新的 collector 均不进入 v0.2。
+`v0.2.0` 发布本身已完成；旧 release plan 中未回填的 checklist 不自动视为通过，
+验证细节仍以实际 release 记录为准。后续仅修复可复现的缺陷，不以新功能维持发布
+节奏。PyStack、NCCL RAS、DCGM、通用 trigger bus、部署模板及新的 collector
+均不进入 v0.2。
 
 #196968 case study 继续遵守 #197232 的明确 upstream outcome gate；等待期间不扩张该
 case 的公开结论。
@@ -200,8 +209,9 @@ ambiguous symptom
 
 发布顺序：
 
-1. 发布 v0.2 和 #53859 CPU-only replay；
-2. 发布“Failures that never reach the supervisor”综合文章；
+1. 已发布 v0.2 和 #53859 CPU-only replay；
+2. 已写出“Failures that never reach the supervisor”综合文章；后续传播仍以
+   相关问题中的直接证据为前提；
 3. 只在能提供直接证据的现有 upstream thread 中链接不可变 artifact；
 4. #197232 获得明确结果后发布 Flight Recorder case study；
 5. 若方法形成稳定共识，再考虑将 progress-vs-health 诊断步骤贡献到 upstream 文档。
@@ -228,6 +238,10 @@ ambiguous symptom
 - 至少两个 upstream issue/PR 引用不可变 Lab 证据；
 - 至少一个第三方修复通过 Lab 的 base/fix 或 claim verifier；
 - 至少一个 native-state mapping 经实际案例验证，而非只停留在设计文档。
+- 对他人的相邻 vLLM runtime PR 至少提供一次可核查的实质审阅；被回应的边界、
+  反例或测试建议，比评论数量更重要。
+- 长期观察 maintainer 是否主动在作者未发起的相关问题中征询证据或判断；
+  不通过索取头衔或制造新问题来追求该信号。
 
 ### 方法复用
 
@@ -246,17 +260,14 @@ Stars 只表示传播；可证伪结论、upstream 结果和方法复用才表�
 
 ## 11. 近期执行顺序
 
-1. 完成 v0.2 发布机械项，不增加功能；
-2. 为 bundle 字段建立 decisional/non-decisional 清单及 non-decisional 变异测试；
-3. 为 #196968、#53859 和 #196996 编写 evidence-to-claim/forbidden-inference 表；
-4. 为 taxonomy 写入 category admission gate，并保留终态 `unknown`；
-5. 运行一次 PyStack capability check，记录它能替代和不能替代的事实；
-6. 在可用环境中运行一次 NCCL RAS healthy/fault 对照；版本不支持时记录明确边界；
-7. 使用等价 observation vectors 验证 producer interchangeability；
-8. 基于实际缺口决定是否需要一个最小 C++ shutdown-stage probe；
-9. 只为已经证实且带版本约束的 native classification 增加 verifier test；
-10. 发布综合文章；
-11. 等 #197232 明确结果后完成并发布 case study。
+1. 维护已发布 v0.2 的 replay、verifier 和证据边界；外部反馈优先修复真实复用障碍。
+2. 在现有 vLLM runtime/lifecycle 主线中完成已打开的 upstream 工作，记录合入、
+   明确拒绝或设计结论；不把未审阅 PR 记作 upstream 成果。
+3. 选择与已读代码相邻的他人 PR 做实质审阅：先复现或核对源码，再提出可证伪的
+   边界或测试；不为增加审阅数量写泛泛评论。
+4. 只在已有案例的判断缺口确实需要时完成 PyStack/NCCL RAS capability 对照，
+   并用版本约束、负对照和 `unknown` 限制 native attribution。
+5. #197232 得到明确 upstream 结果后发布 case study；此前只引用已公开且有边界的证据。
 
 这一路线不以“拥有更多 collector”为进展。每一阶段都必须让一个已命名 failure mode
 更可区分、一个错误推断更难发生，或一个结论更容易被第三方反证。

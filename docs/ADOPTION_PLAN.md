@@ -1,10 +1,18 @@
 # Focused adoption plan
 
-The first adoption cycle aims for ten genuine external stars, two external
-replay users, and one external contributor or issue reporter. These are
-distribution signals, not the primary technical score. Upstream outcomes,
-reproducible claims, and reuse of the evidence method rank above adoption
-counts.
+The long-term goal is to become a trusted contributor to inference-runtime
+reliability, especially in the vLLM community. The lab earns that trust when
+its evidence changes an upstream decision, another engineer can challenge or
+reuse its method, and its author helps maintain the same runtime seam over
+time. It does not earn trust merely by adding collectors, cases, or stars.
+
+The first distribution cycle retains its modest targets of ten genuine
+external stars, two external replay users, and one external contributor or
+issue reporter. These are secondary signals. Upstream adoption, reproducible
+claims, substantive review of others' work, and continued maintenance rank
+above adoption counts. vLLM's [governance process](https://docs.vllm.ai/en/latest/governance/process/)
+distinguishes sustained contributions and stewardship from a one-off result;
+this plan is not a claim to committer or area-owner status.
 
 ## Who this is for
 
@@ -57,6 +65,9 @@ Track the following without collecting personal data:
 
 | Signal | Initial target | Counts when |
 | --- | ---: | --- |
+| Upstream outcome | 1 | a lab-originated finding reaches an explicit maintainer conclusion or an adopted fix; an open PR alone does not count |
+| Substantive external review | 1 | a review of someone else's adjacent runtime PR identifies a concrete boundary, test, or correction and receives a technical response |
+| Maintainer-initiated consultation | observe, do not solicit | a maintainer independently asks for evidence or judgment on a related failure the author did not open |
 | External replay users | 2 | a non-owner reports command, platform, and outcome |
 | External contributor/issue reporter | 1 | a useful issue, PR, or evidence-format discussion is opened |
 | Upstream references | 2 | an issue or PR directly links a tagged lab result |
@@ -86,6 +97,12 @@ also be:
 Collector count, metrics volume, and dashboard coverage are not adoption
 goals. Every added field must have a declared decisional or non-decisional
 role, and every new producer must discriminate an already named failure mode.
+
+The lab's GitHub signals and the author's vLLM contribution record are related
+but not interchangeable. A PyTorch fix can demonstrate low-level competence;
+vLLM trust still requires accepted vLLM changes, responsive review, and
+stewardship in a coherent area. Do not cite an independently authored upstream
+result as a lab discovery to make either record look larger.
 
 ## Four-week stop rule
 
