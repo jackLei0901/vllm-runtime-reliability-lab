@@ -114,6 +114,17 @@ Block 4 已将三案固定为
 claim 与 capability contract；PyStack/NCCL RAS capability check 和任何最小 probe
 仍属于后续阶段。
 
+现有案例的有限 fault taxonomy v0 见
+[`docs/FAULT_TAXONOMY_V0_2026-09-24.md`](docs/FAULT_TAXONOMY_V0_2026-09-24.md)；
+#53859 的同案 DFX 消融见
+[`docs/reviews/VLLM_53859_DFX_BASELINE_ABLATION_2026-09-24.md`](docs/reviews/VLLM_53859_DFX_BASELINE_ABLATION_2026-09-24.md)。
+这两份是可反驳的分析基线，不是 issue tracker 的完整 corpus：R3 未保留指标
+时间序列，因此 Prometheus-only 对照仍为 `not scored`。
+允许另行预注册一个固定数量的已关闭 vLLM 可靠性 issue 随机样本，给现有类别
+测覆盖率和 `insufficient_information` 比例；这不等于从样本中不断增设类别，
+也不能仅凭 issue 描述推断某种 DFX 工具在真实部署中未发现故障。具体抽样框、
+随机种子、排除规则和证据限制见上述 taxonomy v0，执行前必须冻结。
+
 ### E1 通过条件
 
 - 三个案例均列出主体、时间窗口、producer 和反证；
@@ -166,6 +177,53 @@ claim 与 capability contract；PyStack/NCCL RAS capability check 和任何最�
   一律输出 `unknown`，禁止 nearest-match；
 - 至少一个分类通过已有案例证明能排除一个竞争解释；
 - 若现成工具已经足够，则明确记录“不需要 probe”的负面设计结论。
+
+### 并行主线 L：在状态所有者处建设 C++ DFX 能力
+
+底层能力不等 taxonomy、推广或 upstream review 结束后才开始。每周为同一条
+已知 runtime seam 保留两个独立的源码/实验工作时段；以证据合同选问题，以真实
+状态所有者选代码层。多进程身份绑定、manifest 和 join 首先是证据关系问题，
+不能为了练 C++ 而将其搬进 vLLM csrc。已有 Flight Recorder、NCCL RAS 或外部
+工具能够给出所需事实时，也不另造 probe。
+
+**L0 — 区分已有的两种 C++ 能力。** #196968/#197232 的
+`ProcessGroupNCCL` 源码状态表、可达性论证和带变异负对照的 CPU litmus 是
+*阅读与推理*能力；shutdown dump responder 的同步协议、锁顺序、失败边界、
+gtest 和真实回归是*实现与验证*能力。将两类证据整理为同一 seam 的审阅包，
+分别写明源码可达、模型断言和真实运行各自证明到哪一步。PR 的合入另记为
+upstream 结果，不阻塞能力训练，也不由现有测试推断补丁已被接受。
+
+**L1 — 审查一个 c10d 可观测性缺口，不预设补丁。** 候选包括 communicator
+failure reason 的结构化/持久化，以及销毁中状态是否真的不可由现有输出表达。
+这些目前只是审查假设，不是已验证的缺陷或授权的新 PR。先固定 PyTorch 源
+版本、查重现有机制及提案、列出两个会被混淆的解释，再用 Flight Recorder、
+NCCL RAS 与外部栈对照。只有存在一个可命名且可验证的状态关系，才设计最小
+关闭字段或回归断言。#197232 在同一 seam 尚未获得实质 reviewer 反馈前，不
+并行提交第二个 c10d 可观测性 PR；等待期间可完成只读审查与本地测试。
+第一项候选的源码审查见
+[`docs/reviews/C10D_COMM_FAILURE_REASON_SOURCE_AUDIT_2026-09-24.md`](docs/reviews/C10D_COMM_FAILURE_REASON_SOURCE_AUDIT_2026-09-24.md)：
+blocking-wait 测试路径把 timeout 保留在 Work exception/log，却没有给后续
+communicator abort 传 reason；只在存储旁增加 enum 无法解决该路径。
+第二项候选的源码审查见
+[`docs/reviews/C10D_COMM_LIFECYCLE_STATE_SOURCE_AUDIT_2026-09-24.md`](docs/reviews/C10D_COMM_LIFECYCLE_STATE_SOURCE_AUDIT_2026-09-24.md)：
+正常 destroy 与失败 abort 在 `isAborted()` 上合并，但销毁中调用该 getter
+会等待 mutex；不能把内存中尚未更新的 flag 写成可并发观察到的“健康”。两项
+审查都尚未证明新 probe 的必要性。
+
+**L2 — 给产出设可证伪门槛。** 至少一条源码状态/顺序不变量、一个正/负对照、
+一个能使断言失败的变异，以及现有 DFX 是否已足够的结论。若事实已可获得，
+提交“无需 probe”的负面设计结果；若事实仍不可获得，先提出可审阅的最小
+变更和 base/fix 方案，再决定是否 upstream。源码阅读不能升级为运行时发生
+过的断言，CPU litmus 不能冒充真实跨 rank 验证。
+
+**独立主线 K — vLLM CUDA/kernel 能力，不记作 Lab DFX 成果。** #55537 的
+dispatch 层约束工作可以作为已有代码入口，但它本身不是 kernel 实现。真正的
+kernel 能力要由一个版本固定的 CUDA/C++ 算子合同、正确性边界、负对照及性能
+或资源取舍证明；等当前 upstream 队列收敛后只选一个相邻任务。该主线服务
+职业目标，不能为了称作 Lab 的 C++ 能力而强行增加 vLLM DFX 埋点。
+
+每个 L 阶段的审阅包固定回答：源提交与适用版本、状态所有者、两个竞争解释、
+关键状态机、不变量及反例、测试/变异结果、现有 DFX 能否回答、仍未知的事实。
 
 ## 7. 阶段 E3：加强可证伪 verifier
 
@@ -238,6 +296,9 @@ ambiguous symptom
 - 至少两个 upstream issue/PR 引用不可变 Lab 证据；
 - 至少一个第三方修复通过 Lab 的 base/fix 或 claim verifier；
 - 至少一个 native-state mapping 经实际案例验证，而非只停留在设计文档。
+- 至少一个状态所有者明确的 C++ DFX 边界形成版本固定的状态机、可证伪不变量
+  和正/负对照；即使结论是现成工具足够，也保留可审阅的负面结果。vLLM
+  kernel 能力单独评价，不充作 Lab 技术指标。
 - 对他人的相邻 vLLM runtime PR 至少提供一次可核查的实质审阅；被回应的边界、
   反例或测试建议，比评论数量更重要。
 - 长期观察 maintainer 是否主动在作者未发起的相关问题中征询证据或判断；
@@ -261,13 +322,20 @@ Stars 只表示传播；可证伪结论、upstream 结果和方法复用才表�
 ## 11. 近期执行顺序
 
 1. 维护已发布 v0.2 的 replay、verifier 和证据边界；外部反馈优先修复真实复用障碍。
-2. 在现有 vLLM runtime/lifecycle 主线中完成已打开的 upstream 工作，记录合入、
+2. 以现有案例形成 fault taxonomy v0 和同案 DFX baseline 对照，先验证 Lab 在哪里
+   真正改变诊断结论；允许固定样本测覆盖分母，不以批量挖 issue 扩大类别。
+3. 同步执行底层主线 L：整理 #197232 的源码级状态机与回归证据，评审上述
+   两项 c10d 只读审查的反例及现成 DFX 覆盖；不等待 review 才开始训练，也不在
+   同一 seam 并行开第二个未审阅 PR。vLLM CUDA/kernel 主线 K 独立排期。
+4. 将 V1 的 recorder 无进展触发缺口作为独立设计 gate：先证明 demand、freshness、
+   身份和冷却规则可与 frozen verdict 一致，再决定是否在未来版本实现；不修改 v0.2。
+5. 在现有 vLLM runtime/lifecycle 主线中完成已打开的 upstream 工作，记录合入、
    明确拒绝或设计结论；不把未审阅 PR 记作 upstream 成果。
-3. 选择与已读代码相邻的他人 PR 做实质审阅：先复现或核对源码，再提出可证伪的
+6. 选择与已读代码相邻的他人 PR 做实质审阅：先复现或核对源码，再提出可证伪的
    边界或测试；不为增加审阅数量写泛泛评论。
-4. 只在已有案例的判断缺口确实需要时完成 PyStack/NCCL RAS capability 对照，
+7. 只在已有案例的判断缺口确实需要时完成 PyStack/NCCL RAS capability 对照，
    并用版本约束、负对照和 `unknown` 限制 native attribution。
-5. #197232 得到明确 upstream 结果后发布 case study；此前只引用已公开且有边界的证据。
+8. #197232 得到明确 upstream 结果后发布 case study；此前只引用已公开且有边界的证据。
 
 这一路线不以“拥有更多 collector”为进展。每一阶段都必须让一个已命名 failure mode
 更可区分、一个错误推断更难发生，或一个结论更容易被第三方反证。
