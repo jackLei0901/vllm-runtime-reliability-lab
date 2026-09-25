@@ -91,6 +91,15 @@ operator-supplied EngineCore PID and stable process start time throughout
 the window. This binding remains an operator assertion unless independently
 verified; absent or unstable binding blocks the *alive* claim. Fresh 2xx
 health is endpoint responsiveness, not proof that this engine is healthy.
+The pinned source offers a non-attaching binding candidate:
+`core.py:1298-1301` requests the process title `EngineCore_DP{dp_rank}`
+(or `EngineCore` without DP). But `system_utils.py:190-193` silently skips
+that title when `setproctitle` is absent. A title observed in cmdline is
+provenance to cross-check against PID start identity, not identity proof;
+a missing title is **binding unavailable**, never “engine absent.” The
+metric `engine` label-to-`dp_rank` correspondence must be verified for the
+exact build and launch mode, including multi-API-server layouts, before
+this candidate can decide a claim.
 The v0.2 producer/demand state evaluators may be reused on each partition;
 scope selection, precedence, and public claim shape need a separately
 versioned rule and field-role audit. No second unreviewed verdict algorithm
@@ -145,6 +154,7 @@ removed. Reuse the v0.2 progress vectors directly where shapes permit.
 | Cached-only flat metrics or one fresh sample | No trigger; insufficient evidence. |
 | Missing/malformed `/metrics` or sampling timeout | No trigger; producer unavailable or insufficient, not flat. |
 | Counter reset, label-set discontinuity, missing engine partition, or changed engine/PID binding | No trigger under the old window; do not stitch unlike counters. |
+| Process title absent or inconsistent with the metric partition, with no other accepted binding | No engine-alive trigger; mark binding unavailable, not engine absent. |
 | One stuck client request while its engine's counter rises | No engine-scoped trigger; preserve producer conflict if the client probe was explicitly supplied. |
 | Health was never 2xx, later health loss, PID disappearance, or PID reuse | No V1 trigger; apply higher-precedence/undetermined outcome as appropriate. |
 | Demand briefly vanishes or spans less than the evaluation interval | No trigger; demand evidence is discontinuous or insufficient. |

@@ -33,6 +33,9 @@ Read these three new documents in order:
   another advances; a summed service counter must not decide both.
 - Can the per-engine token/demand partition be bound to the affected
   EngineCore PID and start time without adding an invasive default probe?
+  The optional `EngineCore_DP{dp_rank}` process title is a non-attaching
+  candidate, not proof: missing `setproctitle` removes it, and label/rank
+  correspondence still needs a launch-mode-specific check.
   If not, keep the explicit `collect/verify` path rather than dilute the
   trigger preconditions.
 - Before code, should a future recorder reuse the pure v0.2 progress rules
