@@ -1,0 +1,19 @@
+diff --git a/plugins/profiler/inspector/inspector_plugin.cc b/plugins/profiler/inspector/inspector_plugin.cc
+--- a/plugins/profiler/inspector/inspector_plugin.cc
++++ b/plugins/profiler/inspector/inspector_plugin.cc
+@@ -324,9 +324,15 @@ __hidden ncclResult_t inspectorPluginStartEvent(void* context,
+     struct inspectorCommInfo *commInfoCtx = (struct inspectorCommInfo*)context;
+     inspectorPluginCollInfoInit(&collEvent, eDescr, commInfoCtx);
+     *eHandle = collEvent;
++    if (collEvent != nullptr) {
++      TRACE_INSPECTOR("LLR_TP_EVT coll_start");
++    }
+   } else if (eDescr->type == ncclProfileKernelCh) {
+     struct inspectorKernelChInfo *kernelChEvent = nullptr;
+     inspectorPluginKernelChInfoInit(&kernelChEvent, eDescr);
+     *eHandle = kernelChEvent;
++    if (kernelChEvent != nullptr) {
++      TRACE_INSPECTOR("LLR_TP_EVT kernel_ch_start");
++    }
+   } else {
+     return ncclSuccess;
