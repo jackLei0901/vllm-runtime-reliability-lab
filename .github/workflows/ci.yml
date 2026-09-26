@@ -27,6 +27,12 @@ jobs:
           ruff format --check .
       - name: Run unit tests
         run: python -m unittest discover -s tests -v
+      - name: Run engine binding CPU controls
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m unittest discover -s experiments/vllm-engine-binding-gate -p test_binding_evidence.py -v
+          python -m unittest discover -s experiments/vllm-engine-binding-gate -p test_cpu_contract.py -v
       - name: Compile source
         run: python -m compileall -q src tests
       - name: CLI smoke test
