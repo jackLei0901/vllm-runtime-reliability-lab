@@ -7,8 +7,10 @@ that RAS can distinguish peer absence from an all-entered collective hang.
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import os
+import stat
 import time
 
 import torch
@@ -20,6 +22,25 @@ from vllm.distributed.parallel_state import get_world_group, init_distributed_en
 from ras_graph_baseline import inspector_counts, query_view, report_counts
 
 
+def start_event_counts(private_dir: str) -> dict:
+    """Count only our two callback markers; never expose raw NCCL debug lines."""
+    directory = os.stat(private_dir)
+    if directory.st_uid != os.geteuid() or stat.S_IMODE(directory.st_mode) != 0o700:
+        raise ValueError("NCCL debug directory must be owned, mode 0700")
+    paths = glob.glob(os.path.join(private_dir, "nccl.*.log"))
+    if len(paths) != 2:
+        return {"outcome": "unscored", "log_count": len(paths)}
+    result = {"coll_start": 0, "kernel_ch_start": 0}
+    for path in paths:
+        with open(path, "rb") as stream:
+            for line in stream:
+                if b"LLR_TP_EVT coll_start" in line:
+                    result["coll_start"] += 1
+                if b"LLR_TP_EVT kernel_ch_start" in line:
+                    result["kernel_ch_start"] += 1
+    return {"outcome": "available", **result}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--ras-port", type=int, default=28028)
@@ -27,6 +48,7 @@ def main() -> None:
     parser.add_argument("--mode", choices=("eager", "graph"), default="eager")
     parser.add_argument("--private-dir")
     parser.add_argument("--inspector-dir")
+    parser.add_argument("--nccl-debug-dir")
     args = parser.parse_args()
     if int(os.environ["WORLD_SIZE"]) != 2 or not 1 <= args.hold_seconds <= 10:
         raise ValueError("requires WORLD_SIZE=2 and 1 <= hold-seconds <= 10")
@@ -58,6 +80,7 @@ def main() -> None:
             else None
         )
         inspector_before = inspector_counts(args.inspector_dir) if rank == 1 and args.inspector_dir else None
+        starts_before = start_event_counts(args.nccl_debug_dir) if rank == 1 and args.nccl_debug_dir else None
         dist.barrier(group=world.cpu_group)
 
         if graph is not None:
@@ -66,9 +89,11 @@ def main() -> None:
             time.sleep(args.hold_seconds)
             during = query_view(args.ras_port, args.private_dir, "during.ras.json")
             inspector_during = inspector_counts(args.inspector_dir) if args.inspector_dir else None
+            starts_during = start_event_counts(args.nccl_debug_dir) if args.nccl_debug_dir else None
         else:
             during = None
             inspector_during = None
+            starts_during = None
         if graph is None:
             reduced = comm.all_reduce(source)
         else:
@@ -82,6 +107,7 @@ def main() -> None:
             else None
         )
         inspector_after = inspector_counts(args.inspector_dir) if rank == 1 and args.inspector_dir else None
+        starts_after = start_event_counts(args.nccl_debug_dir) if rank == 1 and args.nccl_debug_dir else None
         dist.barrier(group=world.cpu_group)
         expected = 4 if graph is not None else 2
         if not torch.all(reduced == expected).item():
@@ -104,6 +130,11 @@ def main() -> None:
                             "during": inspector_during,
                             "after": inspector_after,
                         } if args.inspector_dir else None,
+                        "start_events": {
+                            "before": starts_before,
+                            "during": starts_during,
+                            "after": starts_after,
+                        } if args.nccl_debug_dir else None,
                         "result": "pass",
                     },
                     sort_keys=True,
