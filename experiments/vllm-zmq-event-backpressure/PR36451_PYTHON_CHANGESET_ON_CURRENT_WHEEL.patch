@@ -1,0 +1,95 @@
+diff --git a/vllm/envs.py b/vllm/envs.py
+--- a/vllm/envs.py
++++ b/vllm/envs.py
+@@ -107,6 +107,7 @@ if TYPE_CHECKING:
+     CMAKE_BUILD_TYPE: Literal["Debug", "Release", "RelWithDebInfo"] | None = None
+     VERBOSE: bool = False
+     VLLM_ALLOW_LONG_MAX_MODEL_LEN: bool = False
++    VLLM_HEALTH_CHECK_TIMEOUT: int = 60  # seconds
+     VLLM_HTTP_TIMEOUT_KEEP_ALIVE: int = 5  # seconds
+     VLLM_MAX_N_SEQUENCES: int = 16384
+     VLLM_MAX_COMPLETION_PROMPTS: int = 1024
+@@ -1124,6 +1125,11 @@ environment_variables: dict[str, Callable[[], Any]] = {
+     "VLLM_FASTSAFETENSORS_QUEUE_SIZE": lambda: int(
+         os.getenv("VLLM_FASTSAFETENSORS_QUEUE_SIZE", "0")
+     ),
++    # Timeout in seconds for the EngineCore health IPC round trip.
++    # Set to 0 to disable the ping.
++    "VLLM_HEALTH_CHECK_TIMEOUT": lambda: int(
++        os.getenv("VLLM_HEALTH_CHECK_TIMEOUT", "60")
++    ),
+     # Timeout in seconds for keeping HTTP connections alive in API server
+     "VLLM_HTTP_TIMEOUT_KEEP_ALIVE": lambda: int(
+         os.environ.get("VLLM_HTTP_TIMEOUT_KEEP_ALIVE", "5")
+diff --git a/vllm/v1/engine/async_llm.py b/vllm/v1/engine/async_llm.py
+--- a/vllm/v1/engine/async_llm.py
++++ b/vllm/v1/engine/async_llm.py
+@@ -1052,6 +1052,8 @@ class AsyncLLM(EngineClient):
+         logger.debug("Called check_health.")
+         if self.errored:
+             raise self.dead_error
++        # Ping EngineCore to detect alive-but-hung state.
++        await self.engine_core.check_health_async()
+ 
+     async def start_profile(self, profile_prefix: str | None = None) -> None:
+         coros = [self.engine_core.profile_async(True, profile_prefix)]
+diff --git a/vllm/v1/engine/core.py b/vllm/v1/engine/core.py
+--- a/vllm/v1/engine/core.py
++++ b/vllm/v1/engine/core.py
+@@ -1005,6 +1005,10 @@ class EngineCore:
+         """Check if engine is sleeping at any level."""
+         return self.is_scheduler_paused() or self.model_executor.is_sleeping
+ 
++    def health_ping(self) -> bool:
++        """Health check ping, called via the UTILITY mechanism."""
++        return True
++
+     def execute_dummy_batch(self):
+         self.model_executor.execute_dummy_batch()
+ 
+diff --git a/vllm/v1/engine/core_client.py b/vllm/v1/engine/core_client.py
+--- a/vllm/v1/engine/core_client.py
++++ b/vllm/v1/engine/core_client.py
+@@ -302,6 +302,9 @@ class EngineCoreClient(ABC):
+     async def is_sleeping_async(self) -> bool:
+         raise NotImplementedError
+ 
++    async def check_health_async(self) -> None:
++        raise NotImplementedError
++
+     async def abort_requests_async(self, request_ids: list[str]) -> None:
+         raise NotImplementedError
+ 
+@@ -417,6 +420,10 @@ class InprocClient(EngineCoreClient):
+     def is_sleeping(self) -> bool:
+         return self.engine_core.is_sleeping()
+ 
++    async def check_health_async(self) -> None:
++        # In-process: always healthy if reachable (no IPC to hang).
++        return
++
+     def execute_dummy_batch(self) -> None:
+         self.engine_core.execute_dummy_batch()
+ 
+@@ -1300,6 +1307,21 @@ class AsyncMPClient(MPClient):
+     async def is_sleeping_async(self) -> bool:
+         return await self.call_utility_async("is_sleeping")
+ 
++    async def check_health_async(self) -> None:
++        """Ping EngineCore via its UTILITY IPC path."""
++        timeout = envs.VLLM_HEALTH_CHECK_TIMEOUT
++        if timeout <= 0:
++            return
++        try:
++            await asyncio.wait_for(
++                self.call_utility_async("health_ping"), timeout=timeout
++            )
++        except asyncio.TimeoutError as error:
++            raise EngineDeadError(
++                f"EngineCore did not respond to health ping within {timeout}s. "
++                "It may be stuck in a long operation or hung."
++            ) from error
++
+     async def execute_dummy_batch_async(self) -> None:
+         await self.call_utility_async("execute_dummy_batch")
+ 
