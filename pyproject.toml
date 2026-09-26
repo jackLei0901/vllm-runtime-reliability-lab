@@ -47,6 +47,9 @@ extend-exclude = [
   # Pre-execution freeze verifiers are byte-pinned by their manifests.
   "experiments/vllm-zmq-event-backpressure/verify_stage1_freeze.py",
   "experiments/vllm-zmq-event-backpressure/verify_stage1_r2_freeze.py",
+  # Published PR #36451 evidence pins these executed runners by SHA-256.
+  "experiments/vllm-zmq-event-backpressure/current_version_ping_audit.py",
+  "experiments/vllm-zmq-event-backpressure/current_version_ping_cell.py",
 ]
 
 [tool.ruff.lint]
