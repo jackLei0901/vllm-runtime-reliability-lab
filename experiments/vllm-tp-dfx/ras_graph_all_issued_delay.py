@@ -36,6 +36,8 @@ def main() -> None:
     torch.cuda.set_device(local_rank)
     init_distributed_environment()
     world = get_world_group()
+    pid_by_rank: list[int] = [0, 0]
+    dist.all_gather_object(pid_by_rank, os.getpid(), group=world.cpu_group)
     with torch.no_grad():
         comm = PyNcclCommunicator(world.cpu_group, device=world.device)
         source = torch.ones((4, 4), device=f"cuda:{local_rank}")
@@ -57,7 +59,7 @@ def main() -> None:
             else None
         )
         inspector_before = inspector_counts(args.inspector_dir) if rank == 1 and args.inspector_dir else None
-        starts_before = start_event_counts(args.nccl_debug_dir) if rank == 1 and args.nccl_debug_dir else None
+        starts_before = start_event_counts(args.nccl_debug_dir, pid_by_rank) if rank == 1 and args.nccl_debug_dir else None
         dist.barrier(group=world.cpu_group)
 
         source.fill_(2)
@@ -72,7 +74,7 @@ def main() -> None:
             graph_pending_before = not end.query()
             during = query_view(args.ras_port, args.private_dir, "during.ras.json")
             inspector_during = inspector_counts(args.inspector_dir) if args.inspector_dir else None
-            starts_during = start_event_counts(args.nccl_debug_dir) if args.nccl_debug_dir else None
+            starts_during = start_event_counts(args.nccl_debug_dir, pid_by_rank) if args.nccl_debug_dir else None
             graph_pending_after = not end.query()
         else:
             during = None
@@ -89,7 +91,7 @@ def main() -> None:
             else None
         )
         inspector_after = inspector_counts(args.inspector_dir) if rank == 1 and args.inspector_dir else None
-        starts_after = start_event_counts(args.nccl_debug_dir) if rank == 1 and args.nccl_debug_dir else None
+        starts_after = start_event_counts(args.nccl_debug_dir, pid_by_rank) if rank == 1 and args.nccl_debug_dir else None
         dist.barrier(group=world.cpu_group)
         if not torch.all(reduced == 4).item():
             raise AssertionError("replayed all-reduce result differs from 4")

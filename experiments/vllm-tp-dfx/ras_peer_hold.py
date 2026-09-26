@@ -22,7 +22,7 @@ from vllm.distributed.parallel_state import get_world_group, init_distributed_en
 from ras_graph_baseline import inspector_counts, query_view, report_counts
 
 
-def start_event_counts(private_dir: str) -> dict:
+def start_event_counts(private_dir: str, pid_by_rank: list[int]) -> dict:
     """Count only our two callback markers; never expose raw NCCL debug lines."""
     directory = os.stat(private_dir)
     if directory.st_uid != os.geteuid() or stat.S_IMODE(directory.st_mode) != 0o700:
@@ -30,15 +30,22 @@ def start_event_counts(private_dir: str) -> dict:
     paths = glob.glob(os.path.join(private_dir, "nccl.*.log"))
     if len(paths) != 2:
         return {"outcome": "unscored", "log_count": len(paths)}
-    result = {"coll_start": 0, "kernel_ch_start": 0}
+    if len(pid_by_rank) != 2 or len(set(pid_by_rank)) != 2:
+        return {"outcome": "unscored", "reason": "ambiguous_pid_binding"}
+    result: dict[int, dict[str, int]] = {}
     for path in paths:
+        ranks = [rank for rank, pid in enumerate(pid_by_rank) if path.endswith(f".{pid}.log")]
+        if len(ranks) != 1 or ranks[0] in result:
+            return {"outcome": "unscored", "reason": "ambiguous_log_binding"}
+        counts = {"coll_start": 0, "kernel_ch_start": 0}
         with open(path, "rb") as stream:
             for line in stream:
                 if b"LLR_TP_EVT coll_start" in line:
-                    result["coll_start"] += 1
+                    counts["coll_start"] += 1
                 if b"LLR_TP_EVT kernel_ch_start" in line:
-                    result["kernel_ch_start"] += 1
-    return {"outcome": "available", **result}
+                    counts["kernel_ch_start"] += 1
+        result[ranks[0]] = counts
+    return {"outcome": "available", "by_rank": result}
 
 
 def main() -> None:
@@ -58,6 +65,8 @@ def main() -> None:
     torch.cuda.set_device(local_rank)
     init_distributed_environment()
     world = get_world_group()
+    pid_by_rank: list[int] = [0, 0]
+    dist.all_gather_object(pid_by_rank, os.getpid(), group=world.cpu_group)
     with torch.no_grad():
         comm = PyNcclCommunicator(world.cpu_group, device=world.device)
         source = torch.ones((4, 4), device=f"cuda:{local_rank}")
@@ -80,7 +89,7 @@ def main() -> None:
             else None
         )
         inspector_before = inspector_counts(args.inspector_dir) if rank == 1 and args.inspector_dir else None
-        starts_before = start_event_counts(args.nccl_debug_dir) if rank == 1 and args.nccl_debug_dir else None
+        starts_before = start_event_counts(args.nccl_debug_dir, pid_by_rank) if rank == 1 and args.nccl_debug_dir else None
         dist.barrier(group=world.cpu_group)
 
         if graph is not None:
@@ -89,7 +98,7 @@ def main() -> None:
             time.sleep(args.hold_seconds)
             during = query_view(args.ras_port, args.private_dir, "during.ras.json")
             inspector_during = inspector_counts(args.inspector_dir) if args.inspector_dir else None
-            starts_during = start_event_counts(args.nccl_debug_dir) if args.nccl_debug_dir else None
+            starts_during = start_event_counts(args.nccl_debug_dir, pid_by_rank) if args.nccl_debug_dir else None
         else:
             during = None
             inspector_during = None
@@ -107,7 +116,7 @@ def main() -> None:
             else None
         )
         inspector_after = inspector_counts(args.inspector_dir) if rank == 1 and args.inspector_dir else None
-        starts_after = start_event_counts(args.nccl_debug_dir) if rank == 1 and args.nccl_debug_dir else None
+        starts_after = start_event_counts(args.nccl_debug_dir, pid_by_rank) if rank == 1 and args.nccl_debug_dir else None
         dist.barrier(group=world.cpu_group)
         expected = 4 if graph is not None else 2
         if not torch.all(reduced == expected).item():
