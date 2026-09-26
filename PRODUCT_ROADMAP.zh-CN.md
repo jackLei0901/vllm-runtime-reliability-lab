@@ -321,6 +321,10 @@ Stars 只表示传播；可证伪结论、upstream 结果和方法复用才表�
 
 ## 11. 近期执行顺序
 
+具体日期和本季度的唯一主目标见 [2026 Q4 执行计划](docs/PLAN_2026Q4.zh-CN.md)；
+持续发现的登记与抽样边界见 [Q4 痛点发现协议](docs/PAIN_POINT_DISCOVERY_2026Q4.zh-CN.md)。
+本节仍作为工程规则和优先级，不是第二套日程。
+
 1. 维护已发布 v0.2 的 replay、verifier 和证据边界；外部反馈优先修复真实复用障碍。
 2. 以现有案例形成 fault taxonomy v0 和同案 DFX baseline 对照，先验证 Lab 在哪里
    真正改变诊断结论；允许固定样本测覆盖分母，不以批量挖 issue 扩大类别。
