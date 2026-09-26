@@ -48,4 +48,4 @@ Because the PR changes only Python files, this source-equivalent test is useful 
 - The reintroduced `VLLM_RPC_TIMEOUT` type and environment entry should be reviewed during rebase. [#44128](https://github.com/vllm-project/vllm/pull/44128) removed it as a dead setting; the health-ping path does not consume it. The port omitted it for that reason. [F21HGG already raised this cleanup point](https://github.com/vllm-project/vllm/pull/36451#issuecomment-5450475299) in the upstream thread; it is not a new finding from this experiment.
 - Decide whether `EngineDeadError` is an appropriate type for a recoverable stall, and whether a 60-second server deadline is compatible with the intended external probe timeout.
 
-The public-facing claim remains **EngineCore loop-liveness**, not token progress or self-healing. No upstream code change was made by this experiment.
+The public-facing claim remains **EngineCore loop-liveness**, not token progress or recovery policy. No upstream code change was made by this experiment.
