@@ -17,6 +17,7 @@ from vllm.distributed.device_communicators.pynccl import PyNcclCommunicator
 from vllm.distributed.parallel_state import get_world_group, init_distributed_environment
 
 from ras_graph_baseline import inspector_counts, query_view, report_counts
+from ras_peer_hold import start_event_counts
 
 
 def main() -> None:
@@ -25,6 +26,7 @@ def main() -> None:
     parser.add_argument("--sleep-cycles", type=int, default=0)
     parser.add_argument("--private-dir")
     parser.add_argument("--inspector-dir")
+    parser.add_argument("--nccl-debug-dir")
     args = parser.parse_args()
     if int(os.environ["WORLD_SIZE"]) != 2 or not 0 <= args.sleep_cycles <= 5_000_000_000:
         raise ValueError("requires WORLD_SIZE=2 and 0 <= sleep-cycles <= 5e9")
@@ -55,6 +57,7 @@ def main() -> None:
             else None
         )
         inspector_before = inspector_counts(args.inspector_dir) if rank == 1 and args.inspector_dir else None
+        starts_before = start_event_counts(args.nccl_debug_dir) if rank == 1 and args.nccl_debug_dir else None
         dist.barrier(group=world.cpu_group)
 
         source.fill_(2)
@@ -69,10 +72,12 @@ def main() -> None:
             graph_pending_before = not end.query()
             during = query_view(args.ras_port, args.private_dir, "during.ras.json")
             inspector_during = inspector_counts(args.inspector_dir) if args.inspector_dir else None
+            starts_during = start_event_counts(args.nccl_debug_dir) if args.nccl_debug_dir else None
             graph_pending_after = not end.query()
         else:
             during = None
             inspector_during = None
+            starts_during = None
             graph_pending_before = None
             graph_pending_after = None
 
@@ -84,6 +89,7 @@ def main() -> None:
             else None
         )
         inspector_after = inspector_counts(args.inspector_dir) if rank == 1 and args.inspector_dir else None
+        starts_after = start_event_counts(args.nccl_debug_dir) if rank == 1 and args.nccl_debug_dir else None
         dist.barrier(group=world.cpu_group)
         if not torch.all(reduced == 4).item():
             raise AssertionError("replayed all-reduce result differs from 4")
@@ -109,6 +115,11 @@ def main() -> None:
                             "during": inspector_during,
                             "after": inspector_after,
                         } if args.inspector_dir else None,
+                        "start_events": {
+                            "before": starts_before,
+                            "during": starts_during,
+                            "after": starts_after,
+                        } if args.nccl_debug_dir else None,
                         "result": "pass",
                     },
                     sort_keys=True,
