@@ -2,6 +2,16 @@
 
 Status: source-level, conditional map and evidence audit; **not** a measured vLLM serving route. No new fault, upstream proposal, or probe is admitted.
 
+**Later runner-selection correction (2026-09-27):** the retained logs from the
+TP serving hold campaign record `Using V2 Model Runner` in both cells. The V1
+`CUDAGraphWrapper` graph-placement row below remains a conditional source map,
+but it does not describe that campaign's FULL replay. At the same pinned
+`c8602c7` revision, [GPUWorker selects the V2 runner](https://github.com/vllm-project/vllm/blob/c8602c79062440074a018c1d5f875a5571eb6881/vllm/v1/worker/gpu_worker.py#L384-L415),
+and [the V2 serving path](https://github.com/vllm-project/vllm/blob/c8602c79062440074a018c1d5f875a5571eb6881/vllm/v1/worker/gpu/model_runner.py#L1392)
+calls `ModelCudaGraphManager.run_fullgraph`. The earlier rank-bound NCCL
+callback counts remain measured; this correction changes the graph-placement
+interpretation, not those counts. See the [bounded hold result](VLLM_TP_INFLIGHT_SERVING_RESULT_2026-09-27.md).
+
 ## 1. Recheck of the prior capability gate
 
 The final A/B runners and Inspector patch remain committed at `c10762f` and `0c8facd`. Their local SHA-256 values match [the capability record](VLLM_TP_PROFILER_V5_START_EVENT_GATE_2026-09-26.md): A runner `e10363c71ce52c8c87aaf21aadfd28ed04a79c1824da67c63cee0a34fbd5a5d6`, B runner `7757e1cb79029586935d66edf3d962351abe796f1838b493b825fdb897149046`, patch `dad43473ed3894c7d8cf5b5de6866de68d665e0a570056e312b00fa49ed7af89`. Both runners compile as Python modules. In A, the rank-1 in-window snapshot and callback count precede its `graph.replay()` in program order. In B, both `graph.replay()` calls precede the barrier and in-window snapshot; the rank-1 completion event was still pending on both sides of the RAS query. Per-rank callback counts are bound to PIDs exchanged inside each run, and an ambiguous log mapping returns `unscored`.

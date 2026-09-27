@@ -42,25 +42,36 @@ Inspector export gap or admit a new NCCL acquisition probe.
 | One bounded hold | Exit 2; 16 output tokens; rank identities stable; arm marker existed, but the entry marker did not. | `unscored / window_or_release_unverified`. No rank-asymmetric in-flight result can be inferred. |
 
 The plugin entry point was discoverable in the host environment and the
-serving configuration reported FULL and PIECEWISE graph capture. These facts
-do **not** show that its wrapper reached the `eligible()` branch during the
-request. No private per-call activation witness was collected, so this run
-cannot distinguish plugin non-execution from a nonmatching runtime mode or
-uncached descriptor. That is an instrumentation uncertainty in this experiment,
-not evidence about stock Inspector.
+serving configuration reported FULL and PIECEWISE graph capture. More
+importantly, the private logs for **both** later cells contain the pinned
+worker's `Using V2 Model Runner` message. At this revision, the V2 worker
+constructs its [V2 model runner](https://github.com/vllm-project/vllm/blob/c8602c79062440074a018c1d5f875a5571eb6881/vllm/v1/worker/gpu_worker.py#L384-L415),
+whose FULL serving path calls
+[`ModelCudaGraphManager.run_fullgraph`](https://github.com/vllm-project/vllm/blob/c8602c79062440074a018c1d5f875a5571eb6881/vllm/v1/worker/gpu/model_runner.py#L1392).
+That manager replays its cached graph through
+[`CudaGraphManager.run_fullgraph`](https://github.com/vllm-project/vllm/blob/c8602c79062440074a018c1d5f875a5571eb6881/vllm/v1/worker/gpu/cudagraph_utils.py#L393-L406).
+The experiment plugin instead patched the V1 full-graph
+`CUDAGraphWrapper.__call__`. This is a source-supported explanation for the
+missing entry marker, now corroborated by the actual runner-selection log.
+It is not a controlled demonstration that no other predicate could also fail:
+the run retained no per-rank plugin-install or per-call activation witness.
+That uncertainty belongs to this experiment, not to stock Inspector.
+
+The runner's `window_or_release_unverified` reason starts with the absent
+entry marker: the wait was never entered, so **no hold window existed** to
+verify. It does not suggest a release-timing failure after a successful hold.
 
 ## Next gate
 
-Before another GPU booking, add a bounded, privacy-safe activation witness to
-the experiment plugin: one record per rank of installation and a closed count
-of the predicates seen at wrapper calls (rank, FULL mode and cached entry),
-without descriptor contents or per-token logging. Mutation-test the witness
-on CPU. Re-run only if the witness can make an absent entry marker attributable
-to a named failed precondition. A later export-policy claim still requires a
-verified hold window and a same-collective stock JSON comparison; aggregate
-counts alone remain non-decisional.
-
-The operator-requested host shutdown was issued after archive verification and
-both GPUs returned to zero reported memory use. The SSH connection reset and a
-new connection was refused; provider-side billing state was not independently
-visible.
+Before another GPU booking, preregister the intended runner. For a
+default-serving claim at this build, hook V2's `ModelCudaGraphManager.run_fullgraph`
+immediately before its delegated replay, not the V1 wrapper. For a deliberately
+V1-only test, set `VLLM_USE_V2_MODEL_RUNNER=0` and label that configuration.
+Either way, add a bounded, privacy-safe witness of **which runner and graph
+manager installed**, plus a closed count of the selected replay predicates
+per rank, without descriptor contents or per-token logging. Mutation-test that
+witness on CPU. `VLLM_USE_BREAKABLE_CUDAGRAPH=0` remains pinned; V2 has a
+separate breakable path, so its effective value must be recorded. Re-run only
+when a missing entry marker can be attributed to a named failed precondition.
+A later export-policy claim still requires a verified hold window and a
+same-collective stock JSON comparison; aggregate counts remain non-decisional.

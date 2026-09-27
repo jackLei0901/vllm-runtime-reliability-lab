@@ -1,5 +1,11 @@
 # TP=2 in-flight serving export gate — local preregistration
 
+Historical protocol, executed once. The [result](VLLM_TP_INFLIGHT_SERVING_RESULT_2026-09-27.md)
+is `unscored`: the target used Model Runner V2, whose FULL replay path
+bypasses the V1 wrapper hook. The specific request's graph mode was not
+independently witnessed. A future V2 experiment needs a new frozen protocol;
+this preregistration is not silently rewritten.
+
 ## Question and limits
 
 Can a bounded, private Inspector callback trace identify a rank-specific NCCL
