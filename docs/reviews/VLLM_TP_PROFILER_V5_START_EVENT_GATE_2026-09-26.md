@@ -1,5 +1,7 @@
 # TP=2 profiler-v5 start-event capability check (2026-09-26)
 
+Follow-up source and callback review: [VLLM_TP_SERVING_AND_CALLBACK_SOURCE_REVIEW_2026-09-26.md](VLLM_TP_SERVING_AND_CALLBACK_SOURCE_REVIEW_2026-09-26.md). It keeps the real-serving route unverified.
+
 ## Decision
 
 **No new NCCL acquisition probe is admitted.** In this bounded two-rank PyNccl CUDA-graph experiment, NCCL profiler-v5 callbacks reached a lab-local Inspector debug build *before* the delayed collective completed. The existing Inspector JSON export still showed only completed collectives. This narrows the demonstrated gap to Inspector's retention/export policy, not the profiler interface's ability to acquire start events. It does not establish behavior in a real vLLM serving graph or the semantics of every profiler callback.
