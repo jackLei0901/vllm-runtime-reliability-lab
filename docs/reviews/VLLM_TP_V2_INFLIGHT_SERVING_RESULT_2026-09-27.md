@@ -9,8 +9,8 @@ stable; after release, the request completed. The callback-history verifier
 nevertheless rejected the cell: one `(communicator, sequence)` key did not
 retain a single channel count across the log. We do not select a favourable
 subset of callbacks, infer a transport hang, or claim a stock-Inspector export
-gap from this run. The next gate is an **offline identity-contract review** of
-the retained callbacks, not an admitted acquisition probe or another GPU cell.
+gap from this run. The offline identity-contract review below explains the
+collision but cannot rescue the missing per-occurrence attribution.
 
 This is a controlled host-side delay before a graph replay, not an organic
 serving fault. The stock Inspector JSON is only a completed-record control;
@@ -28,6 +28,9 @@ its aggregate counts do not join to the pending communicator and sequence.
   `disable_custom_all_reduce=True`. The selected runner was observed as V2;
   `VLLM_USE_V2_MODEL_RUNNER` was unset. No default-route claim follows from
   the forced PyNccl setting.
+- The runtime NCCL shared-library/wheel digest was **not retained**. The
+  `v2.29.7-1` source analysis below is not an exact runtime-binary provenance
+  claim; the next preflight must pin the loaded library's SHA-256 privately.
 - Patched Inspector binary SHA-256:
   `e2f9acc8d985ab936503c58b89ac3965fe8ea2bb254a8ab76522538a0fd6c7ef`.
   The transferred V2 plugin, final runner, witness reader and callback parser
@@ -36,6 +39,10 @@ its aggregate counts do not join to the pending communicator and sequence.
   `dc918c78f154950326fcc54830dc50ca24b429dd9f7bc9754b13d2d2df85b338`,
   `393a2d3e14442d70d97c4caef85aa8f14c15168b7de9e0c9353c74e73f3aa900`,
   and `214000cbe22c52ffdb2a2163646075f0175ec028a4079e17e3354ed3cb2fccd9`.
+  The last digest is the frozen v1 parser at
+  [`7d4f4ec:inflight_trace.py`](https://github.com/jackLei0901/vllm-runtime-reliability-lab/blob/7d4f4ec/experiments/vllm-tp-dfx/inflight_trace.py).
+  The occurrence follow-up uses a separate `inflight_trace_v2.py`; it does
+  not reinterpret the old logs or change the V1 runner's parser.
 - The private archive of the four cells and transferred source has SHA-256
   `5bf9befc99a7a778a3d3e3341dbe6dad08e12b41c5d6b3a5e2b0cd3aa517d4a0`,
   matched before and after transfer to a local directory outside this repo.
@@ -56,6 +63,10 @@ control and hold: `ninja` was put on `PATH`, and `NCCL_INSPECTOR_ENABLE=1`, a
 500-microsecond dump interval and verbose export were added to the runner's
 exact environment check. Each attempt used a fresh private cell directory.
 No second hold was run after the verifier rejected the first.
+The fork-safe PID-keyed witnesses and post-`observe` cached-FULL replay
+counter both worked; neither validates the callback key. The healthy-control
+code did not run that validator, so it passed despite the same conflict in
+its final logs.
 
 ## Why the hold cannot be scored
 
@@ -65,21 +76,43 @@ retained final logs with that parser found **two conflicting keys per rank** in
 both the healthy and hold cells. In the hold cell, one conflicting key had
 1,460 `CollStart` records with channel counts of both 1 and 2; the other had
 two such records. This is a closed aggregate of private data, not publication
-of the keys. It demonstrates that the key assumption fails even in healthy
-serving traffic; it does **not** establish why NCCL reuses or represents those
-identifiers. The in-memory before/during snapshots were not separately
-retained, so the final logs cannot be presented as an exact replay of the
-original triplet verdict.
+of the keys. The offline check found the large key **1,460 times in each of
+four logs** (two ranks in each of the healthy and hold cells), using the
+[closed-shape legacy aggregate](../../experiments/vllm-tp-dfx/legacy_callback_aggregate.py).
+Its consecutive
+channel-count runs were `73, 219, 73, 1,095` in every log, all multiples of
+73; 1,460 is `73 × 20`. The smaller conflicting key appeared twice in each
+log. These counts support repeated graph replays of the same per-type
+sequence, but do not prove which model steps or collective types produced
+the two keys. No raw key, rank PID or log line is published.
 
-## Next gate and operations
+The pinned [NCCL profiler source](https://github.com/NVIDIA/nccl/blob/v2.29.7-1/src/plugin/profiler.cc)
+indexes `seqNumber` by collective function and normally excludes persistent
+graph-captured tasks from the increment. Its exception requires a Group or
+CollApi handle together with KernelCh activation. The pinned
+[Inspector plugin](https://github.com/NVIDIA/nccl/blob/v2.29.7-1/plugins/profiler/inspector/inspector_plugin.cc)
+enables only Coll and KernelCh events, so it does not supply those handles.
+The [host-stream plan callback](https://github.com/NVIDIA/nccl/blob/v2.29.7-1/src/enqueue.cc)
+can issue profiler task events on each replay. Thus `(communicator, sequence)`
+is not a unique replay occurrence; it also omits the collective function.
+This is a source-supported explanation consistent with the retained
+aggregates, subject to the missing runtime-binary pin above. The two-record
+collision could be cross-function, but the old logs omitted `func`, so that
+specific attribution remains unverified.
 
-On CPU, inspect the retained source and raw callbacks to determine whether a
-versioned, observable occurrence identity can separate repeated graph
-replays without guessing or nearest-match. Add a negative control from the
-healthy cell and reject any candidate that silently drops conflicting events.
-Only then decide whether one further bounded serving cell is necessary.
+The old logs cannot be repaired honestly: the Nth `CollStart` can be counted,
+but old `KernelChStart` lines carry no occurrence ID. Assigning them to a
+particular replay would require a nearest-match guess. The in-memory
+before/during snapshots were not separately retained either, so the final
+logs cannot replay the original triplet verdict exactly.
 
-After the private archive digest matched off-host, the instance was sent
-`/usr/bin/shutdown`; the SSH session reset and a subsequent connection was
-refused. This is an observed shutdown/disconnection, not an independent
-console billing-state check.
+Earlier synthetic two-collective and serving reports used aggregate callback
+counts and known graph placement, not a `(communicator, sequence)` join to
+name a serving collective. Their count observations stand; any stronger
+collective-localization reading would exceed those records.
+
+## Next gate
+
+The [occurrence-identity follow-up](VLLM_TP_V2_OCCURRENCE_ID_GATE_2026-09-27.md)
+specifies one further bounded cell only after a source-patch build and a
+healthy callback-validity control. It keeps the original verdict `unscored`.

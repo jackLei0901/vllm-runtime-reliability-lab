@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import os
 import sys
 import tempfile
@@ -26,6 +27,82 @@ def load_runner() -> types.ModuleType:
 
 
 class TPV2StallGateTest(unittest.TestCase):
+    def test_loaded_nccl_digest_requires_one_matching_library(self) -> None:
+        runner = load_runner()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            library = root / "libnccl.so.2"
+            library.write_bytes(b"pinned NCCL binary")
+            identities = {0: (101, 7), 1: (202, 8)}
+            for pid in (101, 202):
+                proc = root / str(pid)
+                proc.mkdir()
+                (proc / "maps").write_text(
+                    f"7f00-8000 r-xp 00000000 00:00 0 {library}\n",
+                    encoding="utf-8",
+                )
+            self.assertEqual(
+                runner._runtime_nccl_digest(identities, proc_root=root),
+                hashlib.sha256(library.read_bytes()).hexdigest(),
+            )
+            (root / "202" / "maps").write_text("no library\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "mapping is ambiguous"):
+                runner._runtime_nccl_digest(identities, proc_root=root)
+
+    def test_control_receipt_must_match_current_binary_and_parser(self) -> None:
+        runner = load_runner()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "control-receipt.json"
+            snapshot = root / "callbacks-after.json"
+            snapshot.write_bytes(b"validated control snapshot")
+            after_digest = hashlib.sha256(snapshot.read_bytes()).hexdigest()
+            expected = runner._control_identity(
+                "model", "a" * 64, "b" * 64, {"vllm_version": "test"}, "c" * 64, "e" * 64
+            )
+            runner._write_control_receipt(
+                path, {**expected, "control_after_sha256": after_digest}
+            )
+            for changed in (
+                {"runtime_nccl_sha256": "d" * 64},
+                {"plugin_sha256": "d" * 64},
+                {"software_build": {"vllm_version": "changed"}},
+                {"witness_reader_sha256": "d" * 64},
+            ):
+                with self.subTest(changed=changed), self.assertRaisesRegex(
+                    ValueError, "identity mismatch"
+                ):
+                    runner._check_control_receipt(path, {**expected, **changed})
+            self.assertEqual(
+                runner._check_control_receipt(path, expected),
+                hashlib.sha256(path.read_bytes()).hexdigest(),
+            )
+            with self.assertRaises(FileExistsError):
+                runner._check_control_receipt(path, expected)
+            with self.assertRaises(FileExistsError):
+                runner._write_control_receipt(path, expected)
+
+    def test_control_receipt_rejects_changed_after_snapshot(self) -> None:
+        runner = load_runner()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "control-receipt.json"
+            snapshot = root / "callbacks-after.json"
+            snapshot.write_bytes(b"control")
+            expected = runner._control_identity(
+                "model", "a" * 64, "b" * 64, {}, "c" * 64, "e" * 64
+            )
+            runner._write_control_receipt(
+                path,
+                {
+                    **expected,
+                    "control_after_sha256": hashlib.sha256(snapshot.read_bytes()).hexdigest(),
+                },
+            )
+            snapshot.write_bytes(b"different")
+            with self.assertRaisesRegex(ValueError, "snapshot digest mismatch"):
+                runner._check_control_receipt(path, expected)
+
     def test_environment_requires_exact_private_paths_and_v2_default(self) -> None:
         runner = load_runner()
         with tempfile.TemporaryDirectory() as directory:
@@ -56,7 +133,12 @@ class TPV2StallGateTest(unittest.TestCase):
             ):
                 self.assertEqual(
                     runner._check_environment(root),
-                    (root / "arm", root / "entered", root / "observe", root / "witness"),
+                    (
+                        root / "arm",
+                        root / "entered",
+                        root / "observe",
+                        root / "witness",
+                    ),
                 )
                 for name, value in (
                     ("VLLM_PLUGINS", "wrong_plugin"),
@@ -101,7 +183,9 @@ class TPV2StallGateTest(unittest.TestCase):
 
     def test_rank_pid_binding_is_used_for_each_witness(self) -> None:
         runner = load_runner()
-        with patch.object(runner, "read_witness", side_effect=lambda _d, pid, rank: (pid, rank)) as read:
+        with patch.object(
+            runner, "read_witness", side_effect=lambda _d, pid, rank: (pid, rank)
+        ) as read:
             pair = runner._witness_pair(Path("private"), {0: (101, 7), 1: (202, 8)})
         self.assertEqual(pair, {0: (101, 0), 1: (202, 1)})
         self.assertEqual(read.call_count, 2)

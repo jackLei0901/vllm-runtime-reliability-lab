@@ -1,0 +1,70 @@
+diff --git a/plugins/profiler/inspector/inspector.h b/plugins/profiler/inspector/inspector.h
+--- a/plugins/profiler/inspector/inspector.h
++++ b/plugins/profiler/inspector/inspector.h
+@@ -148,6 +148,7 @@ struct inspectorCommInfo {
+   char deviceUuidStr[37]; // Pre-computed device UUID string for filename generation
+   char cachedStaticLabels[256]; // Cached static parts of Prometheus labels (hostname, job, comm, rank, etc.)
+   bool dump;
++  uint64_t llrNextOccurrence; // Lab-local callback identity; zero-initialized with the communicator.
+   struct inspectorCompletedCollInfo completedCollInfo;
+   pthread_rwlock_t guard;
+ };
+@@ -201,6 +202,7 @@ struct inspectorCollInfo {
+   struct inspectorCommInfo *commInfo;
+   const char* func;
+   uint64_t sn;
++  uint64_t llrOccurrence;
+   size_t msgSizeBytes;
+   uint64_t tsStartUsec;
+   uint64_t tsCompletedUsec;
+diff --git a/plugins/profiler/inspector/inspector_plugin.cc b/plugins/profiler/inspector/inspector_plugin.cc
+--- a/plugins/profiler/inspector/inspector_plugin.cc
++++ b/plugins/profiler/inspector/inspector_plugin.cc
+@@ -201,5 +201,8 @@ static void inspectorPluginCollInfoInit(struct inspectorCollInfo **collInfo,
+   collInfoPtr->refCount = 0;
+   inspectorPluginCollInfoRef(collInfoPtr); //self ref; no locks needed
+   collInfoPtr->func = eDescr->coll.func;
++  // Exact local identity for every callback, including persistent graph replays.
++  collInfoPtr->llrOccurrence = __atomic_add_fetch(
++      &commInfo->llrNextOccurrence, 1, __ATOMIC_RELAXED);
+   collInfoPtr->sn = eDescr->coll.seqNumber;
+   collInfoPtr->nChannels = eDescr->coll.nChannels;
+@@ -307,10 +310,27 @@ __hidden ncclResult_t inspectorPluginStartEvent(void* context,
+     struct inspectorCommInfo *commInfoCtx = (struct inspectorCommInfo*)context;
+     inspectorPluginCollInfoInit(&collEvent, eDescr, commInfoCtx);
+     *eHandle = collEvent;
++    if (collEvent != nullptr) {
++      TRACE_INSPECTOR("LLR_TP_EVT_V2 coll_start comm=%016llx occurrence=%llu func=%s seq=%llu channels=%u",
++                      (unsigned long long)commInfoCtx->commHash,
++                      (unsigned long long)collEvent->llrOccurrence,
++                      collEvent->func,
++                      (unsigned long long)collEvent->sn,
++                      (unsigned int)collEvent->nChannels);
++    }
+   } else if (eDescr->type == ncclProfileKernelCh) {
+     struct inspectorKernelChInfo *kernelChEvent = nullptr;
+     inspectorPluginKernelChInfoInit(&kernelChEvent, eDescr);
+     *eHandle = kernelChEvent;
++    if (kernelChEvent != nullptr && kernelChEvent->collInfo != nullptr) {
++      struct inspectorCollInfo *coll = kernelChEvent->collInfo;
++      TRACE_INSPECTOR("LLR_TP_EVT_V2 kernel_ch_start comm=%016llx occurrence=%llu func=%s seq=%llu channel=%u",
++                      (unsigned long long)coll->commInfo->commHash,
++                      (unsigned long long)coll->llrOccurrence,
++                      coll->func,
++                      (unsigned long long)coll->sn,
++                      (unsigned int)kernelChEvent->channelId);
++    }
+   } else {
+     return ncclSuccess;
+   }
+@@ -391,4 +411,10 @@ __hidden ncclResult_t inspectorPluginStopEvent(void *eHandle) {
+                                 NCCL_INSP_EVT_TRK_KERNEL_STOP,
+                                 collInfo);
+       kernelChInfo->tsCompletedUsec = inspectorGetTime();
++      TRACE_INSPECTOR("LLR_TP_EVT_V2 kernel_ch_stop comm=%016llx occurrence=%llu func=%s seq=%llu channel=%u",
++                      (unsigned long long)collInfo->commInfo->commHash,
++                      (unsigned long long)collInfo->llrOccurrence,
++                      collInfo->func,
++                      (unsigned long long)collInfo->sn,
++                      (unsigned int)kernelChInfo->channelId);
+       collInfo->nKernelChCompleted += 1;
