@@ -1,0 +1,3091 @@
+{
+ "displayTimeUnit": "ms",
+ "otherData": {
+  "lane_identity": "synthetic ordinals; independent runs are not OS PIDs",
+  "lane_origins": {
+   "1": "request observer start",
+   "2": "request observer start",
+   "3": "request observer start",
+   "4": "request observer start"
+  },
+  "notes": [
+   "The instant the consumer pause began. The drawn gap is the observed interval between progress events, not the injection interval.",
+   "The exact instants of the /health probe and the stack sample. Both are drawn as the interval the campaign's control flow bounds them to.",
+   "When the fix arm dropped its event batches. Only the count is recorded.",
+   "The EngineCore health ping from PR #36451. It was tested in a separate campaign and is not part of this bundle.",
+   "Detection by vLLM's Prometheus metrics. No metrics series was retained (not scored, not failed).",
+   "Repeatability. Each cell ran once.",
+   "The four independent runs are not synchronized to a common clock.",
+   "Evidence digests: 2e0f7025b3d60ffdd9bca2a562962d871120b9fe69670178d48ae0c8b2d967f2, 9ce0b5bedefc2fa421b0fc13978ada6b1cb1f9ca77e659d3e56b29e474ae9360, 2da7e095602749cedb22b10350bd4c07bef0f3e3fd1ecac453006cad17db3880, 4560e38603649461c9591171e87ab874687859bc7491c42a8c25f9e3f58f59ba"
+  ],
+  "source_kind": "verified_r3_replay_v1",
+  "title": "#53859: KV-event backpressure (four independent runs)",
+  "untimed_facts": [
+   {
+    "lane": 4,
+    "name": "4 KV-event batches dropped",
+    "track": 2
+   },
+   {
+    "lane": 4,
+    "name": "Request had completed before the release",
+    "track": 2
+   }
+  ]
+ },
+ "traceEvents": [
+  {
+   "args": {
+    "name": "Independent run 1 \u00b7 base/control"
+   },
+   "name": "process_name",
+   "ph": "M",
+   "pid": 1
+  },
+  {
+   "args": {
+    "sort_index": 1
+   },
+   "name": "process_sort_index",
+   "ph": "M",
+   "pid": 1
+  },
+  {
+   "args": {
+    "name": "token progress"
+   },
+   "name": "thread_name",
+   "ph": "M",
+   "pid": 1,
+   "tid": 1
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 142015
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 170102
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 197454
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 221116
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 247308
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 267981
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 288267
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 308473
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 328755
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 348880
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 373351
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 394234
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 414443
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 434654
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 454758
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 474689
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 494864
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 515062
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 535046
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 555224
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 575093
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 595219
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 616997
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 641458
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 661375
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 681463
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 701614
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 723192
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 743425
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 763744
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 784242
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 810216
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 830213
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 850535
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 870566
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 891116
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 911285
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 931492
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 951707
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 974439
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 994545
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1014929
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1037376
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1059151
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1080065
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1100366
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1120754
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1141068
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1161504
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1181737
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1202164
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1225910
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1245935
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1266099
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1286282
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1306536
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1326975
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1347225
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1367554
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1388492
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1408946
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1429232
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1449727
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1450700
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "request completed",
+   "ph": "I",
+   "pid": 1,
+   "s": "t",
+   "tid": 1,
+   "ts": 1450776
+  },
+  {
+   "args": {
+    "name": "Independent run 2 \u00b7 fix/control"
+   },
+   "name": "process_name",
+   "ph": "M",
+   "pid": 2
+  },
+  {
+   "args": {
+    "sort_index": 2
+   },
+   "name": "process_sort_index",
+   "ph": "M",
+   "pid": 2
+  },
+  {
+   "args": {
+    "name": "token progress"
+   },
+   "name": "thread_name",
+   "ph": "M",
+   "pid": 2,
+   "tid": 1
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 93652
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 117707
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 139316
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 159361
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 174272
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 188084
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 202103
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 215978
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 229895
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 243642
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 257773
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 272217
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 286450
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 300439
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 314320
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 328148
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 342075
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 356166
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 370094
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 384038
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 397849
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 411908
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 425993
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 440213
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 454178
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 468136
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 482266
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 496765
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 511163
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 525213
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 539135
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 553202
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 567173
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 581116
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 594985
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 609052
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 622779
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 636569
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 650547
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 664409
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 678310
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 692043
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 706069
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 720846
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 735045
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 748877
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 762810
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 776785
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 790787
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 804895
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 818901
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 832964
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 846741
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 860589
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 874558
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 888412
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 902125
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 915828
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 929860
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 944229
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 960098
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 974461
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 988445
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 989432
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "request completed",
+   "ph": "I",
+   "pid": 2,
+   "s": "t",
+   "tid": 1,
+   "ts": 989497
+  },
+  {
+   "args": {
+    "name": "Independent run 3 \u00b7 base/pause"
+   },
+   "name": "process_name",
+   "ph": "M",
+   "pid": 3
+  },
+  {
+   "args": {
+    "sort_index": 3
+   },
+   "name": "process_sort_index",
+   "ph": "M",
+   "pid": 3
+  },
+  {
+   "args": {
+    "name": "token progress"
+   },
+   "name": "thread_name",
+   "ph": "M",
+   "pid": 3,
+   "tid": 1
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 111226
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 131918
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 151369
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 173765
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 192921
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 212416
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 231843
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 251252
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 270571
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 290168
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 309742
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10382794
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10426556
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10464447
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10494790
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10522246
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10546126
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10568253
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10588597
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10608169
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10627586
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10647006
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10666497
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10685968
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10705226
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10724706
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10744228
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10765013
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10784847
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10804530
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10824220
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10843692
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10863502
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10883574
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10903340
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10923226
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10943141
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10962957
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 10982952
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11003082
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11023105
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11043139
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11063643
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11085348
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11106271
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11126697
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11147014
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11167330
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11187611
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11208103
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11228826
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11250295
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11271951
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11293980
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11315911
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11337864
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11359844
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11382034
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11404038
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11428110
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11450666
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11473042
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11494806
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11496149
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "request completed",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 1,
+   "ts": 11496225
+  },
+  {
+   "args": {
+    "fact_kind": "observed_gap"
+   },
+   "dur": 10073052,
+   "name": "no token progress observed between samples",
+   "ph": "X",
+   "pid": 3,
+   "tid": 1,
+   "ts": 309742
+  },
+  {
+   "args": {
+    "name": "fault control"
+   },
+   "name": "thread_name",
+   "ph": "M",
+   "pid": 3,
+   "tid": 2
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "consumer released",
+   "ph": "I",
+   "pid": 3,
+   "s": "t",
+   "tid": 2,
+   "ts": 10360755
+  },
+  {
+   "args": {
+    "name": "possible /health sample time"
+   },
+   "name": "thread_name",
+   "ph": "M",
+   "pid": 3,
+   "tid": 3
+  },
+  {
+   "args": {
+    "fact_kind": "possible_window",
+    "window_only": true
+   },
+   "dur": 10051013,
+   "name": "Possible time of one sample (not a state): GET /health \u2192 2xx",
+   "ph": "X",
+   "pid": 3,
+   "tid": 3,
+   "ts": 309742
+  },
+  {
+   "args": {
+    "name": "possible stack sample time"
+   },
+   "name": "thread_name",
+   "ph": "M",
+   "pid": 3,
+   "tid": 4
+  },
+  {
+   "args": {
+    "fact_kind": "possible_window",
+    "window_only": true
+   },
+   "dur": 10051013,
+   "name": "Possible time of one sample (not a state): Stack: EngineCore \u2192 ZmqEventPublisher.publish \u2192 Queue.put",
+   "ph": "X",
+   "pid": 3,
+   "tid": 4,
+   "ts": 309742
+  },
+  {
+   "args": {
+    "name": "Independent run 4 \u00b7 fix/pause"
+   },
+   "name": "process_name",
+   "ph": "M",
+   "pid": 4
+  },
+  {
+   "args": {
+    "sort_index": 4
+   },
+   "name": "process_sort_index",
+   "ph": "M",
+   "pid": 4
+  },
+  {
+   "args": {
+    "name": "token progress"
+   },
+   "name": "thread_name",
+   "ph": "M",
+   "pid": 4,
+   "tid": 1
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 107869
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 127615
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 147583
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 167580
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 187493
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 207642
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 227618
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 247515
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 267613
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 287702
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 307730
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 328900
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 349370
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 369172
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 388933
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 408995
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 428915
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 449017
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 468812
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 488514
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 508294
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 528030
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 547987
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 567710
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 588098
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 607965
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 628186
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 648809
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 669118
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 688766
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 708712
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 728489
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 748360
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 767086
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 781401
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 795545
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 809490
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 823443
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 837566
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 851424
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 865398
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 879466
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 893576
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 916484
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 931275
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 945450
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 959597
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 973703
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 987934
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1001791
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1015849
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1029872
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1044062
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1057982
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1072486
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1086337
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1100309
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1114394
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1128262
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1142889
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1157180
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1171179
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1185252
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "progress event",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1186418
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "request completed",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 1,
+   "ts": 1186508
+  },
+  {
+   "args": {
+    "name": "fault control"
+   },
+   "name": "thread_name",
+   "ph": "M",
+   "pid": 4,
+   "tid": 2
+  },
+  {
+   "args": {
+    "fact_kind": "instant"
+   },
+   "name": "consumer released",
+   "ph": "I",
+   "pid": 4,
+   "s": "t",
+   "tid": 2,
+   "ts": 1202538
+  }
+ ]
+}

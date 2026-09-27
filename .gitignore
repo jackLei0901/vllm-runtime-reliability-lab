@@ -9,6 +9,7 @@ __pycache__/
 .tmp-build/
 build/
 dist/
+out/
 .tmp-block5-v2-*.tar.gz
 stage-b-v2-public-20260922.tar.gz
 

@@ -157,7 +157,9 @@ class TPV2StallPluginTest(unittest.TestCase):
                 manager.graphs[full] = object()
                 self.assertEqual(manager.run_fullgraph(full), "replayed")
                 self.assertFalse(entered.exists())
-                self.assertEqual(self._witness(directory)["observed_full_cached_calls"], 0)
+                self.assertEqual(
+                    self._witness(directory)["observed_full_cached_calls"], 0
+                )
                 (Path(directory) / "observe").touch()
                 arm.touch()
                 self.assertEqual(manager.run_fullgraph(uncached), "replayed")
@@ -181,7 +183,7 @@ class TPV2StallPluginTest(unittest.TestCase):
                 self.assertEqual(witness["eligible_calls"], 1)
                 self.assertIs(witness["hold_entered"], True)
 
-    def test_wrong_rank_non_v2_breakable_and_duplicate_manager_do_not_hold(self) -> None:
+    def test_ineligible_managers_do_not_hold(self) -> None:
         for case in ("wrong_rank", "non_v2", "breakable", "duplicate_manager"):
             with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
                 module = load_plugin()
@@ -226,7 +228,9 @@ class TPV2StallPluginTest(unittest.TestCase):
                     manager = Manager()
                     desc = Descriptor(GraphMode.FULL)
                     manager.graphs[desc] = object()
-                    with patch.object(module, "_write_witness", wraps=module._write_witness) as write:
+                    with patch.object(
+                        module, "_write_witness", wraps=module._write_witness
+                    ) as write:
                         for _ in range(10):
                             manager.run_fullgraph(desc)
                     self.assertEqual(write.call_count, 2)
@@ -235,7 +239,11 @@ class TPV2StallPluginTest(unittest.TestCase):
     @unittest.skipUnless(hasattr(os, "fork"), "requires POSIX fork")
     def test_two_forked_workers_have_distinct_witness_files(self) -> None:
         completed = subprocess.run(
-            [sys.executable, "-c", "from tests.test_tp_v2_stall_plugin import _fork_probe; _fork_probe()"],
+            [
+                sys.executable,
+                "-c",
+                "from tests.test_tp_v2_stall_plugin import _fork_probe; _fork_probe()",
+            ],
             capture_output=True,
             text=True,
             timeout=10,

@@ -26,7 +26,8 @@ class LegacyCallbackAggregateTest(unittest.TestCase):
             for rank in (0, 1):
                 lines = [f"PROFILER/Plugin: init nranks: 2 rank: {rank}\n"]
                 lines.extend(
-                    f"LLR_TP_EVT coll_start comm=0123456789abcdef seq=7 channels={count}\n"
+                    "LLR_TP_EVT coll_start comm=0123456789abcdef "
+                    f"seq=7 channels={count}\n"
                     for count in (1, 1, 2, 2)
                 )
                 (Path(directory) / f"nccl.{rank}.log").write_text(

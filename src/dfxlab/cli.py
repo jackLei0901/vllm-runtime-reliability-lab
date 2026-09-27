@@ -15,6 +15,7 @@ from dfxlab.recorder import IncidentRecorder
 from dfxlab.replay import ReplayError, replay
 from dfxlab.report import summarize_file
 from dfxlab.schema import atomic_write_private_json
+from dfxlab.timeline import write_timeline
 from dfxlab.verify_bundle import verify_bundle
 
 
@@ -107,6 +108,12 @@ def build_parser() -> argparse.ArgumentParser:
         "replay", help="fail-closed replay of a published lab result"
     )
     replay_parser.add_argument("result_dir", type=Path)
+
+    timeline_parser = subparsers.add_parser(
+        "timeline", help="render a verified result or incident bundle"
+    )
+    timeline_parser.add_argument("source", type=Path)
+    timeline_parser.add_argument("--out-dir", type=Path, required=True)
     return parser
 
 
@@ -198,5 +205,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"FAIL: {exc}", file=sys.stderr)
             return 1
         print("\n".join(lines))
+        return 0
+    if args.command == "timeline":
+        try:
+            paths = write_timeline(args.source.resolve(), args.out_dir)
+        except (ReplayError, BundleError) as exc:
+            print(f"FAIL: {exc}", file=sys.stderr)
+            return 1
+        for path in paths:
+            print(path)
         return 0
     raise AssertionError(f"unhandled command: {args.command}")

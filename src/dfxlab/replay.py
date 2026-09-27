@@ -251,8 +251,8 @@ def replay(result_dir: Path) -> list[str]:
         "PASS: controls completed without a stall or dropped event batch",
         "PASS: EngineCore process remained alive during the injected stall",
         (
-            f"PASS: /health remained {base['health_during_stall']} "
-            "while token progress stopped"
+            f"PASS: one /health probe returned {base['health_during_stall']} "
+            "inside the no-progress window"
         ),
         "STACK: EngineCore -> ZmqEventPublisher.publish -> Queue.put",
         "FIX ARM: token progress completed under the same trigger",

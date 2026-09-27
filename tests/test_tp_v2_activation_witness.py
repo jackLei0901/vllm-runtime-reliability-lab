@@ -89,7 +89,11 @@ class TPV2ActivationWitnessTest(unittest.TestCase):
                 module.read_witness(directory, 42, 1)
             for data in (
                 valid_witness() | {"extra": 1},
-                {key: value for key, value in valid_witness().items() if key != "schema"},
+                {
+                    key: value
+                    for key, value in valid_witness().items()
+                    if key != "schema"
+                },
                 valid_witness() | {"eligible_calls": 0},
                 valid_witness() | {"armed_replay_calls": 0},
                 valid_witness() | {"full_cached_calls": 0},

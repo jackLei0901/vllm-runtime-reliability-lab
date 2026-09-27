@@ -118,6 +118,22 @@ def native_observations(*, progressing: bool = False) -> dict:
 
 
 class BundleTest(unittest.TestCase):
+    def test_verifier_rejects_producer_or_demand_window_mismatch(self) -> None:
+        for group in ("producer_inputs", "demand_inputs"):
+            for kind in ("client_request", "server_counter"):
+                with (
+                    self.subTest(group=group, kind=kind),
+                    tempfile.TemporaryDirectory() as temporary,
+                ):
+                    bundle = Path(temporary) / "bundle"
+                    observations = native_observations()
+                    observations[group][kind]["evaluation_start_ns"] += 1
+                    write_bundle(bundle, observations)
+                    with self.assertRaisesRegex(
+                        BundleError, "evaluation window mismatch"
+                    ):
+                        verify_bundle(bundle)
+
     def test_native_r3_facts_recompute_both_verdicts(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

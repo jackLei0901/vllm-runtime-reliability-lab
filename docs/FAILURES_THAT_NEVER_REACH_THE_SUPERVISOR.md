@@ -12,7 +12,7 @@ Four existing investigations expose the same pattern:
 
 | Case | What actually failed | What crossed the boundary | Unsafe conclusion |
 | --- | --- | --- | --- |
-| vLLM [#53859](https://github.com/vllm-project/vllm/issues/53859) / [#53883](https://github.com/vllm-project/vllm/pull/53883) | EngineCore stopped making token progress while publishing into a full event queue | The process stayed alive and `/health` stayed 2xx | The service is healthy |
+| vLLM [#53859](https://github.com/vllm-project/vllm/issues/53859) / [#53883](https://github.com/vllm-project/vllm/pull/53883) | EngineCore stopped making token progress while publishing into a full event queue | The process stayed alive and one `/health` probe returned 2xx during the no-progress window | The service is healthy |
 | PyTorch [#196968](https://github.com/pytorch/pytorch/issues/196968) / [#197232](https://github.com/pytorch/pytorch/pull/197232) | A rank stopped answering dump requests during communicator destruction | Another rank produced a Flight Recorder dump; this rank did not | The missing rank did not participate |
 | vLLM [#48966](https://github.com/vllm-project/vllm/issues/48966) / [#52178](https://github.com/vllm-project/vllm/pull/52178) | EngineCore died unexpectedly | The top-level serving process exited with status 0 | Shutdown was successful |
 | vLLM DP supervisor Gate 0 | A managed child exited abnormally, or a post-start health probe failed | The parent returned status 0 | The supervised group stopped normally |

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import importlib.util
 import hashlib
+import importlib.util
 import os
 import sys
 import tempfile
@@ -58,7 +58,12 @@ class TPV2StallGateTest(unittest.TestCase):
             snapshot.write_bytes(b"validated control snapshot")
             after_digest = hashlib.sha256(snapshot.read_bytes()).hexdigest()
             expected = runner._control_identity(
-                "model", "a" * 64, "b" * 64, {"vllm_version": "test"}, "c" * 64, "e" * 64
+                "model",
+                "a" * 64,
+                "b" * 64,
+                {"vllm_version": "test"},
+                "c" * 64,
+                "e" * 64,
             )
             runner._write_control_receipt(
                 path, {**expected, "control_after_sha256": after_digest}
@@ -92,11 +97,12 @@ class TPV2StallGateTest(unittest.TestCase):
             expected = runner._control_identity(
                 "model", "a" * 64, "b" * 64, {}, "c" * 64, "e" * 64
             )
+            snapshot_digest = hashlib.sha256(snapshot.read_bytes()).hexdigest()
             runner._write_control_receipt(
                 path,
                 {
                     **expected,
-                    "control_after_sha256": hashlib.sha256(snapshot.read_bytes()).hexdigest(),
+                    "control_after_sha256": snapshot_digest,
                 },
             )
             snapshot.write_bytes(b"different")

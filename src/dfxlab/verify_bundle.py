@@ -263,6 +263,13 @@ def _validate_observations(value: dict[str, Any]) -> None:
         {"server_counter", "client_request"},
         "demand inputs",
     )
+    for group_name, group in (("producer", producers), ("demand", demands)):
+        for kind in ("server_counter", "client_request"):
+            if (
+                group[kind]["evaluation_start_ns"] != evaluation["start_ns"]
+                or group[kind]["evaluation_end_ns"] != evaluation["end_ns"]
+            ):
+                raise BundleError(f"{group_name} {kind} evaluation window mismatch")
     for kind in ("server_counter", "client_request"):
         evaluate_producer(kind, producers[kind])
         evaluate_demand(kind, demands[kind])

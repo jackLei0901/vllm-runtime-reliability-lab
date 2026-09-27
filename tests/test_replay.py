@@ -19,7 +19,7 @@ class ReplayTests(unittest.TestCase):
     def test_published_case_replays(self) -> None:
         lines = replay(PUBLISHED)
         rendered = "\n".join(lines)
-        self.assertIn("/health remained 2xx", rendered)
+        self.assertIn("one /health probe returned 2xx", rendered)
         self.assertIn("TRADE-OFF: 4 event batches dropped", rendered)
         self.assertIn("does not rerun the GPU experiment", rendered)
 

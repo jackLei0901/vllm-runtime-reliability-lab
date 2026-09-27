@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import importlib.util
 import hashlib
+import importlib.util
 import sys
 import tempfile
 import unittest
@@ -142,8 +142,10 @@ class TPInflightTraceTest(unittest.TestCase):
             second = Path(directory) / "nccl.2.log"
             first.write_text(
                 "host [0] NCCL INFO PROFILER/Plugin: init nranks: 2 rank: 0\n"
-                "LLR_TP_EVT_V2 coll_start comm=0000000000000000 occurrence=1 func=AllReduce seq=7 channels=2\n"
-                "LLR_TP_EVT_V2 kernel_ch_start comm=0000000000000000 occurrence=1 func=AllReduce seq=7 channel=0\n",
+                "LLR_TP_EVT_V2 coll_start comm=0000000000000000 "
+                "occurrence=1 func=AllReduce seq=7 channels=2\n"
+                "LLR_TP_EVT_V2 kernel_ch_start comm=0000000000000000 "
+                "occurrence=1 func=AllReduce seq=7 channel=0\n",
                 encoding="utf-8",
             )
             second.write_text(
@@ -218,8 +220,12 @@ class TPInflightTraceTest(unittest.TestCase):
         )
         after = {0: events, 1: events}
         key = events[74].key  # First collective of the first decode step.
-        descriptors = {event.key: (event.func, event.seq, event.value) for event in events}
-        facts = module._request_step_metadata({0: (), 1: ()}, after, key, descriptors, 1)
+        descriptors = {
+            event.key: (event.func, event.seq, event.value) for event in events
+        }
+        facts = module._request_step_metadata(
+            {0: (), 1: ()}, after, key, descriptors, 1
+        )
         self.assertEqual(facts["occurrences_after_observe"], {0: 1184, 1: 1184})
         self.assertEqual(facts["step_index"], 2)
         self.assertEqual(facts["position_within_step"], 1)
