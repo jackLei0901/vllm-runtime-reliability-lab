@@ -11,6 +11,7 @@ FIELDS = frozenset(
     {
         "schema",
         "install_seen",
+        "process_origin",
         "manager_instances",
         "manager_kind",
         "runner_v2",
@@ -21,6 +22,7 @@ FIELDS = frozenset(
         "replay_calls",
         "armed_replay_calls",
         "full_cached_calls",
+        "observed_full_cached_calls",
         "eligible_calls",
         "hold_entered",
     }
@@ -30,6 +32,7 @@ COUNTS = (
     "replay_calls",
     "armed_replay_calls",
     "full_cached_calls",
+    "observed_full_cached_calls",
     "eligible_calls",
 )
 MAX_BYTES = 4096
@@ -77,6 +80,7 @@ def read_witness(directory: Path, pid: int, expected_rank: int) -> dict[str, obj
     if (
         observed["schema"] != "tp-v2-activation-v1"
         or observed["install_seen"] is not True
+        or observed["process_origin"] not in ("direct_install", "inherited_after_fork")
         or observed["manager_kind"] != "ModelCudaGraphManager"
         or observed["runner_v2"] is not True
         or type(observed["tp_rank"]) is not int
@@ -84,7 +88,7 @@ def read_witness(directory: Path, pid: int, expected_rank: int) -> dict[str, obj
         or type(observed["tp_world_size"]) is not int
         or observed["tp_world_size"] != 2
         or observed["configured_graph_mode"]
-        not in ("FULL", "FULL_AND_PIECEWISE")
+        not in ("FULL", "FULL_AND_PIECEWISE", "FULL_DECODE_ONLY")
         or observed["breakable_enabled"] is not False
         or type(observed["hold_entered"]) is not bool
     ):
@@ -95,6 +99,8 @@ def read_witness(directory: Path, pid: int, expected_rank: int) -> dict[str, obj
         raise ValueError("activation manager identity ambiguous")
     if observed["hold_entered"] and observed["eligible_calls"] == 0:
         raise ValueError("hold lacks eligible replay")
+    if observed["observed_full_cached_calls"] > observed["full_cached_calls"]:
+        raise ValueError("observed replay exceeds lifetime replay count")
     if observed["eligible_calls"] and (
         observed["armed_replay_calls"] == 0 or observed["full_cached_calls"] == 0
     ):

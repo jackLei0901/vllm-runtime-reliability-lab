@@ -33,16 +33,36 @@ def _witness_pair(directory: Path, identities: dict[int, tuple[int, int]]) -> di
 def _public_witness(pair: dict) -> dict:
     fields = (
         "manager_kind",
+        "process_origin",
         "runner_v2",
         "configured_graph_mode",
         "breakable_enabled",
         "replay_calls",
         "armed_replay_calls",
         "full_cached_calls",
+        "observed_full_cached_calls",
         "eligible_calls",
         "hold_entered",
     )
     return {rank: {field: pair[rank][field] for field in fields} for rank in (0, 1)}
+
+
+def _control_passed(
+    pair: dict, *, tokens: int, identity_stable: bool, entered: bool
+) -> bool:
+    return (
+        tokens == 16
+        and identity_stable
+        and not entered
+        and all(
+            pair[rank]["observed_full_cached_calls"] > 0
+            and pair[rank]["replay_calls"] > 0
+            and pair[rank]["full_cached_calls"] > 0
+            and pair[rank]["eligible_calls"] == 0
+            and not pair[rank]["hold_entered"]
+            for rank in (0, 1)
+        )
+    )
 
 
 def _unscored(mode: str, reason: str, binary_digest: str) -> int:
@@ -62,7 +82,7 @@ def _unscored(mode: str, reason: str, binary_digest: str) -> int:
     return 2
 
 
-def _check_environment(private: Path) -> tuple[Path, Path, Path]:
+def _check_environment(private: Path) -> tuple[Path, Path, Path, Path]:
     _private_directory(private)
     inspector = private / "inspector"
     witness = private / "witness"
@@ -70,12 +90,13 @@ def _check_environment(private: Path) -> tuple[Path, Path, Path]:
     _private_directory(witness)
     if list(witness.iterdir()):
         raise ValueError("witness directory must start empty")
-    arm, entered = private / "arm", private / "entered"
-    if arm.exists() or entered.exists():
-        raise ValueError("arm and entered markers must not pre-exist")
+    arm, entered, observe = private / "arm", private / "entered", private / "observe"
+    if arm.exists() or entered.exists() or observe.exists():
+        raise ValueError("experiment markers must not pre-exist")
     expected = {
         "LLR_TP_ARM_FILE": str(arm),
         "LLR_TP_ENTER_FILE": str(entered),
+        "LLR_TP_OBSERVE_FILE": str(observe),
         "LLR_TP_WITNESS_DIR": str(witness),
         "VLLM_PLUGINS": "llr_tp_v2_stall",
         "VLLM_USE_BREAKABLE_CUDAGRAPH": "0",
@@ -95,7 +116,7 @@ def _check_environment(private: Path) -> tuple[Path, Path, Path]:
     library = Path(os.environ.get("NCCL_PROFILER_PLUGIN", ""))
     if not library.is_absolute() or not library.is_file():
         raise ValueError("pinned Inspector library is unavailable")
-    return arm, entered, witness
+    return arm, entered, observe, witness
 
 
 def main() -> int:
@@ -105,7 +126,7 @@ def main() -> int:
     parser.add_argument("--mode", required=True, choices=("control", "hold"))
     args = parser.parse_args()
     private = args.private_dir.resolve(strict=True)
-    arm, entered, witness_dir = _check_environment(private)
+    arm, entered, observe, witness_dir = _check_environment(private)
     library = Path(os.environ["NCCL_PROFILER_PLUGIN"])
     library_digest = hashlib.sha256(library.read_bytes()).hexdigest()
 
@@ -130,9 +151,12 @@ def main() -> int:
         return _unscored(args.mode, "preflight_evidence_unavailable", library_digest)
     if any(witness_before[rank]["hold_entered"] for rank in (0, 1)):
         raise ValueError("hold occurred before the evaluation window")
+    if any(witness_before[rank]["observed_full_cached_calls"] for rank in (0, 1)):
+        raise ValueError("observed replay before the evaluation window")
     inspector_before = inspector_counts(str(private / "inspector"))
     if inspector_before.get("outcome") != "available":
         return _unscored(args.mode, "stock_inspector_unavailable", library_digest)
+    _create_arm(observe)
     if args.mode == "hold":
         _create_arm(arm)
 
@@ -186,16 +210,15 @@ def main() -> int:
     witnessed_full = all(
         witness_after[rank]["replay_calls"] > 0
         and witness_after[rank]["full_cached_calls"] > 0
+        and witness_after[rank]["observed_full_cached_calls"] > 0
         for rank in (0, 1)
     )
     if args.mode == "control":
-        okay = (
-            tokens == 16
-            and identity_stable
-            and witnessed_full
-            and not entered.exists()
-            and all(not witness_after[rank]["hold_entered"] for rank in (0, 1))
-            and all(witness_after[rank]["eligible_calls"] == 0 for rank in (0, 1))
+        okay = _control_passed(
+            witness_after,
+            tokens=tokens,
+            identity_stable=identity_stable,
+            entered=entered.exists(),
         )
         result = {
             "result": "healthy_v2_full_replay_observed" if okay else "unscored",

@@ -21,6 +21,7 @@ _witness_path: str | None = None
 _state: dict[str, Any] = {
     "schema": "tp-v2-activation-v1",
     "install_seen": False,
+    "process_origin": None,
     "manager_instances": 0,
     "manager_kind": None,
     "runner_v2": None,
@@ -31,6 +32,7 @@ _state: dict[str, Any] = {
     "replay_calls": 0,
     "armed_replay_calls": 0,
     "full_cached_calls": 0,
+    "observed_full_cached_calls": 0,
     "eligible_calls": 0,
     "hold_entered": False,
 }
@@ -71,7 +73,7 @@ def _bump(name: str) -> bool:
 
 def _write_witness() -> None:
     assert _witness_path is not None
-    temporary = f"{_witness_path}.tmp"
+    temporary = f"{_witness_path}.tmp.{os.getpid()}"
     fd = os.open(temporary, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
     with os.fdopen(fd, "w", encoding="ascii") as stream:
         json.dump(_state, stream, sort_keys=True, separators=(",", ":"))
@@ -79,13 +81,16 @@ def _write_witness() -> None:
     os.replace(temporary, _witness_path)
 
 
-def _validate_paths(arm: str | None, entered: str | None, witness_dir: str | None) -> None:
-    if not arm or not entered or not witness_dir:
-        raise RuntimeError("arm, entered and witness paths are required")
-    if not all(os.path.isabs(path) for path in (arm, entered, witness_dir)):
+def _validate_paths(
+    arm: str | None, entered: str | None, observe: str | None,
+    witness_dir: str | None,
+) -> None:
+    if not arm or not entered or not observe or not witness_dir:
+        raise RuntimeError("arm, entered, observe and witness paths are required")
+    if not all(os.path.isabs(path) for path in (arm, entered, observe, witness_dir)):
         raise RuntimeError("experiment paths must be absolute")
-    if os.path.dirname(arm) != os.path.dirname(entered):
-        raise RuntimeError("arm and entered markers must share a private directory")
+    if not (os.path.dirname(arm) == os.path.dirname(entered) == os.path.dirname(observe)):
+        raise RuntimeError("experiment markers must share a private directory")
     if os.path.dirname(witness_dir) != os.path.dirname(arm):
         raise RuntimeError("witness directory must be under the same private root")
     metadata = os.stat(witness_dir)
@@ -105,9 +110,11 @@ def install() -> None:
 
     arm = os.environ.get("LLR_TP_ARM_FILE")
     entered = os.environ.get("LLR_TP_ENTER_FILE")
+    observe = os.environ.get("LLR_TP_OBSERVE_FILE")
     witness_dir = os.environ.get("LLR_TP_WITNESS_DIR")
-    _validate_paths(arm, entered, witness_dir)
-    assert arm is not None and entered is not None and witness_dir is not None
+    _validate_paths(arm, entered, observe, witness_dir)
+    assert arm is not None and entered is not None and observe is not None
+    assert witness_dir is not None
     hold_seconds = float(os.environ.get("LLR_TP_HOLD_SECONDS", "3"))
     if not 2 <= hold_seconds <= 5:
         raise RuntimeError("hold duration must be between 2 and 5 seconds")
@@ -126,7 +133,31 @@ def install() -> None:
     if os.path.exists(_witness_path):
         raise RuntimeError("witness path must be fresh")
     _state["install_seen"] = True
+    _state["process_origin"] = "direct_install"
     _write_witness()
+
+    def reset_after_fork() -> None:
+        """The vLLM plugin loader may not call install again in forked workers."""
+        global _lock, _held, _manager_identity, _witness_path
+        _lock = threading.Lock()
+        _held = False
+        _manager_identity = None
+        for field in (
+            "manager_instances", "replay_calls", "armed_replay_calls",
+            "full_cached_calls", "observed_full_cached_calls", "eligible_calls",
+        ):
+            _state[field] = 0
+        for field in (
+            "manager_kind", "runner_v2", "tp_rank", "tp_world_size",
+            "configured_graph_mode", "breakable_enabled",
+        ):
+            _state[field] = None
+        _state["hold_entered"] = False
+        _state["process_origin"] = "inherited_after_fork"
+        _witness_path = os.path.join(witness_dir, f"witness.{os.getpid()}.json")
+        if os.path.exists(_witness_path):
+            raise RuntimeError("forked witness path must be fresh")
+        _write_witness()
 
     def init_wrapped(self: Any, *args: Any, **kwargs: Any) -> None:
         global _manager_identity
@@ -135,7 +166,7 @@ def install() -> None:
             _bump("manager_instances")
             _manager_identity = id(self) if _state["manager_instances"] == 1 else None
             _state.update(
-                manager_kind="ModelCudaGraphManager",
+                manager_kind=type(self).__name__,
                 runner_v2=bool(self.vllm_config.use_v2_model_runner),
                 tp_rank=get_tensor_model_parallel_rank(),
                 tp_world_size=get_tensor_model_parallel_world_size(),
@@ -155,6 +186,8 @@ def install() -> None:
                 changed = _bump("armed_replay_calls") or changed
             if mode == "FULL" and cached:
                 changed = _bump("full_cached_calls") or changed
+                if os.path.isfile(observe):
+                    changed = _bump("observed_full_cached_calls") or changed
             allowed = eligible_v2(
                 armed=armed,
                 held=_held,
@@ -186,4 +219,6 @@ def install() -> None:
 
     ModelCudaGraphManager.__init__ = init_wrapped
     ModelCudaGraphManager.run_fullgraph = replay_wrapped
+    if hasattr(os, "register_at_fork"):
+        os.register_at_fork(after_in_child=reset_after_fork)
     _installed = True

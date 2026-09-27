@@ -4,6 +4,7 @@ import importlib.metadata
 import importlib.util
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import types
@@ -92,7 +93,7 @@ class TPV2StallPluginTest(unittest.TestCase):
         witness_dir.mkdir(mode=0o700)
         arm, entered = root / "arm", root / "entered"
 
-        class Manager:
+        class ModelCudaGraphManager:
             def __init__(self) -> None:
                 self.vllm_config = types.SimpleNamespace(use_v2_model_runner=v2)
                 self.cudagraph_mode = types.SimpleNamespace(name="FULL_AND_PIECEWISE")
@@ -117,16 +118,20 @@ class TPV2StallPluginTest(unittest.TestCase):
         distributed.get_tensor_model_parallel_rank = lambda: rank
         distributed.get_tensor_model_parallel_world_size = lambda: 2
         fake_modules["vllm.v1.worker.gpu.cudagraph_utils"].ModelCudaGraphManager = (
-            Manager
+            ModelCudaGraphManager
         )
         environment = {
             "LLR_TP_ARM_FILE": str(arm),
             "LLR_TP_ENTER_FILE": str(entered),
+            "LLR_TP_OBSERVE_FILE": str(root / "observe"),
             "LLR_TP_WITNESS_DIR": str(witness_dir),
             "LLR_TP_HOLD_SECONDS": "3",
             "VLLM_USE_BREAKABLE_CUDAGRAPH": "0",
         }
-        return {"modules": fake_modules, "environment": environment}, Manager, arm, entered
+        return (
+            {"modules": fake_modules, "environment": environment},
+            ModelCudaGraphManager, arm, entered,
+        )
 
     def _witness(self, directory: str) -> dict:
         path = Path(directory) / "witness" / f"witness.{os.getpid()}.json"
@@ -140,6 +145,7 @@ class TPV2StallPluginTest(unittest.TestCase):
                 patch.dict(sys.modules, fixture["modules"]),
                 patch.dict(os.environ, fixture["environment"]),
                 patch.object(module.time, "sleep") as sleep,
+                patch.object(os, "register_at_fork", create=True),
             ):
                 module.install()
                 module.install()
@@ -151,6 +157,8 @@ class TPV2StallPluginTest(unittest.TestCase):
                 manager.graphs[full] = object()
                 self.assertEqual(manager.run_fullgraph(full), "replayed")
                 self.assertFalse(entered.exists())
+                self.assertEqual(self._witness(directory)["observed_full_cached_calls"], 0)
+                (Path(directory) / "observe").touch()
                 arm.touch()
                 self.assertEqual(manager.run_fullgraph(uncached), "replayed")
                 self.assertFalse(entered.exists())
@@ -168,6 +176,7 @@ class TPV2StallPluginTest(unittest.TestCase):
                 self.assertEqual(witness["tp_rank"], 1)
                 self.assertIs(witness["breakable_enabled"], False)
                 self.assertEqual(witness["replay_calls"], 2)  # Saturated.
+                self.assertEqual(witness["observed_full_cached_calls"], 2)
                 self.assertEqual(witness["armed_replay_calls"], 2)
                 self.assertEqual(witness["eligible_calls"], 1)
                 self.assertIs(witness["hold_entered"], True)
@@ -186,6 +195,7 @@ class TPV2StallPluginTest(unittest.TestCase):
                     patch.dict(sys.modules, fixture["modules"]),
                     patch.dict(os.environ, fixture["environment"]),
                     patch.object(module.time, "sleep") as sleep,
+                    patch.object(os, "register_at_fork", create=True),
                 ):
                     module.install()
                     manager = Manager()
@@ -202,7 +212,9 @@ class TPV2StallPluginTest(unittest.TestCase):
         module = load_plugin()
         with tempfile.TemporaryDirectory() as directory:
             fixture, Manager, arm, _ = self._fixture(directory)
-            with patch.dict(sys.modules, fixture["modules"]):
+            with patch.dict(sys.modules, fixture["modules"]), patch.object(
+                os, "register_at_fork", create=True
+            ):
                 with patch.dict(os.environ, fixture["environment"] | {
                     "LLR_TP_WITNESS_DIR": "relative"
                 }):
@@ -219,6 +231,63 @@ class TPV2StallPluginTest(unittest.TestCase):
                             manager.run_fullgraph(desc)
                     self.assertEqual(write.call_count, 2)
                     self.assertFalse(arm.exists())
+
+    @unittest.skipUnless(hasattr(os, "fork"), "requires POSIX fork")
+    def test_two_forked_workers_have_distinct_witness_files(self) -> None:
+        completed = subprocess.run(
+            [sys.executable, "-c", "from tests.test_tp_v2_stall_plugin import _fork_probe; _fork_probe()"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(completed.stdout.strip(), "FORK_WITNESSES_OK")
+
+
+def _fork_probe() -> None:
+    module = load_plugin()
+    with tempfile.TemporaryDirectory() as directory:
+        fixture, Manager, _arm, _entered = TPV2StallPluginTest()._fixture(directory)
+        with patch.dict(sys.modules, fixture["modules"]), patch.dict(
+            os.environ, fixture["environment"]
+        ):
+            module.install()
+            parent_pid = os.getpid()
+            read_fd, write_fd = os.pipe()
+            children = []
+            for _ in range(2):
+                child_pid = os.fork()
+                if child_pid == 0:
+                    try:
+                        os.close(write_fd)
+                        os.read(read_fd, 1)
+                        manager = Manager()
+                        full = Descriptor(GraphMode.FULL)
+                        manager.graphs[full] = object()
+                        manager.run_fullgraph(full)
+                        os._exit(0)
+                    except BaseException:
+                        os._exit(1)
+                children.append(child_pid)
+            os.close(read_fd)
+            os.write(write_fd, b"xx")
+            os.close(write_fd)
+            for child_pid in children:
+                _pid, status = os.waitpid(child_pid, 0)
+                assert os.waitstatus_to_exitcode(status) == 0
+            witness_dir = Path(directory) / "witness"
+            assert sorted(path.name for path in witness_dir.iterdir()) == sorted(
+                f"witness.{pid}.json" for pid in (parent_pid, *children)
+            )
+            for child_pid in children:
+                witness = json.loads(
+                    (witness_dir / f"witness.{child_pid}.json").read_text()
+                )
+                assert witness["process_origin"] == "inherited_after_fork"
+                assert witness["manager_instances"] == 1
+                assert witness["tp_rank"] == 1
+    print("FORK_WITNESSES_OK")
 
 
 if __name__ == "__main__":

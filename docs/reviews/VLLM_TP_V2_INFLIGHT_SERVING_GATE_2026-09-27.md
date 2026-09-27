@@ -27,25 +27,42 @@ controlled mechanism, not an organic failure.
   entry-point metadata is colocated on `PYTHONPATH`, with
   `VLLM_PLUGINS=llr_tp_v2_stall`. Installation requires fresh private marker
   and witness directories, a 2–5 second bound, and
-  `VLLM_USE_BREAKABLE_CUDAGRAPH=0`.
+  `VLLM_USE_BREAKABLE_CUDAGRAPH=0`. vLLM may fork its workers after loading
+  plugins in the frontend. An `after_in_child` handler resets the inherited
+  counters, lock, hold state and witness path to the child's PID; a spawned
+  worker installs directly. `process_origin` distinguishes these two paths.
+  Temporary witness filenames include the writer PID, so two children cannot
+  collide on one parent's temporary file.
 - Rank 1 alone may hold, once, before a cached FULL replay. The precondition
   includes a unique V2 manager, TP size 2, no breakable graph, an operator arm
   file, and an unspent hold. The entered marker is written atomically before
-  sleeping. The original replay follows the bounded wait.
+  sleeping. The original replay follows the bounded wait. The runner creates
+  a separate `observe` marker only after construction, capture and warmup;
+  `observed_full_cached_calls` counts cached FULL replays in that request
+  window. Lifetime `full_cached_calls` alone cannot pass the control, since
+  warmup may saturate it before a request begins.
 - Each process writes one private `witness.<pid>.json`. The closed shape records
   installation, unique manager construction, selected V2 configuration,
-  graph-manager kind/mode, rank, breakable setting, and saturated counts
+  observed graph-manager kind/mode, rank, breakable setting, and saturated counts
   (`0`, `1`, `2+`) for replay, armed replay, FULL cached replay and eligible
-  replay. It writes only on state transitions, never one raw line per token.
+  replay, including the observed-window FULL count. It writes only on state
+  transitions, never one raw line per token. `FULL_DECODE_ONLY` is accepted
+  alongside `FULL` and `FULL_AND_PIECEWISE`: each permits cached FULL replays
+  at the pinned revision.
   No descriptor values, pointers, model output or stack frames enter it.
   [The reader](../../experiments/vllm-tp-dfx/v2_activation_witness.py) rejects
   unknown fields, ambiguous managers, invalid identity or missing required
   facts. The [runner](../../experiments/vllm-tp-dfx/serving_v2_stall_gate.py)
   binds each witness filename to the live NCCL-log PID and `/proc` start ticks.
+  `runner_v2` and the FULL-call mode remain consistency checks, not independent
+  evidence of V2 selection or extra mutation coverage: this manager and call
+  site already constrain them.
 - CPU fake-manager and reader tests must pass the positive path and mutations
   of arm, rank, TP size, V2 selection, manager uniqueness, mode, cache and
-  breakable state. Entry-point discovery, bounded writes and malformed
-  witness rejection are also required. A CPU fake cannot establish that the
+  breakable state, observed-window gating, and two forked children writing
+  distinct PID-keyed witnesses without collision. The fork test skips on
+  platforms without `os.fork`. Entry-point discovery, bounded writes and
+  malformed witness rejection are also required. A CPU fake cannot establish that the
   installed wheel imports the plugin or that CUDA replay executes it.
 
 ## One dual-GPU booking, only after the CPU gate
@@ -65,18 +82,29 @@ healthy and one 2–5 second hold cell. Never broaden the run live to another
 backend, model or graph setting.
 
 1. **Build/load smoke:** verify exact source/build identities, plugin discovery,
-   two rank-bound callback logs, and one valid V2 manager witness per rank. If
-   any is absent, stop as `unscored` before injection.
+   two rank-bound callback logs, and exactly one valid V2 manager witness per
+   worker PID, keyed to that PID. A witness keyed to a frontend or other
+   non-worker PID does not substitute. If any is absent, stop as `unscored`
+   before injection.
 2. **Healthy control:** generate 16 tokens without an arm file. Both ranks
    must finish with stable PID/start-tick identities and show at least one
-   actual V2 FULL cached replay in the witness; no entered marker may exist.
-   A FULL capture startup line alone does not pass.
+   actual V2 FULL cached replay **after** the `observe` marker on both ranks;
+   no entered marker may exist. A FULL capture startup line or warmup replay
+   alone does not pass.
 3. **Bounded hold:** construct/capture the engine before arming. Rank 1 must
    atomically write its entered marker and witness `hold_entered=true` on a
-   cached FULL replay. While the marker is younger than the declared hold and
+   cached FULL replay in the observation window. With this request shape,
+   the prefill is expected to use the mixed/piecewise path and the first held
+   FULL replay to be the first decode step; the closed witness, not this
+   expectation, decides whether the cell is scorable. While the marker is
+   younger than the declared hold and
    the request is pending, snapshot callback logs and stock Inspector JSON;
    finish the request, then require rank 1 to catch up. A missing marker is
    `unscored`, not a negative Inspector result.
+
+The entered marker and runner use Linux `CLOCK_MONOTONIC`, a system-wide clock;
+the cross-process hold-window comparison is not portable without rechecking
+that clock contract.
 
 The runner's public line contains only closed activation facts, bounded counts,
 ordinal collective position, binary digest and typed outcome. Raw witness
@@ -94,6 +122,7 @@ stock-Inspector export-policy gap. Aggregate JSON counts cannot fill that gap.
   change.
 - A valid V2 witness but no entry marker: name the failed predicate from the
   closed witness; mark the cell `unscored`, then revise the experiment on CPU.
-- Plugin or manager witness absent/ambiguous, malformed callbacks, wrong
+- Plugin or manager witness absent/ambiguous or keyed to a non-worker PID,
+  malformed callbacks, wrong
   version, timeout, or unstable identity: stop `unscored`; do not buy another
   GPU cell merely to hunt for a passing configuration.

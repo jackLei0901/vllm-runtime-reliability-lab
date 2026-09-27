@@ -24,6 +24,7 @@ def valid_witness() -> dict:
     return {
         "schema": "tp-v2-activation-v1",
         "install_seen": True,
+        "process_origin": "inherited_after_fork",
         "manager_instances": 1,
         "manager_kind": "ModelCudaGraphManager",
         "runner_v2": True,
@@ -34,6 +35,7 @@ def valid_witness() -> dict:
         "replay_calls": 2,
         "armed_replay_calls": 1,
         "full_cached_calls": 2,
+        "observed_full_cached_calls": 1,
         "eligible_calls": 1,
         "hold_entered": True,
     }
@@ -56,6 +58,7 @@ class TPV2ActivationWitnessTest(unittest.TestCase):
     def test_every_identity_and_precondition_is_checked(self) -> None:
         mutations = {
             "install_seen": False,
+            "process_origin": "unknown",
             "manager_instances": 2,
             "manager_kind": "CUDAGraphWrapper",
             "runner_v2": False,
@@ -66,6 +69,7 @@ class TPV2ActivationWitnessTest(unittest.TestCase):
             "replay_calls": True,
             "armed_replay_calls": 3,
             "full_cached_calls": -1,
+            "observed_full_cached_calls": 3,
             "eligible_calls": "1",
         }
         with tempfile.TemporaryDirectory() as root:
@@ -88,6 +92,7 @@ class TPV2ActivationWitnessTest(unittest.TestCase):
                 {key: value for key, value in valid_witness().items() if key != "schema"},
                 valid_witness() | {"eligible_calls": 0},
                 valid_witness() | {"armed_replay_calls": 0},
+                valid_witness() | {"full_cached_calls": 0},
             ):
                 self._write(directory, json.dumps(data))
                 with self.assertRaises(ValueError):
@@ -95,6 +100,17 @@ class TPV2ActivationWitnessTest(unittest.TestCase):
             self._write(directory, json.dumps(valid_witness())[:-1] + ',"tp_rank":1}')
             with self.assertRaisesRegex(ValueError, "duplicate"):
                 module.read_witness(directory, 42, 1)
+
+    def test_decode_only_full_graph_mode_is_valid(self) -> None:
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root) / "witness"
+            directory.mkdir(mode=0o700)
+            expected = valid_witness() | {
+                "configured_graph_mode": "FULL_DECODE_ONLY",
+                "process_origin": "direct_install",
+            }
+            self._write(directory, json.dumps(expected))
+            self.assertEqual(module.read_witness(directory, 42, 1), expected)
 
 
 if __name__ == "__main__":

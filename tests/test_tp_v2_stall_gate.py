@@ -37,6 +37,7 @@ class TPV2StallGateTest(unittest.TestCase):
             environment = {
                 "LLR_TP_ARM_FILE": str(root / "arm"),
                 "LLR_TP_ENTER_FILE": str(root / "entered"),
+                "LLR_TP_OBSERVE_FILE": str(root / "observe"),
                 "LLR_TP_WITNESS_DIR": str(root / "witness"),
                 "LLR_TP_HOLD_SECONDS": "3",
                 "VLLM_PLUGINS": "llr_tp_v2_stall",
@@ -52,7 +53,7 @@ class TPV2StallGateTest(unittest.TestCase):
             ):
                 self.assertEqual(
                     runner._check_environment(root),
-                    (root / "arm", root / "entered", root / "witness"),
+                    (root / "arm", root / "entered", root / "observe", root / "witness"),
                 )
                 for name, value in (
                     ("VLLM_PLUGINS", "wrong_plugin"),
@@ -71,12 +72,14 @@ class TPV2StallGateTest(unittest.TestCase):
         runner = load_runner()
         facts = {
             "manager_kind": "ModelCudaGraphManager",
+            "process_origin": "inherited_after_fork",
             "runner_v2": True,
             "configured_graph_mode": "FULL",
             "breakable_enabled": False,
             "replay_calls": 2,
             "armed_replay_calls": 1,
             "full_cached_calls": 2,
+            "observed_full_cached_calls": 1,
             "eligible_calls": 1,
             "hold_entered": True,
             "tp_rank": 1,
@@ -98,6 +101,24 @@ class TPV2StallGateTest(unittest.TestCase):
             pair = runner._witness_pair(Path("private"), {0: (101, 7), 1: (202, 8)})
         self.assertEqual(pair, {0: (101, 0), 1: (202, 1)})
         self.assertEqual(read.call_count, 2)
+
+    def test_warmup_replays_cannot_pass_the_control(self) -> None:
+        runner = load_runner()
+        facts = {
+            "replay_calls": 2,
+            "full_cached_calls": 2,
+            "observed_full_cached_calls": 1,
+            "eligible_calls": 0,
+            "hold_entered": False,
+        }
+        pair = {0: dict(facts), 1: dict(facts)}
+        self.assertTrue(
+            runner._control_passed(pair, tokens=16, identity_stable=True, entered=False)
+        )
+        pair[1]["observed_full_cached_calls"] = 0
+        self.assertFalse(
+            runner._control_passed(pair, tokens=16, identity_stable=True, entered=False)
+        )
 
 
 if __name__ == "__main__":
