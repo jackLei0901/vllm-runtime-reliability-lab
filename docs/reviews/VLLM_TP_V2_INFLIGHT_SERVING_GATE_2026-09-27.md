@@ -75,6 +75,10 @@ not forced. Set `VLLM_USE_BREAKABLE_CUDAGRAPH=0` explicitly. Use a fresh
 owner-only directory per cell, including `inspector/` and `witness/`; set
 `NCCL_DEBUG=TRACE`, `NCCL_DEBUG_SUBSYS=INIT,PROFILE`, `NCCL_DEBUG_FILE` to
 `<private>/nccl.%p.log`, and stock Inspector JSON to `<private>/inspector`.
+Set `NCCL_INSPECTOR_ENABLE=1`,
+`NCCL_INSPECTOR_DUMP_THREAD_INTERVAL_MICROSECONDS=500`, and
+`NCCL_INSPECTOR_DUMP_VERBOSE=1`; without the enable switch, Inspector is
+disabled by default and absence of callbacks is an apparatus failure.
 The standalone Inspector patch/library are the separately pinned
 [acquisition control](VLLM_TP_INFLIGHT_SERVING_GATE_2026-09-27.md), not a new
 product probe. Use an external 180-second hard timeout and stop after one

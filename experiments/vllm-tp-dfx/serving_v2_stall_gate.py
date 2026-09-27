@@ -104,6 +104,9 @@ def _check_environment(private: Path) -> tuple[Path, Path, Path, Path]:
         "NCCL_DEBUG_SUBSYS": "INIT,PROFILE",
         "NCCL_DEBUG_FILE": str(private / "nccl.%p.log"),
         "NCCL_INSPECTOR_DUMP_DIR": str(inspector),
+        "NCCL_INSPECTOR_ENABLE": "1",
+        "NCCL_INSPECTOR_DUMP_THREAD_INTERVAL_MICROSECONDS": "500",
+        "NCCL_INSPECTOR_DUMP_VERBOSE": "1",
     }
     for name, value in expected.items():
         if os.environ.get(name) != value:

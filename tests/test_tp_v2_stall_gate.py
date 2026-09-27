@@ -46,6 +46,9 @@ class TPV2StallGateTest(unittest.TestCase):
                 "NCCL_DEBUG_SUBSYS": "INIT,PROFILE",
                 "NCCL_DEBUG_FILE": str(root / "nccl.%p.log"),
                 "NCCL_INSPECTOR_DUMP_DIR": str(root / "inspector"),
+                "NCCL_INSPECTOR_ENABLE": "1",
+                "NCCL_INSPECTOR_DUMP_THREAD_INTERVAL_MICROSECONDS": "500",
+                "NCCL_INSPECTOR_DUMP_VERBOSE": "1",
                 "NCCL_PROFILER_PLUGIN": str(library),
             }
             with patch.object(runner, "_private_directory"), patch.dict(
@@ -59,6 +62,7 @@ class TPV2StallGateTest(unittest.TestCase):
                     ("VLLM_PLUGINS", "wrong_plugin"),
                     ("VLLM_USE_V2_MODEL_RUNNER", "0"),
                     ("NCCL_DEBUG_SUBSYS", "INIT"),
+                    ("NCCL_INSPECTOR_ENABLE", "0"),
                     ("LLR_TP_HOLD_SECONDS", "10"),
                 ):
                     with self.subTest(name=name), patch.dict(os.environ, {name: value}):
