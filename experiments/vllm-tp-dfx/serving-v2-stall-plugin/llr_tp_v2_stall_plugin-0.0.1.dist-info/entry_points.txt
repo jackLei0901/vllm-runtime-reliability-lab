@@ -1,0 +1,2 @@
+[vllm.general_plugins]
+llr_tp_v2_stall = llr_tp_v2_stall:install
