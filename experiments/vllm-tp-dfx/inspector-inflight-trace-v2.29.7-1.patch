@@ -1,0 +1,36 @@
+diff --git a/plugins/profiler/inspector/inspector_plugin.cc b/plugins/profiler/inspector/inspector_plugin.cc
+--- a/plugins/profiler/inspector/inspector_plugin.cc
++++ b/plugins/profiler/inspector/inspector_plugin.cc
+@@ -324,10 +324,23 @@ __hidden ncclResult_t inspectorPluginStartEvent(void* context,
+     struct inspectorCommInfo *commInfoCtx = (struct inspectorCommInfo*)context;
+     inspectorPluginCollInfoInit(&collEvent, eDescr, commInfoCtx);
+     *eHandle = collEvent;
++    if (collEvent != nullptr) {
++      TRACE_INSPECTOR("LLR_TP_EVT coll_start comm=%016llx seq=%llu channels=%u",
++                      (unsigned long long)commInfoCtx->commHash,
++                      (unsigned long long)collEvent->sn,
++                      (unsigned int)collEvent->nChannels);
++    }
+   } else if (eDescr->type == ncclProfileKernelCh) {
+     struct inspectorKernelChInfo *kernelChEvent = nullptr;
+     inspectorPluginKernelChInfoInit(&kernelChEvent, eDescr);
+     *eHandle = kernelChEvent;
++    if (kernelChEvent != nullptr && kernelChEvent->collInfo != nullptr) {
++      struct inspectorCollInfo *coll = kernelChEvent->collInfo;
++      TRACE_INSPECTOR("LLR_TP_EVT kernel_ch_start comm=%016llx seq=%llu channel=%u",
++                      (unsigned long long)coll->commInfo->commHash,
++                      (unsigned long long)coll->sn,
++                      (unsigned int)kernelChEvent->channelId);
++    }
+   } else {
+     return ncclSuccess;
+   }
+@@ -391,4 +404,8 @@ __hidden ncclResult_t inspectorPluginStopEvent(void *eHandle) {
+                                 NCCL_INSP_EVT_TRK_KERNEL_STOP,
+                                 collInfo);
+       kernelChInfo->tsCompletedUsec = inspectorGetTime();
++      TRACE_INSPECTOR("LLR_TP_EVT kernel_ch_stop comm=%016llx seq=%llu channel=%u",
++                      (unsigned long long)collInfo->commInfo->commHash,
++                      (unsigned long long)collInfo->sn,
++                      (unsigned int)kernelChInfo->channelId);
+       collInfo->nKernelChCompleted += 1;

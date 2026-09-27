@@ -1,0 +1,4 @@
+Metadata-Version: 2.1
+Name: llr-tp-stall-plugin
+Version: 0.0.1
+Summary: Experiment-only bounded vLLM TP graph hold
