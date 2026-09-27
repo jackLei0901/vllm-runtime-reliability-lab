@@ -50,6 +50,12 @@ extend-exclude = [
   # Published PR #36451 evidence pins these executed runners by SHA-256.
   "experiments/vllm-zmq-event-backpressure/current_version_ping_audit.py",
   "experiments/vllm-zmq-event-backpressure/current_version_ping_cell.py",
+  # TP=2 capability runners are committed and cited by exact SHA-256; do not
+  # rewrite their bytes after the recorded RAS/Inspector and profiler runs.
+  "experiments/vllm-tp-dfx/ras_all_issued_delay.py",
+  "experiments/vllm-tp-dfx/ras_graph_all_issued_delay.py",
+  "experiments/vllm-tp-dfx/ras_graph_baseline.py",
+  "experiments/vllm-tp-dfx/ras_peer_hold.py",
 ]
 
 [tool.ruff.lint]
