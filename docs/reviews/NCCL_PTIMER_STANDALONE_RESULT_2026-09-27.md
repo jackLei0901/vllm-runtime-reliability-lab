@@ -4,7 +4,7 @@ Chinese companion: [NCCL_PTIMER_STANDALONE_RESULT_2026-09-27.zh-CN.md](NCCL_PTIM
 
 ## Decision
 
-The eager instrument control passed on both ranks. The standalone graph cell returned **`graph_reuse_not_observed`** on both ranks: six new, fully paired AllReduce occurrences per rank, with no equal START or STOP clocks among those occurrences. This is a negative result for this *small standalone workload*, not a refutation of the previous forced-PyNccl vLLM serving observation. The frozen interpretation requires an offline comparison of graph structure, callback coverage, and route before another GPU booking. It does not justify an NCCL issue, a stock-Inspector metric claim, an NCCL-core build, or a Lab probe.
+The eager instrument control passed on both ranks. The standalone graph cell returned **`graph_reuse_not_observed`** on both ranks: six new, fully paired AllReduce occurrences per rank, with no equal START or STOP clocks among those occurrences. This is a negative result for this *small standalone workload*, not a refutation of the previous forced-PyNccl vLLM serving observation. The subsequent [offline comparison and corrected source reading](NCCL_PTIMER_GRAPH_COMPARISON_2026-09-27.md) identify a narrower candidate condition: an intervening eager collective on the **same communicator** before replay. That condition was absent from this standalone cell and present in the serving call sequence; it is still a hypothesis, not a counter trace. This result does not justify an NCCL issue, a stock-Inspector metric claim, an NCCL-core build, or a Lab probe.
 
 ## Identity and evidence
 
@@ -38,6 +38,6 @@ The old hold remains **`unscored / target_collective_ambiguous`**. These post-ho
 
 ## Next bounded work
 
-Compare the retained serving and standalone graphs **offline first**: graph construction/replay path, number and ordering of captured collectives, tensor sizes and channel counts, callback timing/coverage, and which occurrence/function forms each repeated-clock class. Keep the analysis tied to the two pinned archives. If a concrete difference predicts clock reuse, preregister one follow-up reproducer before another GPU booking; otherwise record the result as unresolved rather than adding a probe or filing an issue.
+The [offline comparison](NCCL_PTIMER_GRAPH_COMPARISON_2026-09-27.md) is complete. It supports a specific follow-up design: preserve the existing capture/replay control, then vary whether an eager collective runs on the same or a different communicator between capture and replay. The predicted exact zero/nonzero clock values remain conditional on slot history and must be measured. Preregister that follow-up before any GPU booking; do not retune this result or infer a stock metric failure.
 
 The remote `shutdown -h now` command was issued after both archives were downloaded and rehashed; the SSH connection reset immediately afterward. Cloud-platform power/billing state requires separate confirmation and is not inferred from the disconnect.

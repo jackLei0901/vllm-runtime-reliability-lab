@@ -4,7 +4,7 @@
 
 ## 结论
 
-双 rank 的 eager 仪器正控通过。最小独立 graph 用例在双 rank 上均得到 **`graph_reuse_not_observed`**：每 rank 有六个新增且 START/STOP 完整配对的 AllReduce occurrence，未发现这些 occurrence 的 START 或 STOP 时钟相等。这是对**该独立小负载**的阴性结果，不能推翻此前 vLLM 强制 PyNccl 服务运行中的观察。按预注册规则，下一步先离线比较两种图的结构、回调覆盖与路由；本轮不能据此提交 NCCL 缺陷、断言原版 Inspector 指标错误、启动 NCCL-core 改造或纳入 Lab 探针。
+双 rank 的 eager 仪器正控通过。最小独立 graph 用例在双 rank 上均得到 **`graph_reuse_not_observed`**：每 rank 有六个新增且 START/STOP 完整配对的 AllReduce occurrence，未发现这些 occurrence 的 START 或 STOP 时钟相等。这是对**该独立小负载**的阴性结果，不能推翻此前 vLLM 强制 PyNccl 服务运行中的观察。后续[离线对比与修正后的源码走读](NCCL_PTIMER_GRAPH_COMPARISON_2026-09-27.zh-CN.md)提出更窄的候选条件：replay 前在**同一通信器**执行 eager collective。独立用例没有这一条件，服务调用序列则有；它仍是假说，不是内部计数轨迹。本轮不能据此提交 NCCL 缺陷、断言原版 Inspector 指标错误、启动 NCCL-core 改造或纳入 Lab 探针。
 
 ## 身份与封存
 
@@ -35,6 +35,6 @@ graph 得分**没有**应用 eager 的流内顺序谓词；其中 `eager_order_v
 
 ## 下一步与关机状态
 
-先用两份固定归档离线比较服务图和独立图：capture/replay 路径、collective 的数量与顺序、张量尺寸和 channel 数、回调覆盖，以及重复时钟类的 occurrence/function 构成。只有差异能给出可检验预测时，才预注册下一次 GPU 验证；否则保持“未解决”，不补造探针或提交 issue。
+[离线对比](NCCL_PTIMER_GRAPH_COMPARISON_2026-09-27.zh-CN.md)已完成，给出了具体的下一轮设计：保留 capture/replay 对照，在其间分别插入同一通信器或另一通信器上的 eager collective。时钟应为零还是非零旧值取决于槽位历史，不能先验断言。再次开卡前须冻结协议；不能重算本轮结论或推定 stock 指标错误。
 
 两份归档完成下载与二次哈希校验后，已发送 `shutdown -h now`，SSH 随即断开。云平台的电源及计费状态须独立确认，不能由 SSH 断开推断。
