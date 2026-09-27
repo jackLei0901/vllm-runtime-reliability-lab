@@ -13,7 +13,9 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
-RANK_LINE = re.compile(r"\[(\d+)\] NCCL INFO")
+RANK_LINE = re.compile(
+    r"PROFILER/Plugin: init .*\bnranks: 2 rank: (\d+)(?:\s|$)"
+)
 EVENT_LINE = re.compile(
     r"LLR_TP_EVT (?P<kind>coll_start|kernel_ch_start|kernel_ch_stop) "
     r"comm=(?P<comm>[0-9a-f]{16}) seq=(?P<seq>\d+) "

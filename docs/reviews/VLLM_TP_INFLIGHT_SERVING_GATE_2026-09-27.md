@@ -40,6 +40,10 @@ establish binary loadability. Set `NCCL_DEBUG=TRACE` and
 `NCCL_DEBUG_FILE` to `<private-dir>/nccl.%p.log`,
 and enable stock Inspector JSON in a separate private subdirectory. Keep an
 external hard timeout and stop after the healthy and one bounded-hold cell.
+Rank binding uses the Inspector plugin's `nranks: 2 rank: N` init line per PID
+log, not every generic NCCL INFO header: one process may print headers about
+another local communicator. Multiple TP=2 rank declarations in one file, or
+an absent declaration, are `unscored`.
 
 - **Healthy control:** same 16-token TP=2 request, no arm marker. Both ranks
   complete with stable rank identities and no entered marker. Startup log must

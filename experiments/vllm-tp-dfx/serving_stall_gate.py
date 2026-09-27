@@ -16,10 +16,9 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from inflight_trace import MAX_LOG_BYTES, Event, read_rank_logs, score_triplet
+from inflight_trace import MAX_LOG_BYTES, RANK_LINE, Event, read_rank_logs, score_triplet
 
 _LOG_NAME = re.compile(r"^nccl\.(\d+)\.log$")
-_RANK_LINE = re.compile(r"\[(\d+)\] NCCL INFO")
 
 
 def _start_ticks(pid: int) -> int:
@@ -43,7 +42,7 @@ def _rank_identities(pattern: str) -> dict[int, tuple[int, int]]:
         pid = int(match[1])
         if path.stat().st_size > MAX_LOG_BYTES:
             raise ValueError("NCCL debug log exceeded private budget")
-        ranks = set(_RANK_LINE.findall(path.read_text(errors="replace")))
+        ranks = set(RANK_LINE.findall(path.read_text(errors="replace")))
         if len(ranks) != 1:
             raise ValueError("NCCL rank header ambiguous")
         rank = int(next(iter(ranks)))

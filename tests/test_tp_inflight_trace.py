@@ -135,20 +135,28 @@ class TPInflightTraceTest(unittest.TestCase):
             first = Path(directory) / "nccl.1.log"
             second = Path(directory) / "nccl.2.log"
             first.write_text(
-                "host [0] NCCL INFO init\n"
+                "host [0] NCCL INFO PROFILER/Plugin: init nranks: 2 rank: 0\n"
                 "LLR_TP_EVT coll_start comm=0000000000000000 seq=7 channels=2\n"
                 "LLR_TP_EVT kernel_ch_start comm=0000000000000000 seq=7 channel=0\n",
                 encoding="utf-8",
             )
-            second.write_text("host [1] NCCL INFO init\n", encoding="utf-8")
+            second.write_text(
+                "host [1] NCCL INFO PROFILER/Plugin: init nranks: 2 rank: 1\n"
+                "host [0] NCCL INFO unrelated communicator status\n",
+                encoding="utf-8",
+            )
             observed = module.read_rank_logs(str(Path(directory) / "*.log"))
             self.assertEqual(len(observed[0]), 2)
             self.assertEqual(observed[1], ())
-            second.write_text("host [0] NCCL INFO init\n", encoding="utf-8")
+            second.write_text(
+                "host [0] NCCL INFO PROFILER/Plugin: init nranks: 2 rank: 0\n",
+                encoding="utf-8",
+            )
             with self.assertRaisesRegex(ValueError, "duplicate rank"):
                 module.read_rank_logs(str(Path(directory) / "*.log"))
             second.write_text(
-                "host [1] NCCL INFO init\nLLR_TP_EVT malformed\n",
+                "host [1] NCCL INFO PROFILER/Plugin: init nranks: 2 rank: 1\n"
+                "LLR_TP_EVT malformed\n",
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(ValueError, "malformed"):
