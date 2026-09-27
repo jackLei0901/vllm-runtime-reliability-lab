@@ -1,0 +1,32 @@
+diff --git a/plugins/profiler/inspector/inspector_plugin.cc b/plugins/profiler/inspector/inspector_plugin.cc
+--- a/plugins/profiler/inspector/inspector_plugin.cc
++++ b/plugins/profiler/inspector/inspector_plugin.cc
+@@ -341,12 +341,13 @@ __hidden ncclResult_t inspectorPluginStartEvent(void* context,
+     *eHandle = kernelChEvent;
+     if (kernelChEvent != nullptr && kernelChEvent->collInfo != nullptr) {
+       struct inspectorCollInfo *coll = kernelChEvent->collInfo;
+-      TRACE_INSPECTOR("LLR_TP_EVT_V2 kernel_ch_start comm=%016llx occurrence=%llu func=%s seq=%llu channel=%u",
++      TRACE_INSPECTOR("LLR_TP_EVT_V2 kernel_ch_start comm=%016llx occurrence=%llu func=%s seq=%llu channel=%u ptimer=%llu",
+                       (unsigned long long)coll->commInfo->commHash,
+                       (unsigned long long)coll->llrOccurrence,
+                       coll->func,
+                       (unsigned long long)coll->sn,
+-                      (unsigned int)kernelChEvent->channelId);
++                      (unsigned int)kernelChEvent->channelId,
++                      (unsigned long long)kernelChEvent->startGpuClk);
+     }
+   } else {
+     return ncclSuccess;
+@@ -411,9 +412,10 @@ __hidden ncclResult_t inspectorPluginStopEvent(void *eHandle) {
+                                 collInfo);
+       kernelChInfo->tsCompletedUsec = inspectorGetTime();
+-      TRACE_INSPECTOR("LLR_TP_EVT_V2 kernel_ch_stop comm=%016llx occurrence=%llu func=%s seq=%llu channel=%u",
++      TRACE_INSPECTOR("LLR_TP_EVT_V2 kernel_ch_stop comm=%016llx occurrence=%llu func=%s seq=%llu channel=%u ptimer=%llu",
+                       (unsigned long long)collInfo->commInfo->commHash,
+                       (unsigned long long)collInfo->llrOccurrence,
+                       collInfo->func,
+                       (unsigned long long)collInfo->sn,
+-                      (unsigned int)kernelChInfo->channelId);
++                      (unsigned int)kernelChInfo->channelId,
++                      (unsigned long long)kernelChInfo->stopGpuClk);
+       collInfo->nKernelChCompleted += 1;

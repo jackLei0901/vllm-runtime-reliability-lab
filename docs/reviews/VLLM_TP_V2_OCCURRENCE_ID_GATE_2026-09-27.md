@@ -22,10 +22,12 @@ are an explicit hypothesis to check, not guaranteed by the counter itself.
 
 1. Pin the Inspector source tag and commit, apply the patch with
    `git apply --check`, then compile it. The new patch currently has only
-   local diff-syntax and Python-contract checks; it has **not** been applied
-   to or compiled against a fetched NCCL checkout. Do not book a GPU on the
-   strength of patch text alone. Keep the old plugin binary and old run
-   immutable.
+   local diff-syntax and Python-contract checks. A source-level
+   `git apply --check` against NCCL `v2.29.7-1` (`b91894bd5b19`) now passes;
+   Linux compilation and load remain unverified. If the dual-GPU instance is
+   the only CUDA build host, run those gates at the start of one booking and
+   stop before engine startup on failure. Keep the old plugin binary and old
+   run immutable.
 2. The separate [v2 parser](../../experiments/vllm-tp-dfx/inflight_trace_v2.py)
    accepts only `LLR_TP_EVT_V2`, with `comm`, `occurrence`,
    `func`, NCCL `seq`, and channel index/count. It rejects duplicate or

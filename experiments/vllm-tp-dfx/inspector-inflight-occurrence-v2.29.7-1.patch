@@ -1,9 +1,7 @@
 diff --git a/plugins/profiler/inspector/inspector.h b/plugins/profiler/inspector/inspector.h
 --- a/plugins/profiler/inspector/inspector.h
 +++ b/plugins/profiler/inspector/inspector.h
-@@ -148,6 +148,7 @@ struct inspectorCommInfo {
-   char deviceUuidStr[37]; // Pre-computed device UUID string for filename generation
-   char cachedStaticLabels[256]; // Cached static parts of Prometheus labels (hostname, job, comm, rank, etc.)
+@@ -164,4 +164,5 @@ struct inspectorCommInfo {
    bool dump;
 +  uint64_t llrNextOccurrence; // Lab-local callback identity; zero-initialized with the communicator.
    struct inspectorCompletedCollInfo completedCollInfo;
