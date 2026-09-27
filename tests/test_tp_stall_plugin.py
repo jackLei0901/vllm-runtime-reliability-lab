@@ -32,9 +32,10 @@ class TPStallPreconditionTest(unittest.TestCase):
             for entry in distribution.entry_points
             if entry.group == "vllm.general_plugins"
         ]
-        self.assertEqual([(entry.name, entry.value) for entry in entries], [
-            ("llr_tp_stall", "llr_tp_stall:install")
-        ])
+        self.assertEqual(
+            [(entry.name, entry.value) for entry in entries],
+            [("llr_tp_stall", "llr_tp_stall:install")],
+        )
 
     def test_all_facts_required(self) -> None:
         facts = {

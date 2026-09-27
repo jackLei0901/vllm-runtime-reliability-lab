@@ -194,9 +194,7 @@ class TPInflightTraceTest(unittest.TestCase):
     def test_cross_rank_ordinal_is_checked_not_assumed(self) -> None:
         before, _, after = triplet()
         changed = list(after[1])
-        changed[len(before[1])] = Event(
-            "coll_start", COMM, 2, "AllGather", 7, 1
-        )
+        changed[len(before[1])] = Event("coll_start", COMM, 2, "AllGather", 7, 1)
         changed[len(before[1]) + 1] = Event(
             "kernel_ch_start", COMM, 2, "AllGather", 7, 0
         )

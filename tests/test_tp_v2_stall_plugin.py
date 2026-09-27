@@ -86,8 +86,9 @@ class TPV2StallPluginTest(unittest.TestCase):
             with self.subTest(field=field):
                 self.assertFalse(module.eligible_v2(**(facts | {field: value})))
 
-    def _fixture(self, directory: str, *, rank: int = 1, v2: bool = True,
-                 breakable: bool = False) -> tuple[dict, type, Path, Path]:
+    def _fixture(
+        self, directory: str, *, rank: int = 1, v2: bool = True, breakable: bool = False
+    ) -> tuple[dict, type, Path, Path]:
         root = Path(directory)
         witness_dir = root / "witness"
         witness_dir.mkdir(mode=0o700)
@@ -117,9 +118,9 @@ class TPV2StallPluginTest(unittest.TestCase):
         distributed = fake_modules["vllm.distributed"]
         distributed.get_tensor_model_parallel_rank = lambda: rank
         distributed.get_tensor_model_parallel_world_size = lambda: 2
-        fake_modules["vllm.v1.worker.gpu.cudagraph_utils"].ModelCudaGraphManager = (
-            ModelCudaGraphManager
-        )
+        fake_modules[
+            "vllm.v1.worker.gpu.cudagraph_utils"
+        ].ModelCudaGraphManager = ModelCudaGraphManager
         environment = {
             "LLR_TP_ARM_FILE": str(arm),
             "LLR_TP_ENTER_FILE": str(entered),
@@ -130,7 +131,9 @@ class TPV2StallPluginTest(unittest.TestCase):
         }
         return (
             {"modules": fake_modules, "environment": environment},
-            ModelCudaGraphManager, arm, entered,
+            ModelCudaGraphManager,
+            arm,
+            entered,
         )
 
     def _witness(self, directory: str) -> dict:
@@ -214,12 +217,14 @@ class TPV2StallPluginTest(unittest.TestCase):
         module = load_plugin()
         with tempfile.TemporaryDirectory() as directory:
             fixture, Manager, arm, _ = self._fixture(directory)
-            with patch.dict(sys.modules, fixture["modules"]), patch.object(
-                os, "register_at_fork", create=True
+            with (
+                patch.dict(sys.modules, fixture["modules"]),
+                patch.object(os, "register_at_fork", create=True),
             ):
-                with patch.dict(os.environ, fixture["environment"] | {
-                    "LLR_TP_WITNESS_DIR": "relative"
-                }):
+                with patch.dict(
+                    os.environ,
+                    fixture["environment"] | {"LLR_TP_WITNESS_DIR": "relative"},
+                ):
                     with self.assertRaisesRegex(RuntimeError, "absolute"):
                         module.install()
                     self.assertIsNot(Manager.run_fullgraph.__module__, module.__name__)
@@ -257,8 +262,9 @@ def _fork_probe() -> None:
     module = load_plugin()
     with tempfile.TemporaryDirectory() as directory:
         fixture, Manager, _arm, _entered = TPV2StallPluginTest()._fixture(directory)
-        with patch.dict(sys.modules, fixture["modules"]), patch.dict(
-            os.environ, fixture["environment"]
+        with (
+            patch.dict(sys.modules, fixture["modules"]),
+            patch.dict(os.environ, fixture["environment"]),
         ):
             module.install()
             parent_pid = os.getpid()

@@ -56,6 +56,16 @@ extend-exclude = [
   "experiments/vllm-tp-dfx/ras_graph_all_issued_delay.py",
   "experiments/vllm-tp-dfx/ras_graph_baseline.py",
   "experiments/vllm-tp-dfx/ras_peer_hold.py",
+  # TP capability and V2 gate code is source-pinned in the retained review
+  # records; reformatting it would change the evidence being reviewed.
+  "experiments/vllm-tp-dfx/inflight_trace.py",
+  "experiments/vllm-tp-dfx/inflight_trace_v2.py",
+  "experiments/vllm-tp-dfx/legacy_callback_aggregate.py",
+  "experiments/vllm-tp-dfx/serving-v2-stall-plugin/llr_tp_v2_stall.py",
+  "experiments/vllm-tp-dfx/serving_stall_gate.py",
+  "experiments/vllm-tp-dfx/serving_v2_stall_gate.py",
+  "experiments/vllm-tp-dfx/two_collective_graph_gate.py",
+  "experiments/vllm-tp-dfx/v2_activation_witness.py",
 ]
 
 [tool.ruff.lint]

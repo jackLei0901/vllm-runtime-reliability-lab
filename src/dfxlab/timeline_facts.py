@@ -158,8 +158,7 @@ def to_trace(model: dict[str, Any]) -> dict[str, Any]:
                         raise TimelineError("interval below trace resolution")
                     if kind == "possible_window":
                         event["name"] = (
-                            "Possible time of one sample (not a state): "
-                            + fact["name"]
+                            "Possible time of one sample (not a state): " + fact["name"]
                         )
                         event["args"]["window_only"] = True
                 events.append(event)

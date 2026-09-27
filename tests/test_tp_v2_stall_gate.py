@@ -74,8 +74,9 @@ class TPV2StallGateTest(unittest.TestCase):
                 {"software_build": {"vllm_version": "changed"}},
                 {"witness_reader_sha256": "d" * 64},
             ):
-                with self.subTest(changed=changed), self.assertRaisesRegex(
-                    ValueError, "identity mismatch"
+                with (
+                    self.subTest(changed=changed),
+                    self.assertRaisesRegex(ValueError, "identity mismatch"),
                 ):
                     runner._check_control_receipt(path, {**expected, **changed})
             self.assertEqual(
@@ -134,8 +135,9 @@ class TPV2StallGateTest(unittest.TestCase):
                 "NCCL_INSPECTOR_DUMP_VERBOSE": "1",
                 "NCCL_PROFILER_PLUGIN": str(library),
             }
-            with patch.object(runner, "_private_directory"), patch.dict(
-                os.environ, environment, clear=True
+            with (
+                patch.object(runner, "_private_directory"),
+                patch.dict(os.environ, environment, clear=True),
             ):
                 self.assertEqual(
                     runner._check_environment(root),

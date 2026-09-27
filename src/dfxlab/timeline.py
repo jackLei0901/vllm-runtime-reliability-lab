@@ -168,8 +168,7 @@ def to_fact_timeline(model: dict[str, Any]) -> dict[str, Any]:
             {
                 "id": cell["index"],
                 "title": (
-                    f"Independent run {cell['index']} · "
-                    f"{cell['arm']}/{cell['trigger']}"
+                    f"Independent run {cell['index']} · {cell['arm']}/{cell['trigger']}"
                 ),
                 "origin": "request observer start",
                 "tracks": [
@@ -232,9 +231,7 @@ def _svg(model: dict[str, Any]) -> str:
                 f'<line x1="{x:.1f}" y1="{top + 10}" x2="{x:.1f}" '
                 f'y2="{top + 88}" class="grid"/>'
             )
-        parts.append(
-            f'<text x="{x:.1f}" y="{_TOP - 14}" class="tick">{tick} s</text>'
-        )
+        parts.append(f'<text x="{x:.1f}" y="{_TOP - 14}" class="tick">{tick} s</text>')
         tick += step
     for row, cell in enumerate(model["cells"]):
         top = _TOP + row * _ROW
@@ -245,9 +242,9 @@ def _svg(model: dict[str, Any]) -> str:
         )
         parts.append(
             f'<text x="12" y="{top + 44}" class="cell-sub">'
-            'independent run</text>'
+            "independent run</text>"
             f'<text x="12" y="{top + 59}" class="cell-sub">'
-            'own t=0: request start</text>'
+            "own t=0: request start</text>"
         )
         parts.append(
             f'<line x1="{_LEFT}" y1="{lane_progress}" x2="{_RIGHT}" '
@@ -409,7 +406,7 @@ here comes from a bundle that passed the fail-closed replay check.</p>
 starts its own clock at its request observer.</strong> Cell 3: 10.07 s without
 observed token progress (0.31 → 10.38 s). Scroll the detailed timeline →</p>
 <div class="plot">{_svg(model)}</div>
-<p class="plot-note">Untimed, Cell 4: {esc('; '.join(model['cells'][3]['untimed']))}.
+<p class="plot-note">Untimed, Cell 4: {esc("; ".join(model["cells"][3]["untimed"]))}.
 In Cell 3, consumer release was a harness control action; progress resumed
 later in that run. The graphic alone does not prove causation.</p>
 <ul class="legend">
