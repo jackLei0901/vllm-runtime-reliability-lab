@@ -101,9 +101,60 @@ def v2_fixture() -> tuple[bytes, dict, dict]:
         }
     )
     for entry in ledger["entries"]:
-        entry["guide_version"] = "2.0.0-rc1"
+        entry["guide_version"] = "2.0.0"
         entry["fault_domain"] = "unknown"
     return snapshot, ledger, original
+
+
+def human_fixture() -> tuple[bytes, dict, dict, dict]:
+    snapshot, ledger, original = v2_fixture()
+    original["status"] = "in_progress"
+    original["entries"] = original["entries"][:10]
+    prefix_bytes = json.dumps(
+        original["entries"], sort_keys=True, separators=(",", ":")
+    ).encode()
+    ledger["v1_prefix_sha256"] = hashlib.sha256(prefix_bytes).hexdigest()
+    human = {
+        "schema_version": "q4-human-review-v2",
+        **{
+            field: ledger[field]
+            for field in (
+                "snapshot_sha256",
+                "protocol_commit",
+                "guide_commit",
+                "guide_sha256",
+                "v1_prefix_sha256",
+            )
+        },
+        "reviewer": {"kind": "human", "prior_ai_exposure": "aggregate_only"},
+        "entries": [
+            {
+                key: deepcopy(entry[key])
+                for key in (
+                    "number",
+                    "decision",
+                    "matched_terms",
+                    "title_sha256",
+                    "body_sha256",
+                    "updated_at",
+                    "v_label",
+                    "model_relation",
+                    "model_parts",
+                    "evidence",
+                    "guide_version",
+                    "fault_domain",
+                )
+            }
+            | {
+                "labelled_at": (LABELLED_AT + timedelta(days=1, minutes=i)).isoformat(),
+                "active_seconds": 600,
+            }
+            for i, entry in enumerate(ledger["entries"][10:20])
+        ],
+    }
+    for i, entry in enumerate(ledger["entries"][10:], start=0):
+        entry["labelled_at"] = (LABELLED_AT + timedelta(days=2, minutes=i)).isoformat()
+    return snapshot, ledger, original, human
 
 
 class PainPointLabelValidatorTests(unittest.TestCase):
@@ -324,7 +375,7 @@ class PainPointLabelValidatorTests(unittest.TestCase):
     def test_v2_accepts_separate_ledger_without_changing_v1(self) -> None:
         snapshot, ledger, original = v2_fixture()
         result = validate(snapshot, ledger, V2_GUIDE, original)
-        self.assertEqual(result["guide_version"], "2.0.0-rc1")
+        self.assertEqual(result["guide_version"], "2.0.0")
         self.assertEqual(result["eligible"], 40)
         self.assertIsNone(result["human_relation_agreement"])
         self.assertFalse(result["placement_cost_scored"])
@@ -386,51 +437,72 @@ class PainPointLabelValidatorTests(unittest.TestCase):
             validate(snapshot, ledger, V2_GUIDE, original)
 
     def test_v2_human_agreement_requires_full_source_stable_pass(self) -> None:
-        snapshot, ledger, original = v2_fixture()
-        ledger["human_reviewer"] = {
-            "kind": "human",
-            "prior_ai_exposure": "aggregate_only",
-        }
-        ledger["human_reviews"] = [
-            {
-                "number": entry["number"],
-                "labelled_at": (LABELLED_AT + timedelta(days=1, minutes=i)).isoformat(),
-                "title_sha256": entry["title_sha256"],
-                "body_sha256": entry["body_sha256"],
-                "updated_at": entry["updated_at"],
-                "guide_version": "2.0.0-rc1",
-                "fault_domain": "unknown",
-                "v_label": "V1",
-                "model_relation": "mapped",
-                "model_parts": ["M3"],
-                "evidence": deepcopy(entry["evidence"]),
-                "active_seconds": 600,
-            }
-            for i, entry in enumerate(ledger["entries"][:10])
-        ]
-        result = validate(snapshot, ledger, V2_GUIDE, original)
+        snapshot, ledger, original, human = human_fixture()
+        result = validate(snapshot, ledger, V2_GUIDE, original, human)
         self.assertEqual(result["human_relation_agreement"], 10)
         self.assertEqual(result["human_mpart_set_agreement"], 10)
         self.assertEqual(result["median_human_review_seconds"], 600)
-        ledger["human_reviews"][0]["body_sha256"] = "b" * 64
+        human["entries"][0]["body_sha256"] = "b" * 64
         self.assertIsNone(
-            validate(snapshot, ledger, V2_GUIDE, original)["human_relation_agreement"]
+            validate(snapshot, ledger, V2_GUIDE, original, human)[
+                "human_relation_agreement"
+            ]
         )
-        ledger["human_reviews"][0]["body_sha256"] = "a" * 64
-        ledger["human_reviewer"]["prior_ai_exposure"] = "item_labels_seen"
+        human["entries"][0]["body_sha256"] = "a" * 64
+        human["reviewer"]["prior_ai_exposure"] = "item_labels_seen"
         self.assertIsNone(
-            validate(snapshot, ledger, V2_GUIDE, original)["human_relation_agreement"]
+            validate(snapshot, ledger, V2_GUIDE, original, human)[
+                "human_relation_agreement"
+            ]
         )
-        ledger["human_reviewer"]["prior_ai_exposure"] = "aggregate_only"
-        ledger["human_reviews"][0]["active_seconds"] = -1
+        human["reviewer"]["prior_ai_exposure"] = "aggregate_only"
+        human["entries"][0]["active_seconds"] = -1
         with self.assertRaisesRegex(LedgerError, "invalid active_seconds"):
-            validate(snapshot, ledger, V2_GUIDE, original)
-        ledger["human_reviews"][0]["active_seconds"] = 600
-        ledger["human_reviews"][1]["labelled_at"] = (
+            validate(snapshot, ledger, V2_GUIDE, original, human)
+        human["entries"][0]["active_seconds"] = 600
+        human["entries"][1]["labelled_at"] = (
             LABELLED_AT + timedelta(days=1, seconds=-1)
         ).isoformat()
         with self.assertRaisesRegex(LedgerError, "decreases along review order"):
-            validate(snapshot, ledger, V2_GUIDE, original)
+            validate(snapshot, ledger, V2_GUIDE, original, human)
+
+    def test_v2_human_pass_precedes_ai_pass_and_starts_after_v1(self) -> None:
+        snapshot, ledger, original, human = human_fixture()
+        ledger["status"] = "in_progress"
+        ledger["entries"] = ledger["entries"][:10]
+        result = validate(snapshot, ledger, V2_GUIDE, original, human)
+        self.assertTrue(result["human_review_cost_scored"])
+        self.assertIsNone(result["human_relation_agreement"])
+        snapshot, ledger, original, human = human_fixture()
+        human["entries"][0]["number"] = ledger["entries"][0]["number"]
+        with self.assertRaisesRegex(LedgerError, "post-v1 frozen-order prefix"):
+            validate(snapshot, ledger, V2_GUIDE, original, human)
+        snapshot, ledger, original, human = human_fixture()
+        human["entries"][0]["labelled_at"] = ledger["entries"][10]["labelled_at"]
+        with self.assertRaisesRegex(LedgerError, "human label was not before AI"):
+            validate(snapshot, ledger, V2_GUIDE, original, human)
+
+    def test_v2_human_decision_difference_is_unscored(self) -> None:
+        snapshot, ledger, original, human = human_fixture()
+        first = human["entries"][0]
+        for field in (
+            "v_label",
+            "model_relation",
+            "model_parts",
+            "evidence",
+            "fault_domain",
+        ):
+            del first[field]
+        first["decision"] = "exclude"
+        first["exclusion_code"] = "install_build"
+        source = ledger["entries"][20]
+        extra = deepcopy(human["entries"][-1])
+        extra["number"] = source["number"]
+        extra["labelled_at"] = (LABELLED_AT + timedelta(days=1, minutes=10)).isoformat()
+        human["entries"].append(extra)
+        result = validate(snapshot, ledger, V2_GUIDE, original, human)
+        self.assertEqual(result["human_decision_disagreements"], 1)
+        self.assertIsNone(result["human_relation_agreement"])
 
     def test_v2_cannot_change_v1_prefix_or_exclusions(self) -> None:
         snapshot, ledger, original = v2_fixture()
@@ -472,7 +544,7 @@ class PainPointLabelValidatorTests(unittest.TestCase):
         with self.assertRaisesRegex(LedgerError, "excluded report has label fields"):
             validate(snapshot, ledger, V2_GUIDE, original)
 
-    def test_v2_model_gap_needs_located_fault_domain(self) -> None:
+    def test_v2_model_gap_allows_unknown_earliest_fault(self) -> None:
         snapshot, ledger, original = v2_fixture()
         first = ledger["entries"][0]
         first["model_relation"] = "model_gap"
@@ -482,8 +554,7 @@ class PainPointLabelValidatorTests(unittest.TestCase):
             "V": first["evidence"]["V"],
             "gap": {"pointer": "body:L3", "grade": "reporter_narrative"},
         }
-        with self.assertRaisesRegex(LedgerError, "model_gap needs located"):
-            validate(snapshot, ledger, V2_GUIDE, original)
+        self.assertEqual(validate(snapshot, ledger, V2_GUIDE, original)["eligible"], 40)
         first["fault_domain"] = "leaf"
         self.assertEqual(validate(snapshot, ledger, V2_GUIDE, original)["eligible"], 40)
 

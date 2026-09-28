@@ -1,6 +1,6 @@
 # Q4 痛点抽样 M-part 标注指南 v2
 
-状态：`2.0.0-rc1`，**待审阅、未冻结**。本文件是[冻结的 v1 指南](PAIN_POINT_M_PART_LABELING_GUIDE_2026Q4.zh-CN.md)的候选继任版，不修改 v1 标签、抽样框架、候选顺序、排除规则或 `n=40`。[English](PAIN_POINT_M_PART_LABELING_GUIDE_V2_2026Q4.md)。**未公开冻结本版及校验器前，不读第 11 条候选。**
+版本：`2.0.0`；**待公开冻结，尚不得继续抽样**。本中文文件是唯一规范性指南，[English](PAIN_POINT_M_PART_LABELING_GUIDE_V2_2026Q4.md)仅为非规范性译文。它是[冻结的 v1 指南](PAIN_POINT_M_PART_LABELING_GUIDE_2026Q4.zh-CN.md)的候选继任版，不修改 v1 标签、抽样框架、候选顺序、排除规则或 `n=40`。**未公开冻结本版及校验器前，不读第 11 条候选。**
 
 ## 1. 失败与版本边界
 
@@ -26,26 +26,26 @@ v1 的首 10 条候选中有 8 条纳入、7 条 `guide_issue`，已经超过原
 
 ## 4. 标注者、复核与成本
 
-v2 每条记录 `guide_version=2.0.0-rc1`、`fault_domain`，并在 `outside_model` 时记录 `downstream`；另记录该轮标注者类型、模型标识（若运行界面未提供则写 `not_exposed`）、可见标注指令的 SHA-256、以及是否已见逐条 v1 标签。指令摘要**不声称覆盖隐藏系统提示或模型状态**。已有同一会话对 v1 的接触必须记为 `item_labels_seen`，不能称盲标。
+v2 每条记录 `guide_version=2.0.0`、`fault_domain`，并在 `outside_model` 时记录 `downstream`；另记录该轮标注者类型、模型标识（若运行界面未提供则写 `not_exposed`）、可见标注指令的 SHA-256、以及是否已见逐条 v1 标签。指令摘要**不声称覆盖隐藏系统提示或模型状态**。已有同一会话对 v1 的接触必须记为 `item_labels_seen`，不能称盲标。
 
-原来的七天后“同一标注者盲重标”仍属于 v1，不改写其结论；AI 在当前上下文重标并不天然盲。v2 的优先可靠性检查是：用户在不查看逐条 AI 标签和下述私有预期表的情况下，独立标注前 10 条**纳入**报告。记录其已看过汇总结论这一先验接触、每条实际人工用时和证据。至少 8/10 的四类 `model_relation` 一致性作为 v2 候选门槛；同时列出 M-part 集合分歧。若不能完成该复核，可靠性记 `unscored`，不可用 AI 自我重复替代。
+原来的七天后“同一标注者盲重标”仍属于 v1，不改写其结论；AI 在当前上下文重标并不天然盲。v2 的优先可靠性检查改为：从 v1 已读候选前缀之后，按冻结顺序选取前 10 条**人工判为纳入**的报告；用户先独立标注并保存私有人工账本，AI 后标注相同候选。人工须在交卷前不看逐条 AI 标签及下述私有预期表；记录已看过汇总结论这一先验接触、每条实际人工用时和证据。候选门槛为人工与 AI 对相同 10 条候选的纳入决定及来源版本一致后，四类 `model_relation` 至少 8/10 一致；另列 M-part 集合分歧。若任何一项不满足可比条件，可靠性为 `unscored`，不以 AI 自我重复代替。时间戳只能反驳错误顺序，不能单独证明盲态。
 
 v2 的成本指标仅为这 10 条人工复核的实际用时中位数，候选门槛为 ≤15 分钟；AI 处理秒数单列描述，不与人工门槛比较。v2 仍要求 40 条完整合格样本才计算框架内 M-part 与模型外比例；候选门槛为 `outside_model + insufficient_information ≤24/40`、`guide_issue ≤5/40`。这些是**新的候选规则**，须在继续抽样前公开冻结；已发生的 v1 失败不撤销。9 月 28 日以来投入本方向的工时继续计入原总预算，不重新归零。
 
 ## 5. 预期校准与执行顺序
 
-在读取新候选前，先用已见过的 7 条 v1 疑点及 v1 中抽样框架外的开放 issue / 合成例校准规则。逐条预期标签和理由存在**私有**清单，SHA-256：`13aab5888b88bc569d1fc74b6226e6446617ade4c483a53d873e612739055008`。这份清单是在看过这些案例后写成，**只测试规则回归，不是盲测、预测或独立一致性结果**；人工复核者在交卷前不读它。公开摘要锁定清单字节，但私有清单本身不推送。
+在读取新候选前，先用已见过的 7 条 v1 疑点及 v1 中抽样框架外的开放 issue / 合成例校准规则。逐条预期标签和理由存在**私有**清单，SHA-256：`9469f66ccaea893c6f10612e222d806d719da3742b38c9550b3e860ec79d98e1`。这份清单是在看过这些案例后写成，**只测试规则回归，不是盲测、预测或独立一致性结果**；人工复核者在交卷前不读它。公开摘要锁定清单字节，但私有清单本身不推送。
 
-顺序：审阅本指南及 v2 校验器 → 测试 v1 原账本仍可读、v2 异常被拒 → 固定私有预期表的摘要与公开指南/代码提交 → 用户推送并确认公开可访问 → 另建 v2 账本，对已读候选作独立版本的重判 → 才按原冻结顺序读第 11 条。公开报告并列 v1/v2 的前缀、规则版本和标注者来源；不把 v2 结果称为 v1 的修正。
+顺序：审阅本指南及 v2 校验器 → 测试 v1 原账本仍可读、v2 异常被拒 → 固定私有预期表的摘要与公开指南/代码提交 → 用户推送并确认公开可访问 → 另建 v2 账本，对已读候选作独立版本的重判 → 从原冻结顺序的第 11 条候选开始，先由用户标注并封存独立人工账本（含排除项，直到人工纳入 10 条），再由 AI 标注相同候选。公开报告并列 v1/v2 的前缀、规则版本和标注者来源；不把 v2 结果称为 v1 的修正。
 
 ## 6. 校验器输入边界
 
-v2 账本使用 `schema_version=q4-label-ledger-v2`，顶层额外绑定 `guide_commit`、实际指南文件的 `guide_sha256`、v1 原始审读前缀的 `v1_prefix_sha256` 和 `labeller`。前缀摘要按 v1 `entries` 整个数组的 JSON 序列化计算：键排序、分隔符为 `(',', ':')`、UTF-8 编码；不包含后来的 `relabels`。`labeller` 包括 `kind`、`model_id`、`visible_instructions_sha256`、`prior_v1_exposure`；后者取 `none_declared`、`aggregate_only`、`item_labels_seen` 或 `unknown`。v2 的 `human_reviews` 单独保存人工对前 10 条纳入报告的判断；对应的 `human_reviewer` 说明已见 AI 标签的程度。校验器拒绝 v2 账本改变 v1 已读前缀的纳入/排除、标题/正文摘要、命中词或更新时间；不能用重判偷偷改变样本成员。真实 v1 私有账本仍使用原命令独立验证。
+v2 AI 账本使用 `schema_version=q4-label-ledger-v2`，顶层额外绑定 `guide_commit`、中文指南文件的 `guide_sha256`、v1 原始审读前缀的 `v1_prefix_sha256` 和 `labeller`；英文译文不参与摘要或规范判定。前缀摘要按 v1 `entries` 整个数组的 JSON 序列化计算：键排序、分隔符为 `(',', ':')`、UTF-8 编码；不包含后来的 `relabels`。`labeller` 包括 `kind`、`model_id`、`visible_instructions_sha256`、`prior_v1_exposure`；后者取 `none_declared`、`aggregate_only`、`item_labels_seen` 或 `unknown`。人工判断另存于私有 `schema_version=q4-human-review-v2` 账本，绑定同一快照、协议、指南和 v1 前缀，记录 `reviewer.prior_ai_exposure`；在人工提交前，不把逐条判断放入 AI 可见上下文。校验器拒绝 AI 账本改变 v1 已读前缀的纳入/排除、标题/正文摘要、命中词或更新时间；不能用重判偷偷改变样本成员。真实 v1 私有账本仍使用原命令独立验证。
 
-v2 校验命令需同时提供快照、两个私有账本和**精确的**指南文件：
+v2 校验命令需提供快照、v1/v2 私有账本和**精确的中文指南文件**；人工账本在完成后通过可选参数加入：
 
 ```text
-python scripts/validate_pain_point_labels.py --snapshot data/pain-point-sample/candidate_snapshot_2026-09-28.json --ledger PATH_TO_PRIVATE_V2_LEDGER --v1-ledger PATH_TO_PRIVATE_V1_LEDGER --guide docs/PAIN_POINT_M_PART_LABELING_GUIDE_V2_2026Q4.zh-CN.md
+python scripts/validate_pain_point_labels.py --snapshot data/pain-point-sample/candidate_snapshot_2026-09-28.json --ledger PATH_TO_PRIVATE_V2_LEDGER --v1-ledger PATH_TO_PRIVATE_V1_LEDGER --guide docs/PAIN_POINT_M_PART_LABELING_GUIDE_V2_2026Q4.zh-CN.md --human-ledger PATH_TO_PRIVATE_HUMAN_LEDGER
 ```
 
 校验器能检查形状、顺序、版本和证据指针，**不能**证明报告解释正确、人工真的没看过逐条 AI 标签，或公开提交已推送；最后一项在恢复抽样前另作公开 URL 核对。
