@@ -1,0 +1,268 @@
+"""Mutation controls for the private Q4 sample-record validator."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import unittest
+from copy import deepcopy
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+from scripts.validate_pain_point_labels import LedgerError, validate
+
+SNAPSHOT = (
+    Path(__file__).resolve().parents[1]
+    / "data/pain-point-sample/candidate_snapshot_2026-09-28.json"
+)
+LABELLED_AT = datetime(2026, 10, 5, tzinfo=timezone.utc)
+
+
+def fixture(size: int = 45) -> tuple[bytes, dict]:
+    numbers = list(range(100, 100 + size))
+    seed = "synthetic-test:"
+    order = sorted(
+        numbers,
+        key=lambda n: (hashlib.sha256(f"{seed}{n}".encode()).hexdigest(), n),
+    )
+    snapshot = json.dumps(
+        {
+            "status": "complete",
+            "candidate_numbers": numbers,
+            "randomized_numbers": order,
+            "random_seed": seed,
+            "protocol_commit": "f" * 40,
+            "finished_at_utc": "2026-09-28T07:25:30+00:00",
+        }
+    ).encode()
+    entries = [
+        {
+            "number": n,
+            "decision": "include",
+            "body_sha256": "a" * 64,
+            "updated_at": "2026-09-25T00:00:00+00:00",
+            "labelled_at": (LABELLED_AT + timedelta(minutes=i)).isoformat(),
+            "active_seconds": 300,
+            "v_label": "V1",
+            "model_relation": "mapped",
+            "model_parts": ["M3"],
+            "evidence": {
+                "V": {"pointer": "body:L1", "grade": "reporter_narrative"},
+                "M3": {"pointer": "body:L2", "grade": "report_log_or_output"},
+            },
+            "ping_detectable": "unknown",
+            "ping_basis": "No ping measurement in this synthetic report",
+            "closure_mode": "closed",
+            "root_cause_status": "unknown",
+        }
+        for i, n in enumerate(order[:40])
+    ]
+    ledger = {
+        "schema_version": "q4-label-ledger-v1",
+        "snapshot_sha256": hashlib.sha256(snapshot).hexdigest(),
+        "protocol_commit": "f" * 40,
+        "status": "complete",
+        "entries": entries,
+    }
+    return snapshot, ledger
+
+
+class PainPointLabelValidatorTests(unittest.TestCase):
+    def check_error(self, snapshot: bytes, ledger: dict, message: str) -> None:
+        with self.assertRaisesRegex(LedgerError, message):
+            validate(snapshot, ledger)
+
+    def test_complete_synthetic_prefix_and_counts(self) -> None:
+        snapshot, ledger = fixture()
+        result = validate(snapshot, ledger)
+        self.assertEqual((result["reviewed"], result["eligible"]), (40, 40))
+        self.assertEqual(result["relation_agreement"], None)
+        self.assertEqual(result["median_timed_eligible_seconds"], 300)
+        self.assertEqual(result["outside_or_insufficient"], 0)
+
+    def test_real_snapshot_accepts_empty_in_progress_ledger(self) -> None:
+        snapshot = SNAPSHOT.read_bytes()
+        manifest = json.loads(snapshot)
+        ledger = {
+            "schema_version": "q4-label-ledger-v1",
+            "snapshot_sha256": hashlib.sha256(snapshot).hexdigest(),
+            "protocol_commit": manifest["protocol_commit"],
+            "status": "in_progress",
+            "entries": [],
+        }
+        self.assertEqual(validate(snapshot, ledger)["eligible"], 0)
+
+    def test_reorder_and_duplicate_cannot_change_prefix(self) -> None:
+        snapshot, ledger = fixture()
+        ledger["entries"][0], ledger["entries"][1] = (
+            ledger["entries"][1],
+            ledger["entries"][0],
+        )
+        self.check_error(snapshot, ledger, "review-order prefix")
+        ledger["entries"][1] = deepcopy(ledger["entries"][0])
+        self.check_error(snapshot, ledger, "review-order prefix")
+
+    def test_exclusion_code_and_label_fields_are_closed(self) -> None:
+        snapshot, ledger = fixture()
+        first = ledger["entries"][0]
+        first["decision"] = "exclude"
+        first["exclusion_code"] = "not_registered"
+        self.check_error(snapshot, ledger, "exclusion code")
+        first["exclusion_code"] = "install_build"
+        self.check_error(snapshot, ledger, "excluded report has label fields")
+
+    def test_missing_evidence_and_invalid_model_relation_fail(self) -> None:
+        snapshot, ledger = fixture()
+        del ledger["entries"][0]["evidence"]["M3"]
+        self.check_error(snapshot, ledger, "evidence must cover")
+        ledger["entries"][0]["evidence"]["M3"] = {
+            "pointer": "body:L2",
+            "grade": "report_log_or_output",
+        }
+        ledger["entries"][0]["model_relation"] = "outside_model"
+        self.check_error(snapshot, ledger, "relation cannot have model parts")
+
+    def test_model_gap_needs_a_separate_evidence_pointer(self) -> None:
+        snapshot, ledger = fixture()
+        first = ledger["entries"][0]
+        first["model_relation"] = "model_gap"
+        first["model_gap"] = "Synthetic lifecycle boundary not in M1-M6"
+        self.check_error(snapshot, ledger, "evidence must cover")
+        first["evidence"]["gap"] = {
+            "pointer": "body:L3",
+            "grade": "reporter_narrative",
+        }
+        self.assertEqual(validate(snapshot, ledger)["eligible"], 40)
+
+    def test_complete_cannot_stop_early_or_review_past_40(self) -> None:
+        snapshot, ledger = fixture()
+        ledger["entries"].pop()
+        self.check_error(snapshot, ledger, "stopping at eligible item 40")
+        snapshot, ledger = fixture()
+        order = json.loads(snapshot)["randomized_numbers"]
+        extra = deepcopy(ledger["entries"][-1])
+        extra["number"] = order[40]
+        extra["labelled_at"] = (LABELLED_AT + timedelta(minutes=40)).isoformat()
+        ledger["entries"].append(extra)
+        self.check_error(snapshot, ledger, "reviewed beyond the 40th eligible")
+
+    def test_label_times_follow_snapshot_and_frozen_order(self) -> None:
+        snapshot, ledger = fixture()
+        ledger["entries"][0]["labelled_at"] = "2026-09-01T00:00:00+00:00"
+        self.check_error(snapshot, ledger, "before snapshot finished")
+        snapshot, ledger = fixture()
+        ledger["entries"][1]["labelled_at"] = ledger["entries"][0]["labelled_at"]
+        self.assertEqual(validate(snapshot, ledger)["eligible"], 40)
+        ledger["entries"][1]["labelled_at"] = (
+            LABELLED_AT - timedelta(seconds=1)
+        ).isoformat()
+        self.check_error(snapshot, ledger, "decreases along review order")
+
+    def test_source_versions_cannot_postdate_labels(self) -> None:
+        snapshot, ledger = fixture()
+        ledger["entries"][0]["updated_at"] = "2026-10-06T00:00:00+00:00"
+        self.check_error(snapshot, ledger, "entry: source updated after label")
+        snapshot, ledger = fixture()
+        ledger["entries"][0]["comments"] = [
+            {
+                "id": 123,
+                "updated_at": "2026-10-06T00:00:00+00:00",
+                "body_sha256": "b" * 64,
+            }
+        ]
+        self.check_error(snapshot, ledger, "comment: source updated after label")
+
+    def test_time_limit_is_not_no_sample(self) -> None:
+        snapshot, ledger = fixture()
+        ledger["entries"] = ledger["entries"][:10]
+        ledger["status"] = "no_sample"
+        self.check_error(snapshot, ledger, "candidate exhaustion")
+        ledger["status"] = "in_progress"
+        self.assertEqual(validate(snapshot, ledger)["eligible"], 10)
+
+    def test_relabel_waits_seven_days_after_tenth_initial_label(self) -> None:
+        snapshot, ledger = fixture()
+        tenth = datetime.fromisoformat(ledger["entries"][9]["labelled_at"])
+        ledger["relabels"] = [
+            {
+                "number": e["number"],
+                "labelled_at": (tenth + timedelta(days=7)).isoformat(),
+                "body_sha256": e["body_sha256"],
+                "updated_at": e["updated_at"],
+                "v_label": "V1",
+                "model_relation": "mapped",
+                "model_parts": ["M3"],
+                "evidence": deepcopy(e["evidence"]),
+            }
+            for e in ledger["entries"][:10]
+        ]
+        self.assertEqual(validate(snapshot, ledger)["relation_agreement"], 10)
+        ledger["relabels"][0]["labelled_at"] = (
+            tenth + timedelta(days=7, seconds=-1)
+        ).isoformat()
+        self.check_error(snapshot, ledger, "seven-day wait")
+
+    def test_relabelled_changed_report_is_not_scored(self) -> None:
+        snapshot, ledger = fixture()
+        tenth = datetime.fromisoformat(ledger["entries"][9]["labelled_at"])
+        ledger["relabels"] = [
+            {
+                "number": e["number"],
+                "labelled_at": (tenth + timedelta(days=7)).isoformat(),
+                "body_sha256": e["body_sha256"],
+                "updated_at": e["updated_at"],
+                "v_label": "V1",
+                "model_relation": "mapped",
+                "model_parts": ["M3"],
+                "evidence": deepcopy(e["evidence"]),
+            }
+            for e in ledger["entries"][:10]
+        ]
+        ledger["relabels"][0]["body_sha256"] = "b" * 64
+        result = validate(snapshot, ledger)
+        self.assertEqual(result["relabel_source_changed"], 1)
+        self.assertIsNone(result["relation_agreement"])
+        del ledger["relabels"][0]["evidence"]["M3"]
+        self.check_error(snapshot, ledger, "evidence must cover")
+
+    def test_relabel_source_cannot_postdate_relabel(self) -> None:
+        snapshot, ledger = fixture()
+        tenth = datetime.fromisoformat(ledger["entries"][9]["labelled_at"])
+        ledger["relabels"] = [
+            {
+                "number": ledger["entries"][0]["number"],
+                "labelled_at": (tenth + timedelta(days=7)).isoformat(),
+                "body_sha256": "a" * 64,
+                "updated_at": (tenth + timedelta(days=8)).isoformat(),
+                "v_label": "V1",
+                "model_relation": "mapped",
+                "model_parts": ["M3"],
+                "evidence": deepcopy(ledger["entries"][0]["evidence"]),
+            }
+        ]
+        self.check_error(snapshot, ledger, "relabel: source updated after label")
+
+    def test_snapshot_and_protocol_identity_are_bound(self) -> None:
+        snapshot, ledger = fixture()
+        ledger["snapshot_sha256"] = "0" * 64
+        self.check_error(snapshot, ledger, "snapshot bytes mismatch")
+        ledger["snapshot_sha256"] = hashlib.sha256(snapshot).hexdigest()
+        ledger["protocol_commit"] = "0" * 40
+        self.check_error(snapshot, ledger, "protocol commit mismatch")
+
+    def test_comment_identity_is_closed_without_comment_text(self) -> None:
+        snapshot, ledger = fixture()
+        ledger["entries"][0]["comments"] = [
+            {
+                "id": 123,
+                "updated_at": "2026-09-25T00:00:00+00:00",
+                "body_sha256": "b" * 64,
+            }
+        ]
+        self.assertEqual(validate(snapshot, ledger)["eligible"], 40)
+        ledger["entries"][0]["comments"][0]["body"] = "raw comment text"
+        self.check_error(snapshot, ledger, "unexpected object shape")
+
+
+if __name__ == "__main__":
+    unittest.main()
