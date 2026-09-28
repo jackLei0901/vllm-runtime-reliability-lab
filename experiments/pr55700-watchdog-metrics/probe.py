@@ -287,6 +287,7 @@ class Server:
             "--max-model-len", "512",
             "--max-num-seqs", "4",
             "--gpu-memory-utilization", "0.5",
+            "--enforce-eager",
             "--worker-cls", "hold_worker.HoldingCPUWorker",
             "--watchdog-config", json.dumps(watchdog),
         ]  # fmt: skip

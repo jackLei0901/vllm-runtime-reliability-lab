@@ -227,6 +227,7 @@ class ServerConfigTests(unittest.TestCase):
                 command = popen.call_args.args[0]
                 index = command.index("--gpu-memory-utilization")
                 self.assertEqual(command[index + 1], "0.5")
+                self.assertIn("--enforce-eager", command)
             finally:
                 server.log.close()
 

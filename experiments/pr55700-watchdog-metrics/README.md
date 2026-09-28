@@ -11,6 +11,7 @@ Draft probe for the [frozen selection record](../../docs/reviews/PR55700_FIRST_C
 and its [addendum A1](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A1_2026-09-28.zh-CN.md),
 plus [setup addendum A2](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A2_2026-09-28.zh-CN.md),
 and [model-download addendum A3](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A3_2026-09-28.zh-CN.md),
+plus the [final CPU-eager setup limit A4](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A4_2026-09-28.zh-CN.md),
 which must be committed before any data is acquired. Nothing here has been run.
 Pin: PR head `b274bf04dd4c6d54807a136babce5b5d17dd74be`.
 
@@ -44,6 +45,8 @@ The CPU server uses `--gpu-memory-utilization 0.5` (the flag's name also
 applies to CPU memory) after a pre-hold startup failure at the 0.92 default.
 If the direct Hugging Face endpoint is unreachable, set
 `HF_ENDPOINT=https://hf-mirror.com` and record that environment change.
+The last bounded setup attempt also uses `--enforce-eager` after CPU Torch's
+Inductor path tried to initialize CUDA. Any result is scoped to CPU eager mode.
 
 Prediction recorded before any run, source inference only: with TP=2 the
 EngineCore waits for worker replies inside the shm reader, which feeds the
