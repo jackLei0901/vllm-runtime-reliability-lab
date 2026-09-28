@@ -16,6 +16,7 @@ SNAPSHOT = (
     / "data/pain-point-sample/candidate_snapshot_2026-09-28.json"
 )
 LABELLED_AT = datetime(2026, 10, 5, tzinfo=timezone.utc)
+V2_GUIDE = b"synthetic frozen guide v2"
 
 
 def fixture(size: int = 45) -> tuple[bytes, dict]:
@@ -77,6 +78,32 @@ def fixture(size: int = 45) -> tuple[bytes, dict]:
         "entries": entries,
     }
     return snapshot, ledger
+
+
+def v2_fixture() -> tuple[bytes, dict, dict]:
+    snapshot, original = fixture()
+    ledger = deepcopy(original)
+    prefix_bytes = json.dumps(
+        original["entries"], sort_keys=True, separators=(",", ":")
+    ).encode()
+    ledger.update(
+        {
+            "schema_version": "q4-label-ledger-v2",
+            "guide_commit": "e" * 40,
+            "guide_sha256": hashlib.sha256(V2_GUIDE).hexdigest(),
+            "v1_prefix_sha256": hashlib.sha256(prefix_bytes).hexdigest(),
+            "labeller": {
+                "kind": "ai",
+                "model_id": "not_exposed",
+                "visible_instructions_sha256": hashlib.sha256(V2_GUIDE).hexdigest(),
+                "prior_v1_exposure": "item_labels_seen",
+            },
+        }
+    )
+    for entry in ledger["entries"]:
+        entry["guide_version"] = "2.0.0-rc1"
+        entry["fault_domain"] = "unknown"
+    return snapshot, ledger, original
 
 
 class PainPointLabelValidatorTests(unittest.TestCase):
@@ -293,6 +320,172 @@ class PainPointLabelValidatorTests(unittest.TestCase):
         self.assertEqual(validate(snapshot, ledger)["eligible"], 40)
         ledger["entries"][0]["comments"][0]["body"] = "raw comment text"
         self.check_error(snapshot, ledger, "unexpected object shape")
+
+    def test_v2_accepts_separate_ledger_without_changing_v1(self) -> None:
+        snapshot, ledger, original = v2_fixture()
+        result = validate(snapshot, ledger, V2_GUIDE, original)
+        self.assertEqual(result["guide_version"], "2.0.0-rc1")
+        self.assertEqual(result["eligible"], 40)
+        self.assertIsNone(result["human_relation_agreement"])
+        self.assertFalse(result["placement_cost_scored"])
+        self.assertEqual(validate(*fixture())["eligible"], 40)
+
+    def test_v2_requires_exact_guide_and_labeller_provenance(self) -> None:
+        snapshot, ledger, original = v2_fixture()
+        with self.assertRaisesRegex(LedgerError, "guide bytes mismatch"):
+            validate(snapshot, ledger, v1_ledger=original)
+        with self.assertRaisesRegex(LedgerError, "guide bytes mismatch"):
+            validate(snapshot, ledger, b"changed", original)
+        ledger["labeller"]["prior_v1_exposure"] = "blind"
+        with self.assertRaisesRegex(LedgerError, "invalid prior exposure"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+        ledger["labeller"]["prior_v1_exposure"] = "item_labels_seen"
+        ledger["labeller"]["raw_prompt"] = "not allowed"
+        with self.assertRaisesRegex(LedgerError, "unexpected object shape"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+
+    def test_v2_outside_model_distinguishes_unobserved_from_normal(self) -> None:
+        snapshot, ledger, original = v2_fixture()
+        first = ledger["entries"][0]
+        first["model_relation"] = "outside_model"
+        first["model_parts"] = []
+        first["evidence"] = {"V": first["evidence"]["V"]}
+        first["fault_domain"] = "leaf"
+        first["downstream"] = "unobserved"
+        self.assertEqual(validate(snapshot, ledger, V2_GUIDE, original)["eligible"], 40)
+        first["downstream"] = "observed_normal"
+        with self.assertRaisesRegex(LedgerError, "unexpected object shape"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+        first["downstream_evidence"] = {
+            "pointer": "body:L9",
+            "grade": "report_log_or_output",
+        }
+        self.assertEqual(validate(snapshot, ledger, V2_GUIDE, original)["eligible"], 40)
+        first["downstream"] = "unobserved"
+        with self.assertRaisesRegex(LedgerError, "unobserved cannot"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+        del first["downstream_evidence"]
+        first["fault_domain"] = "unknown"
+        with self.assertRaisesRegex(LedgerError, "outside_model needs leaf"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+
+    def test_v2_relation_and_exclusion_fields_are_closed(self) -> None:
+        snapshot, ledger, original = v2_fixture()
+        first = ledger["entries"][0]
+        first["model_relation"] = "insufficient_information"
+        first["model_parts"] = []
+        first["evidence"] = {"V": first["evidence"]["V"]}
+        with self.assertRaisesRegex(LedgerError, "insufficient needs unknown"):
+            first["fault_domain"] = "leaf"
+            validate(snapshot, ledger, V2_GUIDE, original)
+        first["fault_domain"] = "unknown"
+        self.assertEqual(validate(snapshot, ledger, V2_GUIDE, original)["eligible"], 40)
+        first["decision"] = "exclude"
+        first["exclusion_code"] = "accuracy_only"
+        with self.assertRaisesRegex(LedgerError, "changed v1 prefix decision"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+
+    def test_v2_human_agreement_requires_full_source_stable_pass(self) -> None:
+        snapshot, ledger, original = v2_fixture()
+        ledger["human_reviewer"] = {
+            "kind": "human",
+            "prior_ai_exposure": "aggregate_only",
+        }
+        ledger["human_reviews"] = [
+            {
+                "number": entry["number"],
+                "labelled_at": (LABELLED_AT + timedelta(days=1, minutes=i)).isoformat(),
+                "title_sha256": entry["title_sha256"],
+                "body_sha256": entry["body_sha256"],
+                "updated_at": entry["updated_at"],
+                "guide_version": "2.0.0-rc1",
+                "fault_domain": "unknown",
+                "v_label": "V1",
+                "model_relation": "mapped",
+                "model_parts": ["M3"],
+                "evidence": deepcopy(entry["evidence"]),
+                "active_seconds": 600,
+            }
+            for i, entry in enumerate(ledger["entries"][:10])
+        ]
+        result = validate(snapshot, ledger, V2_GUIDE, original)
+        self.assertEqual(result["human_relation_agreement"], 10)
+        self.assertEqual(result["human_mpart_set_agreement"], 10)
+        self.assertEqual(result["median_human_review_seconds"], 600)
+        ledger["human_reviews"][0]["body_sha256"] = "b" * 64
+        self.assertIsNone(
+            validate(snapshot, ledger, V2_GUIDE, original)["human_relation_agreement"]
+        )
+        ledger["human_reviews"][0]["body_sha256"] = "a" * 64
+        ledger["human_reviewer"]["prior_ai_exposure"] = "item_labels_seen"
+        self.assertIsNone(
+            validate(snapshot, ledger, V2_GUIDE, original)["human_relation_agreement"]
+        )
+        ledger["human_reviewer"]["prior_ai_exposure"] = "aggregate_only"
+        ledger["human_reviews"][0]["active_seconds"] = -1
+        with self.assertRaisesRegex(LedgerError, "invalid active_seconds"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+        ledger["human_reviews"][0]["active_seconds"] = 600
+        ledger["human_reviews"][1]["labelled_at"] = (
+            LABELLED_AT + timedelta(days=1, seconds=-1)
+        ).isoformat()
+        with self.assertRaisesRegex(LedgerError, "decreases along review order"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+
+    def test_v2_cannot_change_v1_prefix_or_exclusions(self) -> None:
+        snapshot, ledger, original = v2_fixture()
+        ledger["entries"][0]["body_sha256"] = "b" * 64
+        with self.assertRaisesRegex(LedgerError, "changed v1 prefix body_sha256"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+        ledger["entries"][0]["body_sha256"] = "a" * 64
+        original["entries"][0]["ping_basis"] = "A different but valid basis"
+        with self.assertRaisesRegex(LedgerError, "original v1 prefix changed"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+
+    def test_v2_exclusion_after_original_prefix_has_no_label_fields(self) -> None:
+        snapshot, ledger, original = v2_fixture()
+        original["status"] = "in_progress"
+        original["entries"] = original["entries"][:1]
+        prefix_bytes = json.dumps(
+            original["entries"], sort_keys=True, separators=(",", ":")
+        ).encode()
+        ledger["v1_prefix_sha256"] = hashlib.sha256(prefix_bytes).hexdigest()
+        ledger["status"] = "in_progress"
+        ledger["entries"] = ledger["entries"][:2]
+        second = ledger["entries"][1]
+        for field in (
+            "v_label",
+            "model_relation",
+            "model_parts",
+            "evidence",
+            "fault_domain",
+            "ping_detectable",
+            "ping_basis",
+            "closure_mode",
+            "root_cause_status",
+        ):
+            del second[field]
+        second["decision"] = "exclude"
+        second["exclusion_code"] = "install_build"
+        self.assertEqual(validate(snapshot, ledger, V2_GUIDE, original)["excluded"], 1)
+        second["fault_domain"] = "leaf"
+        with self.assertRaisesRegex(LedgerError, "excluded report has label fields"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+
+    def test_v2_model_gap_needs_located_fault_domain(self) -> None:
+        snapshot, ledger, original = v2_fixture()
+        first = ledger["entries"][0]
+        first["model_relation"] = "model_gap"
+        first["model_gap"] = "Cross-process resource lifetime not represented"
+        first["model_parts"] = []
+        first["evidence"] = {
+            "V": first["evidence"]["V"],
+            "gap": {"pointer": "body:L3", "grade": "reporter_narrative"},
+        }
+        with self.assertRaisesRegex(LedgerError, "model_gap needs located"):
+            validate(snapshot, ledger, V2_GUIDE, original)
+        first["fault_domain"] = "leaf"
+        self.assertEqual(validate(snapshot, ledger, V2_GUIDE, original)["eligible"], 40)
 
 
 if __name__ == "__main__":

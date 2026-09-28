@@ -33,3 +33,5 @@ python scripts/validate_pain_point_labels.py \
 台账顶层需有 `schema_version: "q4-label-ledger-v1"`、精确的 `snapshot_sha256` 与 `protocol_commit`、`in_progress`／`complete`／`no_sample` 状态及按冻结顺序排列的 `entries`。每个审读项记 issue 编号、按冻结词顺序的 `matched_terms`、标题与正文各自的 UTF-8 摘要、`updated_at`、首轮标注 UTC 时间、可选主动耗时，以及登记的排除代码，或纳入项的标签和证据指针。纳入项须为 V 标签和每个 M-part 记录证据等级（报告内日志/输出或报告者叙述）、ping 判断及依据、关闭方式、根因已知/未知。可选评论引用只存 ID、更新时间、摘要，不存正文；可选 `relabels` 保留前 10 个合格项的顺序、时间、各自的标题/正文摘要与更新时间及证据指针。原始标题、正文、评论、宿主路径、凭据和栈作为**额外字段**被拒绝；自由文本值不会自动脱敏。台账留在公开仓库之外，转移前另作内容审查。
 
 这个工具只做结构校验，不能检查排除**优先级**、报告真伪、M3 三项事实是否充分、真正盲法或人工证据指针的来源。这些仍由冻结的[抽样协议](../PAIN_POINT_DISCOVERY_2026Q4.zh-CN.md)和[标注指南](../PAIN_POINT_M_PART_LABELING_GUIDE_2026Q4.zh-CN.md)裁决。本轮没有读候选正文，因此还没有 M-part 计数或覆盖结论。
+
+交付后补记（2026-09-28）：原 v1 校验路径保持不变；另有[候选 v2 指南](../PAIN_POINT_M_PART_LABELING_GUIDE_V2_2026Q4.zh-CN.md)，增加 `fault_domain`、`downstream`、指南/标注者来源及可选人工复核。同一校验器仅在同时提供精确指南字节和原始私有 v1 账本时接受 v2，并绑定 v1 已读前缀；定向测试现为 25 项。本补记不改变冻结的 v1 指南，也不改写上文对这份证据检查最初写成时尚未读取候选正文的历史描述。

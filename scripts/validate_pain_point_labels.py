@@ -26,6 +26,10 @@ V_LABELS = {"V1", "V2", "V3", "none_of_v0", "insufficient_information"}
 RELATIONS = {"mapped", "outside_model", "model_gap", "insufficient_information"}
 PARTS = {f"M{i}" for i in range(1, 7)}
 GRADES = {"report_log_or_output", "reporter_narrative"}
+V2_GUIDE_VERSION = "2.0.0-rc1"
+FAULT_DOMAINS = {"leaf", "lifecycle", "unknown"}
+DOWNSTREAM = {"observed_normal", "unobserved"}
+EXPOSURES = {"none_declared", "aggregate_only", "item_labels_seen", "unknown"}
 ENTRY_KEYS = {
     "number",
     "decision",
@@ -51,6 +55,12 @@ ENTRY_KEYS = {
     "signal_note",
     "incidental_observation",
 }
+V2_ENTRY_KEYS = ENTRY_KEYS | {
+    "guide_version",
+    "fault_domain",
+    "downstream",
+    "downstream_evidence",
+}
 RELABEL_KEYS = {
     "number",
     "labelled_at",
@@ -62,6 +72,13 @@ RELABEL_KEYS = {
     "model_parts",
     "model_gap",
     "evidence",
+}
+HUMAN_REVIEW_KEYS = RELABEL_KEYS | {
+    "guide_version",
+    "fault_domain",
+    "downstream",
+    "downstream_evidence",
+    "active_seconds",
 }
 
 
@@ -82,6 +99,15 @@ def _digest(value: object, where: str) -> None:
         and all(c in "0123456789abcdef" for c in value)
     ):
         raise LedgerError(f"{where}: expected lowercase SHA-256")
+
+
+def _commit(value: object, where: str) -> None:
+    if not (
+        isinstance(value, str)
+        and len(value) == 40
+        and all(c in "0123456789abcdef" for c in value)
+    ):
+        raise LedgerError(f"{where}: expected lowercase Git commit")
 
 
 def _time(value: object, where: str) -> datetime:
@@ -137,7 +163,60 @@ def _model_evidence(record: dict, where: str) -> None:
             raise LedgerError("evidence: invalid grade")
 
 
-def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
+def _v2_fields(record: dict, where: str) -> None:
+    if record.get("guide_version") != V2_GUIDE_VERSION:
+        raise LedgerError(f"{where}: wrong v2 guide version")
+    domain = record.get("fault_domain")
+    if domain not in FAULT_DOMAINS:
+        raise LedgerError(f"{where}: invalid fault domain")
+    relation = record["model_relation"]
+    if relation == "outside_model":
+        if domain != "leaf" or record.get("downstream") not in DOWNSTREAM:
+            raise LedgerError(f"{where}: outside_model needs leaf and downstream")
+        if record["downstream"] == "observed_normal":
+            ref = _object(
+                record.get("downstream_evidence"),
+                {"pointer", "grade"},
+                f"{where}.downstream_evidence",
+            )
+            _text(ref.get("pointer"), f"{where}.downstream_evidence.pointer")
+            if ref.get("grade") not in GRADES:
+                raise LedgerError(f"{where}: invalid downstream evidence grade")
+        elif "downstream_evidence" in record:
+            raise LedgerError(f"{where}: unobserved cannot have downstream evidence")
+    elif "downstream" in record or "downstream_evidence" in record:
+        raise LedgerError(f"{where}: downstream applies only to outside_model")
+    if relation == "insufficient_information" and domain != "unknown":
+        raise LedgerError(f"{where}: insufficient needs unknown fault domain")
+    if relation == "model_gap" and domain == "unknown":
+        raise LedgerError(f"{where}: model_gap needs located fault domain")
+
+
+def _labeller(value: object) -> None:
+    record = _object(
+        value,
+        {"kind", "model_id", "visible_instructions_sha256", "prior_v1_exposure"},
+        "labeller",
+    )
+    if record.get("kind") not in {"ai", "human", "ai_with_human_review"}:
+        raise LedgerError("labeller: invalid kind")
+    _text(record.get("model_id"), "labeller.model_id")
+    if record["kind"] == "human" and record["model_id"] != "not_applicable":
+        raise LedgerError("labeller: human model_id must be not_applicable")
+    _digest(
+        record.get("visible_instructions_sha256"),
+        "labeller.visible_instructions_sha256",
+    )
+    if record.get("prior_v1_exposure") not in EXPOSURES:
+        raise LedgerError("labeller: invalid prior exposure")
+
+
+def validate(
+    snapshot_bytes: bytes,
+    ledger: object,
+    guide_bytes: bytes | None = None,
+    v1_ledger: object | None = None,
+) -> dict[str, object]:
     snapshot = json.loads(snapshot_bytes)
     if snapshot.get("status") != "complete":
         raise LedgerError("snapshot: incomplete acquisition")
@@ -184,6 +263,12 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
     if any(not matched for matched in term_matches.values()):
         raise LedgerError("snapshot: candidate has no matched term")
 
+    if not isinstance(ledger, dict):
+        raise LedgerError("ledger: unexpected object shape")
+    schema = ledger.get("schema_version")
+    if schema not in {"q4-label-ledger-v1", "q4-label-ledger-v2"}:
+        raise LedgerError("ledger: schema version mismatch")
+    v2 = schema == "q4-label-ledger-v2"
     doc = _object(
         ledger,
         {
@@ -193,11 +278,45 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
             "status",
             "entries",
             "relabels",
+            *(
+                {
+                    "guide_commit",
+                    "guide_sha256",
+                    "labeller",
+                    "human_reviewer",
+                    "human_reviews",
+                    "v1_prefix_sha256",
+                }
+                if v2
+                else set()
+            ),
         },
         "ledger",
     )
-    if doc.get("schema_version") != "q4-label-ledger-v1":
-        raise LedgerError("ledger: schema version mismatch")
+    if v2:
+        _commit(doc.get("guide_commit"), "ledger.guide_commit")
+        _digest(doc.get("guide_sha256"), "ledger.guide_sha256")
+        if (
+            guide_bytes is None
+            or doc["guide_sha256"] != hashlib.sha256(guide_bytes).hexdigest()
+        ):
+            raise LedgerError("ledger: guide bytes mismatch")
+        _labeller(doc.get("labeller"))
+        if "relabels" in doc:
+            raise LedgerError("ledger: v2 uses human_reviews, not relabels")
+        _digest(doc.get("v1_prefix_sha256"), "ledger.v1_prefix_sha256")
+        if (
+            not isinstance(v1_ledger, dict)
+            or v1_ledger.get("schema_version") != "q4-label-ledger-v1"
+        ):
+            raise LedgerError("ledger: v2 requires original v1 ledger")
+        validate(snapshot_bytes, v1_ledger)
+        original_prefix = v1_ledger["entries"]
+        prefix_bytes = json.dumps(
+            original_prefix, sort_keys=True, separators=(",", ":")
+        ).encode()
+        if doc["v1_prefix_sha256"] != hashlib.sha256(prefix_bytes).hexdigest():
+            raise LedgerError("ledger: original v1 prefix changed")
     if doc.get("snapshot_sha256") != hashlib.sha256(snapshot_bytes).hexdigest():
         raise LedgerError("ledger: snapshot bytes mismatch")
     if doc.get("protocol_commit") != snapshot.get("protocol_commit"):
@@ -208,13 +327,31 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
     entries = doc.get("entries")
     if not isinstance(entries, list) or len(entries) > len(order):
         raise LedgerError("ledger: invalid reviewed prefix")
+    if v2:
+        for original, candidate in zip(original_prefix, entries, strict=False):
+            for field in (
+                "number",
+                "decision",
+                "title_sha256",
+                "body_sha256",
+                "matched_terms",
+                "updated_at",
+            ):
+                if not isinstance(candidate, dict) or original.get(
+                    field
+                ) != candidate.get(field):
+                    raise LedgerError(f"ledger: v2 changed v1 prefix {field}")
+            if original.get("decision") == "exclude" and original.get(
+                "exclusion_code"
+            ) != candidate.get("exclusion_code"):
+                raise LedgerError("ledger: v2 changed v1 exclusion")
 
     included = []
     missing_times = 0
     guide_issues = 0
     previous_labelled = snapshot_finished
     for index, raw in enumerate(entries):
-        entry = _object(raw, ENTRY_KEYS, "entry")
+        entry = _object(raw, V2_ENTRY_KEYS if v2 else ENTRY_KEYS, "entry")
         if entry.get("number") != order[index]:
             raise LedgerError("entry: not the frozen review-order prefix")
         _digest(entry.get("title_sha256"), "entry.title_sha256")
@@ -252,6 +389,8 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
         elif type(seconds) not in {int, float} or not 0 <= seconds <= 86400:
             raise LedgerError("entry: invalid active_seconds")
         decision = entry.get("decision")
+        if v2 and entry.get("guide_version") != V2_GUIDE_VERSION:
+            raise LedgerError("entry: wrong v2 guide version")
         if decision == "exclude":
             if entry.get("exclusion_code") not in EXCLUSIONS:
                 raise LedgerError("entry: invalid exclusion code")
@@ -266,6 +405,7 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
                 "active_seconds",
                 "exclusion_code",
                 "comments",
+                *({"guide_version"} if v2 else set()),
             }:
                 raise LedgerError("entry: excluded report has label fields")
             continue
@@ -276,6 +416,8 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
         if entry.get("v_label") not in V_LABELS:
             raise LedgerError("entry: invalid V label")
         _model_evidence(entry, "entry")
+        if v2:
+            _v2_fields(entry, "entry")
         if entry.get("ping_detectable") not in {"yes", "no", "unknown"}:
             raise LedgerError("entry: invalid ping judgement")
         _text(entry.get("ping_basis"), "entry.ping_basis")
@@ -301,7 +443,7 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
     if status == "in_progress" and (len(entries) == len(order) or len(included) >= 40):
         raise LedgerError("ledger: progress status contradicts stop condition")
 
-    relabels = doc.get("relabels", [])
+    relabels = doc.get("relabels", []) if not v2 else []
     if not isinstance(relabels, list) or len(relabels) > 10:
         raise LedgerError("relabels: invalid list")
     if relabels and len(included) < 10:
@@ -340,11 +482,68 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
             else:
                 agreement += relabel["model_relation"] == original["model_relation"]
 
+    human_reviews = doc.get("human_reviews", []) if v2 else []
+    if not isinstance(human_reviews, list) or len(human_reviews) > 10:
+        raise LedgerError("human_reviews: invalid list")
+    if human_reviews and len(included) < 10:
+        raise LedgerError("human_reviews: first ten eligible items not yet known")
+    if v2 and human_reviews:
+        reviewer = _object(
+            doc.get("human_reviewer"),
+            {"kind", "prior_ai_exposure"},
+            "human_reviewer",
+        )
+        if (
+            reviewer.get("kind") != "human"
+            or reviewer.get("prior_ai_exposure") not in EXPOSURES
+        ):
+            raise LedgerError("human_reviewer: invalid provenance")
+    elif v2 and "human_reviewer" in doc:
+        raise LedgerError("human_reviewer: no reviews")
+    human_agreement = 0
+    human_parts_agreement = 0
+    human_changed_sources = 0
+    human_times = []
+    previous_human_time = snapshot_finished
+    for index, raw in enumerate(human_reviews):
+        review = _object(raw, HUMAN_REVIEW_KEYS, "human_review")
+        original = included[index]
+        if review.get("number") != original["number"]:
+            raise LedgerError("human_reviews: not the first-ten eligible prefix")
+        reviewed_at = _time(review.get("labelled_at"), "human_review.labelled_at")
+        if reviewed_at <= snapshot_finished:
+            raise LedgerError("human_review: before snapshot finished")
+        if reviewed_at < previous_human_time:
+            raise LedgerError("human_review: labelled_at decreases along review order")
+        previous_human_time = reviewed_at
+        if _time(review.get("updated_at"), "human_review.updated_at") > reviewed_at:
+            raise LedgerError("human_review: source updated after label")
+        _digest(review.get("title_sha256"), "human_review.title_sha256")
+        _digest(review.get("body_sha256"), "human_review.body_sha256")
+        if review.get("v_label") not in V_LABELS:
+            raise LedgerError("human_review: invalid V label")
+        _model_evidence(review, "human_review")
+        _v2_fields(review, "human_review")
+        seconds = review.get("active_seconds")
+        if type(seconds) not in {int, float} or not 0 <= seconds <= 86400:
+            raise LedgerError("human_review: invalid active_seconds")
+        human_times.append(seconds)
+        if any(
+            review[field] != original[field]
+            for field in ("title_sha256", "body_sha256", "updated_at")
+        ):
+            human_changed_sources += 1
+        else:
+            human_agreement += review["model_relation"] == original["model_relation"]
+            human_parts_agreement += set(review["model_parts"]) == set(
+                original["model_parts"]
+            )
+
     timed_eligible = [
         e["active_seconds"] for e in included if e.get("active_seconds") is not None
     ]
     cost_scored = len(included) == 40 and len(timed_eligible) >= 35
-    return {
+    result = {
         "status": status,
         "reviewed": len(entries),
         "eligible": len(included),
@@ -362,22 +561,57 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
             for e in included
         ),
         "timed_eligible": len(timed_eligible),
-        "placement_cost_scored": cost_scored,
+        "placement_cost_scored": cost_scored if not v2 else False,
         "median_timed_eligible_seconds": (
-            median(timed_eligible) if cost_scored else None
+            median(timed_eligible) if cost_scored and not v2 else None
         ),
     }
+    if v2:
+        result.update(
+            {
+                "guide_version": V2_GUIDE_VERSION,
+                "human_reviewed": len(human_reviews),
+                "human_review_source_changed": human_changed_sources,
+                "human_relation_agreement": (
+                    human_agreement
+                    if len(human_reviews) == 10
+                    and human_changed_sources == 0
+                    and doc["human_reviewer"]["prior_ai_exposure"]
+                    in {"none_declared", "aggregate_only"}
+                    else None
+                ),
+                "human_mpart_set_agreement": (
+                    human_parts_agreement
+                    if len(human_reviews) == 10
+                    and human_changed_sources == 0
+                    and doc["human_reviewer"]["prior_ai_exposure"]
+                    in {"none_declared", "aggregate_only"}
+                    else None
+                ),
+                "human_review_cost_scored": len(human_reviews) == 10,
+                "median_human_review_seconds": (
+                    median(human_times) if len(human_reviews) == 10 else None
+                ),
+            }
+        )
+    return result
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--snapshot", type=Path, required=True)
     parser.add_argument("--ledger", type=Path, required=True)
+    parser.add_argument("--guide", type=Path, help="required for v2 ledger")
+    parser.add_argument("--v1-ledger", type=Path, help="required for v2 ledger")
     args = parser.parse_args()
     try:
         result = validate(
             args.snapshot.read_bytes(),
             json.loads(args.ledger.read_text(encoding="utf-8")),
+            args.guide.read_bytes() if args.guide else None,
+            json.loads(args.v1_ledger.read_text(encoding="utf-8"))
+            if args.v1_ledger
+            else None,
         )
     except (OSError, UnicodeError, json.JSONDecodeError, LedgerError) as exc:
         print(f"INVALID: {exc}", file=sys.stderr)
