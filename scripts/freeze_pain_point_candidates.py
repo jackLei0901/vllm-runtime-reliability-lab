@@ -40,7 +40,8 @@ def digest_numbers(numbers: list[int]) -> str:
 def save(path: Path, record: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix(path.suffix + ".tmp")
-    temp.write_text(json.dumps(record, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    with temp.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(record, ensure_ascii=False, sort_keys=True, indent=2) + "\n")
     temp.replace(path)
 
 
