@@ -66,6 +66,23 @@ extend-exclude = [
   "experiments/vllm-tp-dfx/serving_v2_stall_gate.py",
   "experiments/vllm-tp-dfx/two_collective_graph_gate.py",
   "experiments/vllm-tp-dfx/v2_activation_witness.py",
+  # Older Gate 1 manifests pin this shared process-lifecycle helper by hash.
+  "experiments/organic-hang/process_lifecycle.py",
+  # K5 control, injected worker and revised runner are retained run inputs.
+  "experiments/engine-liveness-contract/k5-worker-hold-plugin/llr_k5_worker_hold.py",
+  "experiments/engine-liveness-contract/k5_health_stall_gate.py",
+  "experiments/engine-liveness-contract/k5_health_stall_gate_v1.py",
+  "tests/k5_test_snapshot_v1.py",
+  # NCCL pTimer sources are cited by SHA-256 in the published capability runs.
+  "experiments/vllm-tp-dfx/ptimer_call_history.py",
+  "experiments/vllm-tp-dfx/ptimer_call_history_score.py",
+  "experiments/vllm-tp-dfx/ptimer_eager_control.py",
+  "experiments/vllm-tp-dfx/ptimer_graph_compare_offline.py",
+  "experiments/vllm-tp-dfx/ptimer_standalone_replay.py",
+  "experiments/vllm-tp-dfx/ptimer_standalone_score.py",
+  "experiments/vllm-tp-dfx/ptimer_trace.py",
+  # The candidate snapshot's execution method was committed before acquisition.
+  "scripts/freeze_pain_point_candidates.py",
 ]
 
 [tool.ruff.lint]

@@ -49,20 +49,27 @@ class PosthocPtimerTest(unittest.TestCase):
         before = {rank: occurrence(1) for rank in (0, 1)}
         end = {rank: before[rank] + occurrence(2) + occurrence(3) for rank in (0, 1)}
         clocks = {
-            rank: clock_map((1, "AllReduce", 100, 200), (2, "AllReduce", 50, 150),
-                            (3, "AllReduce", 50, 150))
+            rank: clock_map(
+                (1, "AllReduce", 100, 200),
+                (2, "AllReduce", 50, 150),
+                (3, "AllReduce", 50, 150),
+            )
             for rank in (0, 1)
         }
         result = audit.audit_windows(before, end, clocks)
         self.assertEqual(result["by_rank"]["0"]["clocks_below_pre_window_max"], 4)
         self.assertEqual(result["by_rank"]["0"]["history_comparable_events"], 4)
         self.assertEqual(
-            result["by_rank"]["0"]["by_kind"]["kernel_ch_start"]
-            ["largest_equal_clock_distinct_occurrences"], 2
+            result["by_rank"]["0"]["by_kind"]["kernel_ch_start"][
+                "largest_equal_clock_distinct_occurrences"
+            ],
+            2,
         )
         self.assertEqual(
-            result["by_rank"]["1"]["by_kind"]["kernel_ch_stop"]
-            ["occurrences_in_repeated_classes"], 2
+            result["by_rank"]["1"]["by_kind"]["kernel_ch_stop"][
+                "occurrences_in_repeated_classes"
+            ],
+            2,
         )
         self.assertNotIn(COMM, str(result))
         self.assertNotIn("150", str(result))
@@ -74,8 +81,11 @@ class PosthocPtimerTest(unittest.TestCase):
             for rank in (0, 1)
         }
         clocks = {
-            rank: clock_map((1, "AllReduce", 10, 20), (2, "AllReduce", 30, 40),
-                            (3, "AllGather", 30, 40))
+            rank: clock_map(
+                (1, "AllReduce", 10, 20),
+                (2, "AllReduce", 30, 40),
+                (3, "AllGather", 30, 40),
+            )
             for rank in (0, 1)
         }
         result = audit.audit_windows(before, end, clocks)

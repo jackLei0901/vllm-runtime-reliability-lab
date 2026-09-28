@@ -36,12 +36,18 @@ def lines(rank: int, *, clock: int = 111, missing_clock: bool = False) -> str:
     suffix = "" if missing_clock else f" ptimer={clock}"
     return (
         f"PROFILER/Plugin: init nranks: 2 rank: {rank}\n"
-        f"LLR_TP_EVT_V2 coll_start comm={COMM} occurrence=1 func=AllReduce seq=7 channels=1\n"
-        f"LLR_TP_EVT_V2 kernel_ch_start comm={COMM} occurrence=1 func=AllReduce seq=7 channel=0 ptimer=1\n"
-        f"LLR_TP_EVT_V2 kernel_ch_stop comm={COMM} occurrence=1 func=AllReduce seq=7 channel=0 ptimer=2\n"
-        f"LLR_TP_EVT_V2 coll_start comm={COMM} occurrence=2 func=AllReduce seq=7 channels=1\n"
-        f"LLR_TP_EVT_V2 kernel_ch_start comm={COMM} occurrence=2 func=AllReduce seq=7 channel=0{suffix}\n"
-        f"LLR_TP_EVT_V2 kernel_ch_stop comm={COMM} occurrence=2 func=AllReduce seq=7 channel=0 ptimer=222\n"
+        f"LLR_TP_EVT_V2 coll_start comm={COMM} occurrence=1 "
+        "func=AllReduce seq=7 channels=1\n"
+        f"LLR_TP_EVT_V2 kernel_ch_start comm={COMM} occurrence=1 "
+        "func=AllReduce seq=7 channel=0 ptimer=1\n"
+        f"LLR_TP_EVT_V2 kernel_ch_stop comm={COMM} occurrence=1 "
+        "func=AllReduce seq=7 channel=0 ptimer=2\n"
+        f"LLR_TP_EVT_V2 coll_start comm={COMM} occurrence=2 "
+        "func=AllReduce seq=7 channels=1\n"
+        f"LLR_TP_EVT_V2 kernel_ch_start comm={COMM} occurrence=2 "
+        f"func=AllReduce seq=7 channel=0{suffix}\n"
+        f"LLR_TP_EVT_V2 kernel_ch_stop comm={COMM} occurrence=2 "
+        "func=AllReduce seq=7 channel=0 ptimer=222\n"
     )
 
 
@@ -57,22 +63,27 @@ class TPPtimerTraceTest(unittest.TestCase):
             clocks, digests = trace.read_private_clocks(pattern)
             self.assertEqual(set(digests), {0, 1})
             self.assertEqual(
-                trace.summarize_all_clocks(clocks)["0"]["by_kind"]["kernel_ch_start"]["events"],
+                trace.summarize_all_clocks(clocks)["0"]["by_kind"]["kernel_ch_start"][
+                    "events"
+                ],
                 2,
             )
             before = {rank: parsed[rank][:3] for rank in (0, 1)}
             end = {rank: parsed[rank] for rank in (0, 1)}
             summary = trace.summarize_window(before, end, clocks)
-            self.assertEqual(summary["0"]["by_kind"]["kernel_ch_start"], {
-                "events": 1,
-                "zero_clocks": 0,
-                "comm_channel_groups": 1,
-                "largest_group_event_count": 1,
-                "groups_with_at_least_six_events": 0,
-                "groups_with_repeated_clock": 0,
-                "largest_equal_value_class_within_group": 1,
-                "nonincreasing_adjacent_pairs": 0,
-            })
+            self.assertEqual(
+                summary["0"]["by_kind"]["kernel_ch_start"],
+                {
+                    "events": 1,
+                    "zero_clocks": 0,
+                    "comm_channel_groups": 1,
+                    "largest_group_event_count": 1,
+                    "groups_with_at_least_six_events": 0,
+                    "groups_with_repeated_clock": 0,
+                    "largest_equal_value_class_within_group": 1,
+                    "nonincreasing_adjacent_pairs": 0,
+                },
+            )
             self.assertEqual(summary["1"]["by_kind"]["kernel_ch_stop"]["events"], 1)
             self.assertNotIn("111", str(summary))
             self.assertNotIn(COMM, str(summary))
@@ -80,7 +91,9 @@ class TPPtimerTraceTest(unittest.TestCase):
     def test_missing_clock_fails_closed(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "nccl.0.log").write_text(lines(0, missing_clock=True), encoding="utf-8")
+            (root / "nccl.0.log").write_text(
+                lines(0, missing_clock=True), encoding="utf-8"
+            )
             (root / "nccl.1.log").write_text(lines(1), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "missing or malformed pTimer"):
                 trace.read_private_clocks(str(root / "nccl.*.log"))
@@ -101,10 +114,14 @@ class TPPtimerTraceTest(unittest.TestCase):
         self.assertEqual(summary["largest_paired_group_event_count"], 2)
         self.assertEqual(summary["nonpositive_pair_duration"], 0)
         self.assertEqual(
-            summary["by_kind"]["kernel_ch_start"]["largest_equal_value_class_within_group"],
+            summary["by_kind"]["kernel_ch_start"][
+                "largest_equal_value_class_within_group"
+            ],
             1,
         )
-        self.assertEqual(summary["by_kind"]["kernel_ch_start"]["comm_channel_groups"], 2)
+        self.assertEqual(
+            summary["by_kind"]["kernel_ch_start"]["comm_channel_groups"], 2
+        )
         # A's second START precedes its first STOP; batching can make this real.
         events.append(trace.ClockEvent("kernel_ch_start", a, 3, "AllReduce", 7, 0, 30))
         events.append(trace.ClockEvent("kernel_ch_stop", a, 3, "AllReduce", 7, 0, 30))
@@ -129,7 +146,9 @@ class TPPtimerTraceTest(unittest.TestCase):
             for item in captured
         )
         with self.assertRaisesRegex(ValueError, "not a prefix"):
-            trace.summarize_window(before, {0: changed + new, 1: captured}, {0: {}, 1: {}})
+            trace.summarize_window(
+                before, {0: changed + new, 1: captured}, {0: {}, 1: {}}
+            )
 
 
 if __name__ == "__main__":

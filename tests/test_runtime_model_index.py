@@ -6,7 +6,6 @@ import re
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MODEL = ROOT / "docs" / "model" / "RUNTIME_MODEL.md"
 EXPERIMENTS = ROOT / "experiments"

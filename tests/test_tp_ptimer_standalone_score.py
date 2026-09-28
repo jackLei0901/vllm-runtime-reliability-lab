@@ -38,7 +38,8 @@ def occurrence(index: int):
 def fixtures(new_count: int, *, reused: bool = False):
     before = {rank: occurrence(1) for rank in (0, 1)}
     after = {
-        rank: before[rank] + tuple(
+        rank: before[rank]
+        + tuple(
             event for index in range(2, new_count + 2) for event in occurrence(index)
         )
         for rank in (0, 1)
@@ -88,7 +89,9 @@ class StandaloneScoreTest(unittest.TestCase):
 
     def test_missing_channel_clock_rejected(self) -> None:
         before, after, clocks = fixtures(3)
-        one_key = next(key for key in clocks[0] if key[2] == 2 and key[0] == "kernel_ch_stop")
+        one_key = next(
+            key for key in clocks[0] if key[2] == 2 and key[0] == "kernel_ch_stop"
+        )
         del clocks[0][one_key]
         with self.assertRaisesRegex(ValueError, "lacks a pTimer marker"):
             scorer.score(before, after, clocks, mode="eager")

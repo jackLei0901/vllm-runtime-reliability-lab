@@ -29,8 +29,10 @@ def occurrence(comm: str, index: int):
 
 
 def fixture(variant: str, *, reuse: bool = False, wrong_comm: bool = False):
-    initial = occurrence(PRIMARY, 1) + occurrence(SECONDARY, 1) + tuple(
-        event for index in range(2, 5) for event in occurrence(PRIMARY, index)
+    initial = (
+        occurrence(PRIMARY, 1)
+        + occurrence(SECONDARY, 1)
+        + tuple(event for index in range(2, 5) for event in occurrence(PRIMARY, index))
     )
     eager_comm = SECONDARY if variant == "other_comm" else PRIMARY
     if wrong_comm:
@@ -55,7 +57,11 @@ def fixture(variant: str, *, reuse: bool = False, wrong_comm: bool = False):
             + ([(eager_comm, eager_index)] if inserted else [])
             + [(PRIMARY, i) for i in range(first_replay, first_replay + 6)]
         ):
-            start = 100 if reuse and index >= first_replay and comm == PRIMARY else index * 10
+            start = (
+                100
+                if reuse and index >= first_replay and comm == PRIMARY
+                else index * 10
+            )
             for kind, clock in (
                 ("kernel_ch_start", start),
                 ("kernel_ch_stop", start + 5),
