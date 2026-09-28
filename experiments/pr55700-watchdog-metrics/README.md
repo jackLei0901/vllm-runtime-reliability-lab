@@ -1,18 +1,20 @@
 ---
 model_cells: [M3, M4]
-status: active
+status: paused
 upstream_exit: vLLM PR 55700 review; not posted
 last_scored: never
 ---
 
 # PR #55700 watchdog counter during a continuing hold
 
-Draft probe for the [frozen selection record](../../docs/reviews/PR55700_FIRST_CANDIDATE_2026-09-28.zh-CN.md)
+Probe for the [frozen selection record](../../docs/reviews/PR55700_FIRST_CANDIDATE_2026-09-28.zh-CN.md)
 and its [addendum A1](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A1_2026-09-28.zh-CN.md),
 plus [setup addendum A2](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A2_2026-09-28.zh-CN.md),
 and [model-download addendum A3](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A3_2026-09-28.zh-CN.md),
 plus the [final CPU-eager setup limit A4](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A4_2026-09-28.zh-CN.md),
-which must be committed before any data is acquired. Nothing here has been run.
+which were committed before their corresponding attempts. The
+[CPU setup result](PR55700_CPU_SETUP_NO_GO_2026-09-28.md) records five
+identity-verified but unscored startup attempts. No hold was entered.
 Pin: PR head `b274bf04dd4c6d54807a136babce5b5d17dd74be`.
 
 `probe.py` starts a real `vllm serve` on the CPU backend, launched by the same
