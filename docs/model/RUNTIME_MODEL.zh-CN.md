@@ -1,6 +1,6 @@
 # Lab 运行时模型：serving 进程的存活状态
 
-版本：**0.1.0-draft**（2026-09-27）。英文原稿：
+版本：**0.1.0**（2026-09-28 为 Q4 抽样标签冻结）。英文原稿：
 [RUNTIME_MODEL.md](RUNTIME_MODEL.md)；[变更记录](CHANGELOG.md)；
 [按模型部分检索](../INDEX.zh-CN.md)。
 

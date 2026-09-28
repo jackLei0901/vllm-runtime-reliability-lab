@@ -40,6 +40,12 @@ terminal engine error。实验设了 `VLLM_KEEP_ALIVE_ON_ENGINE_DEATH=1`，因�
 “存活但未前进”。可选 FT 框架虽有 `UNHEALTHY`，但作用范围不同，需要对齐。
 C5（#58242/#58279）与 C6（#48745/#49000）已有上游负责人，本提纲只把它们当作集成输入。
 
+[#48745](https://github.com/vllm-project/vllm/issues/48745) 的附带日志还显示：
+`timeout=0s`、进程管理器进入 force-kill 分支，以及 EngineCore 在同一秒
+记录开始资源清理。这独立佐证了实际报告中的关闭流程会走到零宽限分支，
+但秒级时间戳不能确定 SIGKILL 与清理的先后或清理是否完成。报告者提出的
+是“关闭被误报为崩溃”，不是 C1；该附带观察不是可评分的 C1 案例。
+
 ## 3. 待审阅的契约骨架
 
 ### 生命周期与健康信号

@@ -7,3 +7,4 @@ are never silently rescored.
 | Version | Date | Change | Historical scores |
 | --- | --- | --- | --- |
 | `0.1.0-draft` | 2026-09-27 | Seed M1–M6 from the pinned liveness inventory, K1/K2/K5 evidence and the architecture mapping. Distinguish the source model from upstream vocabulary. | Unchanged. |
+| `0.1.0` | 2026-09-28 | Freeze the same M1–M6 meanings for the preregistered issue-label guide; no model semantics changed from the draft. The sample will record the exact public commit. | Unchanged. |

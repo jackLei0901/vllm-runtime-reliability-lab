@@ -57,6 +57,14 @@ The RPC-reply mismatch (C5, #58242/#58279) and shutdown-as-crash reporting
 (C6, #48745/#49000) already have upstream owners; they are integration inputs,
 not new findings claimed by this outline.
 
+An incidental log in [#48745](https://github.com/vllm-project/vllm/issues/48745)
+also shows `timeout=0s`, a process-manager force-kill branch, and EngineCore
+starting resource teardown in the same logged second. This independently
+corroborates that the zero-grace branch is reached in a reported shutdown, not
+that SIGKILL interrupted cleanup: the one-second timestamps do not establish
+ordering or completion. The reporter raised shutdown-as-crash logging, not C1;
+this observation is not a scored C1 case.
+
 ## 3. Contract skeleton for review
 
 ### State and signal ownership

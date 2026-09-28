@@ -1,6 +1,6 @@
 # Lab runtime model: serving process liveness
 
-Version: **0.1.0-draft** (2026-09-27). Chinese companion:
+Version: **0.1.0** (frozen for the Q4 sampling labels on 2026-09-28). Chinese companion:
 [RUNTIME_MODEL.zh-CN.md](RUNTIME_MODEL.zh-CN.md). Change history:
 [CHANGELOG.md](CHANGELOG.md). [Index by model part](../INDEX.md).
 

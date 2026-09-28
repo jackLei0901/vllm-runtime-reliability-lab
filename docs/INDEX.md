@@ -3,7 +3,7 @@
 [中文版索引](INDEX.zh-CN.md)
 
 This index organizes existing evidence by the Lab's descriptive
-[runtime model v0.1.0-draft](model/RUNTIME_MODEL.md)
+[runtime model v0.1.0](model/RUNTIME_MODEL.md)
 ([中文](model/RUNTIME_MODEL.zh-CN.md)). It is not a replacement for the
 [fault taxonomy](FAULT_TAXONOMY_V0_2026-09-24.md), the frozen v0.2 verdicts,
 or an upstream vLLM contract. Each experiment's README has a small status
