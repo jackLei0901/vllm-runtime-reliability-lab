@@ -50,6 +50,8 @@ The liveness C1 design question is **not an active upstream post this cycle**. P
 
 **Pre-mortem and retrospective:** The likely failures are broad keywords causing many exclusions, labels requiring source knowledge unavailable in issue reports, and sampling displacing #55537. Check reviewed-item rate, `guide_issue`, and protected Q6 time weekly. At month-end, record each threshold, observation, deviation, and continue/pivot/pause decision here rather than adding an OKR hierarchy or dashboard.
 
+**Post-gate procedural amendment A1 (2026-09-28, before candidate 11):** The [review-process amendment](Q4_SAMPLE_REVIEW_AMENDMENT_2026-09-28.md) records the user's choice to finish AI labelling first and review all 40 afterward. This supersedes the prospective human-first step for v2 without changing the frozen frame or classification rules. The original 8/10 agreement and human-time thresholds remain visible above but will be `unscored/not_attempted`, not passed by retrospective review. Therefore the original full “Continue” gate cannot pass; only descriptive sampling and a bounded next-PoC consideration remain available under the other checks.
+
 ## Code to write now, and code to defer
 
 - **Now:** offline sample-record validation with mutation tests, G0 CPU controls, fixes to demonstrated bundle/replay defects, and tests for model-index and evidence-link integrity. None changes model labels or verdict semantics.

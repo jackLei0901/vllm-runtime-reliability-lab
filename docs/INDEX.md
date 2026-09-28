@@ -35,3 +35,6 @@ Incoming issues first map to a model part or a private `model_gap` entry;
 neither action changes the taxonomy by itself. The
 [Q4 discovery protocol](PAIN_POINT_DISCOVERY_2026Q4.zh-CN.md) fixes the
 sampling and labeling rules before any issue body is read.
+The [2026-09-28 review-process amendment](model/Q4_SAMPLE_REVIEW_AMENDMENT_2026-09-28.md)
+replaces prospective human blind labelling with a post-sample user audit;
+the v2.0.0 classification rules and frozen candidate order do not change.
