@@ -28,5 +28,5 @@
 新问题先对应已有模型部分，或进入私有 `model_gap` 台账；这两种处理都不自动增加
 故障类别。[Q4 发现协议](PAIN_POINT_DISCOVERY_2026Q4.zh-CN.md)要求读取 issue 正文前
 固定抽样与标注规则。
-2026-09-28 的[复核流程修订 A1](model/Q4_SAMPLE_REVIEW_AMENDMENT_2026-09-28.zh-CN.md)
+2026-09-28 的[复核流程修订 R1](model/Q4_SAMPLE_REVIEW_AMENDMENT_2026-09-28.zh-CN.md)
 将先行人工盲标改为抽样后的用户统一审核；v2.0.0 判定规则与冻结候选顺序不变。

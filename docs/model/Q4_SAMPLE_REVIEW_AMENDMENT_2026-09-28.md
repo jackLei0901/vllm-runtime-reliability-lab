@@ -1,6 +1,8 @@
-# Q4 pain-point sample: review-process amendment A1
+# Q4 pain-point sample: review-process amendment R1
 
 Status: awaiting a public commit and push; do not read candidate 11 until both are publicly accessible. [中文](Q4_SAMPLE_REVIEW_AMENDMENT_2026-09-28.zh-CN.md) is authoritative. Recorded on 2026-09-28 before sampling resumes, following the user's decision to review the completed sample rather than blind-label candidates ahead of the AI.
+
+Post-sample identifier correction: the original public commit [`ef41a308`](https://github.com/jackLei0901/vllm-runtime-reliability-lab/commit/ef41a30820f3d1814211c14d5ca8c822ac48193e) called this review-process amendment “A1”, colliding with sampling-protocol amendments A1/A2. It is now **R1**. The original commit and its pre-candidate-11 publication evidence remain intact; this correction changes no classification rule or reading order. The “awaiting” status above records the original pre-execution state, not current progress.
 
 ## Preserved and changed
 
@@ -17,3 +19,5 @@ Retain the existing post-40 checks: `guide_issue ≤5/40`, `outside_model + insu
 ## Resumption condition
 
 Commit and publish this amendment, then verify the remote commit and both language versions are publicly accessible. Create/validate the private v2 ledger and reclassify the already-read v1 prefix before reading candidate 11. `guide_commit` and `guide_sha256` still identify the public v2.0.0 **Chinese guide**; record this amendment's commit separately in private operations notes and the eventual result. The validator checks ledger structure, not retrospective-review quality or whether this amendment is public.
+
+Post-sample execution record: after 40 eligible reports were completed, the user chose a bounded first-stage audit of six mapped/model-gap cases plus five outside-model cases selected by a fixed rule. This is **not** the originally planned review of all 40, and it does not score blind agreement or human placement time. The item selection and disagreements remain in the private review record.
