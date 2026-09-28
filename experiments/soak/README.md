@@ -1,4 +1,14 @@
+---
+model_cells: []
+status: archived
+upstream_exit: none
+last_scored: never
+---
+
 # Soak test
+
+Archived in place as an unexecuted alpha-era stub. The design below is not a
+scored result or an admitted runtime-model cell.
 
 ## Goal
 

@@ -1,7 +1,8 @@
 # Lab 运行时模型：serving 进程的存活状态
 
 版本：**0.1.0-draft**（2026-09-27）。英文原稿：
-[RUNTIME_MODEL.md](RUNTIME_MODEL.md)；[变更记录](CHANGELOG.md)。
+[RUNTIME_MODEL.md](RUNTIME_MODEL.md)；[变更记录](CHANGELOG.md)；
+[按模型部分检索](../INDEX.zh-CN.md)。
 
 这是 Lab 的**描述性**模型，不是 vLLM 已认可的公共契约。主要源码固定在
 vLLM [`c8602c79062440074a018c1d5f875a5571eb6881`](https://github.com/vllm-project/vllm/commit/c8602c79062440074a018c1d5f875a5571eb6881)；

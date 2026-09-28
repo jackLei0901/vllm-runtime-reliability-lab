@@ -1,3 +1,10 @@
+---
+model_cells: [M1, M2, M3, M5]
+status: active
+upstream_exit: liveness contract outline; not posted
+last_scored: 2026-09-27
+---
+
 # Engine liveness contract — K1/K2 CPU checks
 
 Cheapest checks from the

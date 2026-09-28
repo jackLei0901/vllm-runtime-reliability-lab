@@ -3,6 +3,9 @@
 [中文文档](README.zh-CN.md) · [中文方案设计](DESIGN.zh-CN.md) ·
 [中文 evidence-first 计划](PRODUCT_ROADMAP.zh-CN.md)
 
+[Lab runtime-model index](docs/INDEX.md) (draft, Lab-internal organization;
+no change to the published v0.2 contract).
+
 [![CI](https://github.com/jackLei0901/vllm-runtime-reliability-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/jackLei0901/vllm-runtime-reliability-lab/actions/workflows/ci.yml)
 
 An evidence lab for inference failures that leave the service process alive but

@@ -1,3 +1,10 @@
+---
+model_cells: [M3]
+status: closed
+upstream_exit: none; cross-stack transfer case
+last_scored: 2026-09-12
+---
+
 # Organic distributed-hang validation
 
 This directory prepares the first non-author-designed validation case for the

@@ -13,7 +13,7 @@
    长期未解决的 open issue 可经每周审阅进入台账；它们不进入下述
    closed-only 样本，也不与样本计数混算。
 2. **固定 n=40 issue 样本**只估计既定报告框架中，已命名的
-   V1/V2/V3 分类能解释多少报告；遵循
+   V1/V2/V3 分类能解释多少报告，并描述报告涉及哪些运行时模型边界；遵循
    [fault taxonomy 的原协议](FAULT_TAXONOMY_V0_2026-09-24.md)。
    痛点附栏是描述性的，不从 issue 没提工具推断工具漏检。
 
@@ -23,7 +23,10 @@
 受影响的进程/线程边界、缺失或误导的信号、证据等级
 （同次运行材料／源码加复现／报告者叙述／未知）、目前已有的
 诊断方法或 PR、下一项能区分两个解释的实验、去重键、隐私等级、
-状态（新建／已分诊／PoC 候选／已退出 upstream／放弃）及原因。
+`model_cell`（一个或多个 M1–M6 ID）或 `model_gap`（模型无法表示的
+观察事实）、状态（新建／已分诊／PoC 候选／已退出 upstream／放弃）及原因。
+模型外条目明确标记 `outside_model`，不为凑标签强行分配 M-ID；
+`model_gap` 仅是待月度评议的输入，不自动修改模型。
 不在公开台账粘贴原始进程路径、栈、模型名或私有日志。
 `owner` 只能表示潜在审阅路由，不表示维护者认可。
 
@@ -81,12 +84,33 @@ number 的排序清单与 SHA-256；任何分片不完整则停止，不抽样�
 分析；没有可核查链接时只标 `duplicate_unknown`，不凭标题相似合并。
 
 首轮逐项记录 issue number、检索命中的词、纳入/排除及代码、V1/V2/V3/
-`none_of_v0`/`insufficient_information`、最小证据指针、缺失或误导
+`none_of_v0`/`insufficient_information`、下述 M-part 标签、最小证据指针、缺失或误导
 信号（若能确认）、loop-level ping 的 `yes/no/unknown` 及依据、
 重复簇、关闭方式与根因是否明确。第二次复核在首轮开始前固定为
 40 个样本中哈希次序前 10 个，由同一标注者隔至少 7 日、看不到首轮
 标签时重标；若未来有第二标注者，另报告独立复核，不能把同一人重标
 称为独立复核。分歧与原始两轮标签均保留，不以讨论后的标签回写原记录。
+
+### 预注册的运行时模型附栏（抽样前决定）
+
+本次**同时**按 [runtime model](model/RUNTIME_MODEL.md) 的 M1–M6
+标注，但不改变候选框架、随机次序、排除规则、n=40 或 V1–V3 主标签。
+冻结候选清单时一并记录模型版本及其 Git commit；后来模型改版，不回填
+首轮标签。每个纳入报告单独记录 `model_parts`（M1–M6 的零个或多个）、
+`model_relation`（`mapped`、`outside_model`、`model_gap`、
+`insufficient_information` 四选一）、证据指针；`model_gap` 另写一条
+模型无法表示的事实。只依据报告中**观察到的故障边界**标注，不依据
+猜测的根因、候选修复位置或 CODEOWNER。多个 M-part 仅在各边界分别
+有依据时标注；信息不足不得强行归类。`outside_model` 与
+`insufficient_information` 的 `model_parts` 为空。`model_gap` 只是
+待评议条目，不自动扩展模型，也不新增 fault taxonomy 类别。
+`mapped` 必须有至少一个 M-part；`model_gap` 必须附不能表达的事实，
+可以同时记录已知的相邻 M-part，但该标签不替代缺口说明。
+
+报告时分别给出每个 M-part 的 `k/40`、多标签数量、模型外、模型缺口
+和信息不足数量；这些类别不是互斥的故障频率估计，M-part 的 `k`
+不可相加。分母只适用于上述**已关闭、关键词命中**的 issue 报告框架，
+不能推断生产故障分布、工具漏检率或模型对所有 vLLM 故障的覆盖率。
 
 这里写明了预注册方法，**没有生成样本**。协议提交固定后的下一步是
 保存候选 ID 快照，
@@ -102,7 +126,7 @@ number 的排序清单与 SHA-256；任何分片不完整则停止，不抽样�
 | 框架 | 原样保存的 closed-issue 搜索式、时间边界、排序与去重规则；PR 不混入 issue |
 | 排除 | install/build、accuracy-only、feature request、无可靠性故障的 performance-only；每个排除必须有代码。stale bot 关闭的 issue 仍在框架内，单列 `closed_stale_without_root_cause`，不当作已修复 |
 | 随机化 | 按上文 `SHA256("dfxlab-coverage-20260926-v1:" + number)` 顺序审读，排除后在第 40 个合格项停止；保留完整审读前缀。候选耗尽则 `NO-SAMPLE`，不得补词补样 |
-| 标注 | `V1`、`V2`、`V3`、`none_of_v0`、`insufficient_information`；痛点信号与标签分列。另列“loop-level ping 会发现吗”：是／否／未知，必须说明证据依据 |
+| 标注 | `V1`、`V2`、`V3`、`none_of_v0`、`insufficient_information`；另列 M1–M6 多标签及 `mapped`／`outside_model`／`model_gap`／`insufficient_information`，记录模型 commit 与每个标签的依据。痛点信号与标签分列。“loop-level ping 会发现吗”仍为是／否／未知，须说明依据 |
 | 复核 | 预先指定复核子集及分歧处理；一人延时盲于首次标签重标仅称同一标注者一致性检查，有第二人时才称独立复核；保留样本 ID、排除理由、各阶段计数和重复敏感性分析 |
 
 不能把排除后剩余数量偷换成生产故障总数；未解决的“到根因时间”

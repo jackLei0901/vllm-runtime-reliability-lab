@@ -43,16 +43,16 @@ into `external_schema.py` as a new v0.2 observation.
 
 | Directory | Model placement | Current classification for indexing |
 | --- | --- | --- |
-| `engine-liveness-contract` | M1/M3/M5; K1/K2/K5 | active model-building evidence, not a second Q4 PoC |
+| `engine-liveness-contract` | M1/M2/M3/M5; K1/K2/K5 | active model-building evidence, not a second Q4 PoC |
 | `fault-recovery` | M6 API/EngineCore fatal propagation | closed experiment; upstream thread remains separate |
 | `native-evidence-capability` | M4 attribution/evidence layer | completed capability check |
-| `oom-boundary` | Outside current model; no admitted scored run | stub, pending archive-status decision |
+| `oom-boundary` | Outside current model; no admitted scored run | archived in place; never executed |
 | `organic-hang` | M3 hypothesis input; mechanism not established | retained case, no automatic fault category |
 | `overhead` | Evidence-layer cost, not an M-fact | harness/reference |
-| `preemption` | Outside current model; no admitted scored run | stub, pending archive-status decision |
+| `preemption` | Outside current model; no admitted scored run | archived in place; never executed |
 | `pytorch-c10d-shutdown-dump` | Cross-stack X1; possible M4 transfer only | separate PyTorch case, not a vLLM occurrence |
 | `pytorch-unused-grad-dtype` | Cross-stack X2, below runtime-tree leaves | separate PyTorch case |
-| `soak` | Outside current model; no admitted scored run | stub, pending archive-status decision |
+| `soak` | Outside current model; no admitted scored run | archived in place; never executed |
 | `vllm-dp-supervisor-exit` | M1 DP supervisor, M6 exit propagation | Gate 1 pending; preserve Gate 0 score |
 | `vllm-engine-binding-gate` | M1 EngineCore topology, M3 identity/freshness | active binding gate; no rank inference from missing log |
 | `vllm-mm-uuid-encoder-cache` | Outside runtime-liveness model; cache correctness | retained draft, no automatic admission |

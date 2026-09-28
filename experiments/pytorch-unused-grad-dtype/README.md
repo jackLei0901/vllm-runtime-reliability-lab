@@ -1,3 +1,10 @@
+---
+model_cells: []
+status: closed
+upstream_exit: PyTorch cross-stack case; see below
+last_scored: 2026-09-14
+---
+
 # Two-rank FSDP2 unused-gradient dtype experiment
 
 Status: **first GPU lane complete; the predeclared reproduction hypothesis was

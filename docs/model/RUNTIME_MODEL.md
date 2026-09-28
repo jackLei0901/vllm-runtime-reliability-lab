@@ -2,7 +2,7 @@
 
 Version: **0.1.0-draft** (2026-09-27). Chinese companion:
 [RUNTIME_MODEL.zh-CN.md](RUNTIME_MODEL.zh-CN.md). Change history:
-[CHANGELOG.md](CHANGELOG.md).
+[CHANGELOG.md](CHANGELOG.md). [Index by model part](../INDEX.md).
 
 This is the Lab's **descriptive** model, not vLLM's agreed public contract.
 Its primary source pin is vLLM

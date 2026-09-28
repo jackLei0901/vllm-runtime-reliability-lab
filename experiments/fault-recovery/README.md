@@ -1,3 +1,10 @@
+---
+model_cells: [M6]
+status: closed
+upstream_exit: vLLM PR 52178
+last_scored: not-indexed
+---
+
 # Fault recovery
 
 ## Completed case: #48966 / PR #52178

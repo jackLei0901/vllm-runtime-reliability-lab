@@ -52,7 +52,7 @@ stable IDs:
 
 | Part | Contents | Seeded from |
 | --- | --- | --- |
-| **M1 Topology** | Process roles and their owners: API server or Rust frontend, CLI parent (single, headless, multi-API), DP supervisor, Rust managed-engine parent, `MPClient`, EngineCore, executor (uni/multiproc/Ray), workers, DP coordinator. Launch modes are part of the element, not a footnote. | Inventory §2, outline §3 budget table |
+| **M1 Topology** | Process roles and owners on the bounded local serving paths: API server or Rust frontend, CLI parent (single, headless, multi-API), DP supervisor, Rust managed-engine parent, `MPClient`, EngineCore, executor and workers. Ray and multi-node variants are named but not treated as equivalent or fully mapped. | Inventory §2, outline §3 budget table |
 | **M2 Lifecycle** | Source-observed state holders and transitions, each with its actual owner. Candidate names such as paused/sleeping and draining stay in the separate contract outline until their source mapping is explicit. | Inventory transitions, outline §3 |
 | **M3 Health and progress facts** | Process alive and identity-stable; loop responsive; admitted demand; progress within a window; producer absent or stale; terminal failure. Each fact records producer availability, freshness and scope (request/service/engine); an absent producer is recorded as absent, not invented. | Inventory S-signals, `progress.py` states |
 | **M4 Signals** | S1–S11: who produces each signal, who consumes it, and over which transport (RPC, sentinel, ZMQ, HTTP). | Inventory §3 |
@@ -114,9 +114,11 @@ bounded scope; neither outcome silently expands M1–M6.
 
 `progress.py` is not changed. Two gaps show up immediately and become model
 questions, not code changes. First, M2 lifecycle state is not an input: an
-intentional `pause_generation(mode="keep")` would currently look like
-`alive_health_ok_no_progress`. Second, "loop responsive" (the #36451 ping) has
-no slot at all.
+intentional `pause_generation(mode="keep")` could be classified as
+`alive_health_ok_no_progress` if the frozen inputs still report admitted
+demand, a healthy process, and flat progress. This is a conditional mapping
+risk, not an observed misclassification. Second, "loop responsive" (the
+#36451 ping) has no slot at all.
 
 ### Experiments
 
@@ -135,18 +137,18 @@ classification:
 | `vllm-tp-dfx` | below-M1 leaf: collectives | paused; closure doc pending |
 | `organic-hang`, `pytorch-c10d-shutdown-dump`, `pytorch-unused-grad-dtype` | cross-stack X1/X2 | closed or waiting on #197232 |
 | `vllm-mm-uuid-encoder-cache` | out of model (cache correctness) | draft |
-| `oom-boundary`, `preemption`, `soak` | not placed; each would need admission | stub, never executed; propose archive status |
+| `oom-boundary`, `preemption`, `soak` | outside M1–M6; each would need admission | archived in place, never executed |
 | `VLLM_CONCURRENCY_56251_ASSESSMENT` | M4 and M5 risk map | reference |
 
 ## 5. Repository changes (small, link-preserving)
 
 1. **Add** `docs/model/RUNTIME_MODEL.md` (M1–M6) and
    `docs/model/CHANGELOG.md`.
-2. **Add** `docs/INDEX.md`: one section per model part linking the relevant
+2. **Add** `docs/INDEX.md`: one row per model part linking the relevant
    docs and reviews. Files are **not moved or renamed**, because published
    results and upstream comments link to current paths.
 3. **Add a status header** to each experiment README, in a fixed shape:
-   `model_cells`, `status` (active / paused / closed / stub / archived),
+   `model_cells`, `status` (active / paused / closed / archived),
    `upstream_exit`, `last_scored`. Stubs are marked `archived` in place, not
    deleted.
 4. **Add one CPU test** that parses the headers and fails if a header names a
@@ -182,11 +184,12 @@ short statement of what the model cannot express). Two consequences:
   either change the model (with a changelog entry), are declared out of scope,
   or stay open. The taxonomy admission gate is unchanged; a model change is not
   a new fault category.
-- The planned n=40 coverage sample can label against **M-parts** as well as
-  V1–V3. That turns "we have no denominator" into "these model parts received
-  k of 40 sampled reports". This must be decided **before the frame is frozen
-  in week 1 (09-28 to 10-04)**; adding labels after reading issues would break
-  the preregistration.
+- The planned n=40 sample **will** label M1–M6 as a secondary, potentially
+  multi-label column beside V1–V3. The rule is now preregistered in the
+  [discovery protocol](PAIN_POINT_DISCOVERY_2026Q4.zh-CN.md), before candidate
+  IDs or issue bodies are read. Each `k/40` describes only the fixed closed,
+  keyword-matched reporting frame; it is not population failure coverage or
+  an existing-tool miss rate. The model commit is frozen with the sample.
 
 ## 8. Relationship to the Q4 plan (a deviation to acknowledge)
 
@@ -217,7 +220,7 @@ are unaffected.
 | P0 | Isolate the liveness evidence and tests after a publishability review. | Done locally in `373f6dd`; unrelated TP/timeline/user work remains untouched and uncommitted. No public push is implied. |
 | P1 | Write `RUNTIME_MODEL.md` M1–M6 from the inventory, pinned, with a `main` drift column. | Every row of §4 placed or explicitly out of model; no element lacks a source anchor. |
 | P2 | Experiment headers, `docs/INDEX.md`, the header-lint test. | The test passes; every experiment has a status. |
-| P3 | Ledger field; n=40 label decision before the frame freeze. | Decision recorded by 10-04. |
+| P3 | Ledger field; n=40 M-part label rule before the frame freeze. | Label rule recorded; sample frame and model commit still need freezing by 10-04. |
 | P4 | First monthly review using `model_gap`. | At least one gap resolved, declared out of scope, or kept open with a reason. Zero model changes is an acceptable outcome. |
 
 Estimated effort: P1 is about two sessions of source-anchored writing, since
@@ -247,10 +250,11 @@ claim that the model is vLLM's contract. It describes source, and upstream
 contracts are negotiated in upstream threads. Self-healing stays out of public
 framing.
 
-## 12. Open decisions for the owner
+## 12. Decisions recorded; publication still separate
 
-1. Label the n=40 sample by M-part as well as V1–V3: yes or no, before 10-04.
-2. Archive status for `oom-boundary`, `preemption`, `soak`: agree, or name one
-   to re-admit.
-3. `RUNTIME_MODEL.md` gets a `zh-CN` companion, consistent with this proposal
-   and the liveness outline; the exact release timing remains open.
+1. The n=40 sample receives secondary M-part labels under the preregistered
+   rule; no issue bodies have been sampled yet.
+2. `oom-boundary`, `preemption`, and `soak` are archived **in place**, without
+   deletion or a claim of scored evidence.
+3. The model and proposal have Chinese companions. No public push is implied
+   by these local architecture changes.

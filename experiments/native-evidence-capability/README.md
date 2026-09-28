@@ -1,3 +1,10 @@
+---
+model_cells: [M4]
+status: closed
+upstream_exit: none; Lab evidence capability
+last_scored: 2026-09-22
+---
+
 # Block 5 native-evidence capability run
 
 Status: Stage A Linux CPU smoke and Stage B v2 scored RTX 4090 validation are

@@ -1,5 +1,8 @@
 # vLLM Runtime Reliability Lab 中文指南
 
+[Lab 运行时模型索引](docs/INDEX.zh-CN.md)（草案，仅组织已有工作，
+不改变已发布的 v0.2 契约）。
+
 > 当前版本：已发布 [`v0.2.0`](https://github.com/jackLei0901/vllm-runtime-reliability-lab/releases/tag/v0.2.0)
 > 当前定位：可公开安装和复现的研究型 Alpha，不是生产监控产品。
 

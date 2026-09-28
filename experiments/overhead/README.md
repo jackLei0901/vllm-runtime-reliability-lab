@@ -1,3 +1,10 @@
+---
+model_cells: []
+status: paused
+upstream_exit: none; Lab overhead gate
+last_scored: not-indexed
+---
+
 # Paired overhead harness
 
 This directory prepares the post-alpha overhead gate without making a GPU
