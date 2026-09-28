@@ -10,6 +10,7 @@ last_scored: never
 Draft probe for the [frozen selection record](../../docs/reviews/PR55700_FIRST_CANDIDATE_2026-09-28.zh-CN.md)
 and its [addendum A1](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A1_2026-09-28.zh-CN.md),
 plus [setup addendum A2](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A2_2026-09-28.zh-CN.md),
+and [model-download addendum A3](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A3_2026-09-28.zh-CN.md),
 which must be committed before any data is acquired. Nothing here has been run.
 Pin: PR head `b274bf04dd4c6d54807a136babce5b5d17dd74be`.
 
