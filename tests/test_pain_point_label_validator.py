@@ -33,13 +33,25 @@ def fixture(size: int = 45) -> tuple[bytes, dict]:
             "random_seed": seed,
             "protocol_commit": "f" * 40,
             "finished_at_utc": "2026-09-28T07:25:30+00:00",
+            "terms": ["hang"],
+            "search_shards": [
+                {
+                    "query": (
+                        "repo:test is:issue in:title,body hang "
+                        "created:2026-01-01..2026-01-31"
+                    ),
+                    "numbers": numbers,
+                }
+            ],
         }
     ).encode()
     entries = [
         {
             "number": n,
             "decision": "include",
+            "title_sha256": "c" * 64,
             "body_sha256": "a" * 64,
+            "matched_terms": ["hang"],
             "updated_at": "2026-09-25T00:00:00+00:00",
             "labelled_at": (LABELLED_AT + timedelta(minutes=i)).isoformat(),
             "active_seconds": 300,
@@ -122,6 +134,22 @@ class PainPointLabelValidatorTests(unittest.TestCase):
         ledger["entries"][0]["model_relation"] = "outside_model"
         self.check_error(snapshot, ledger, "relation cannot have model parts")
 
+    def test_title_digest_and_matched_terms_are_required(self) -> None:
+        snapshot, ledger = fixture()
+        del ledger["entries"][0]["title_sha256"]
+        self.check_error(snapshot, ledger, "entry.title_sha256")
+        ledger["entries"][0]["title_sha256"] = "c" * 64
+        ledger["entries"][0]["matched_terms"] = ["stuck"]
+        self.check_error(snapshot, ledger, "matched terms differ")
+
+    def test_snapshot_shard_membership_is_checked(self) -> None:
+        snapshot, ledger = fixture()
+        manifest = json.loads(snapshot)
+        manifest["search_shards"][0]["numbers"].pop()
+        changed = json.dumps(manifest).encode()
+        ledger["snapshot_sha256"] = hashlib.sha256(changed).hexdigest()
+        self.check_error(changed, ledger, "candidate has no matched term")
+
     def test_model_gap_needs_a_separate_evidence_pointer(self) -> None:
         snapshot, ledger = fixture()
         first = ledger["entries"][0]
@@ -187,6 +215,7 @@ class PainPointLabelValidatorTests(unittest.TestCase):
             {
                 "number": e["number"],
                 "labelled_at": (tenth + timedelta(days=7)).isoformat(),
+                "title_sha256": e["title_sha256"],
                 "body_sha256": e["body_sha256"],
                 "updated_at": e["updated_at"],
                 "v_label": "V1",
@@ -209,6 +238,7 @@ class PainPointLabelValidatorTests(unittest.TestCase):
             {
                 "number": e["number"],
                 "labelled_at": (tenth + timedelta(days=7)).isoformat(),
+                "title_sha256": e["title_sha256"],
                 "body_sha256": e["body_sha256"],
                 "updated_at": e["updated_at"],
                 "v_label": "V1",
@@ -232,6 +262,7 @@ class PainPointLabelValidatorTests(unittest.TestCase):
             {
                 "number": ledger["entries"][0]["number"],
                 "labelled_at": (tenth + timedelta(days=7)).isoformat(),
+                "title_sha256": "c" * 64,
                 "body_sha256": "a" * 64,
                 "updated_at": (tenth + timedelta(days=8)).isoformat(),
                 "v_label": "V1",

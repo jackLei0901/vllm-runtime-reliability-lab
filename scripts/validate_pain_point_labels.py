@@ -29,7 +29,9 @@ GRADES = {"report_log_or_output", "reporter_narrative"}
 ENTRY_KEYS = {
     "number",
     "decision",
+    "title_sha256",
     "body_sha256",
+    "matched_terms",
     "updated_at",
     "labelled_at",
     "active_seconds",
@@ -52,6 +54,7 @@ ENTRY_KEYS = {
 RELABEL_KEYS = {
     "number",
     "labelled_at",
+    "title_sha256",
     "body_sha256",
     "updated_at",
     "v_label",
@@ -155,6 +158,31 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
         key=lambda n: (hashlib.sha256(f"{seed}{n}".encode()).hexdigest(), n),
     ):
         raise LedgerError("snapshot: review order differs from frozen seed")
+    terms = snapshot.get("terms")
+    shards = snapshot.get("search_shards")
+    if (
+        not isinstance(terms, list)
+        or not terms
+        or any(not isinstance(term, str) or not term for term in terms)
+        or len(set(terms)) != len(terms)
+        or not isinstance(shards, list)
+    ):
+        raise LedgerError("snapshot: missing term provenance")
+    term_matches: dict[int, set[str]] = {number: set() for number in candidates}
+    for shard in shards:
+        if not isinstance(shard, dict) or not isinstance(shard.get("query"), str):
+            raise LedgerError("snapshot: invalid search shard")
+        matched = [
+            term for term in terms if f"in:title,body {term} created:" in shard["query"]
+        ]
+        if len(matched) != 1 or not isinstance(shard.get("numbers"), list):
+            raise LedgerError("snapshot: ambiguous shard term")
+        for number in shard["numbers"]:
+            if type(number) is not int or number not in term_matches:
+                raise LedgerError("snapshot: shard contains unknown candidate")
+            term_matches[number].add(matched[0])
+    if any(not matched for matched in term_matches.values()):
+        raise LedgerError("snapshot: candidate has no matched term")
 
     doc = _object(
         ledger,
@@ -189,7 +217,12 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
         entry = _object(raw, ENTRY_KEYS, "entry")
         if entry.get("number") != order[index]:
             raise LedgerError("entry: not the frozen review-order prefix")
+        _digest(entry.get("title_sha256"), "entry.title_sha256")
         _digest(entry.get("body_sha256"), "entry.body_sha256")
+        if entry.get("matched_terms") != [
+            term for term in terms if term in term_matches[entry["number"]]
+        ]:
+            raise LedgerError("entry: matched terms differ from snapshot")
         updated = _time(entry.get("updated_at"), "entry.updated_at")
         labelled = _time(entry.get("labelled_at"), "entry.labelled_at")
         if labelled <= snapshot_finished:
@@ -225,7 +258,9 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
             if set(entry) - {
                 "number",
                 "decision",
+                "title_sha256",
                 "body_sha256",
+                "matched_terms",
                 "updated_at",
                 "labelled_at",
                 "active_seconds",
@@ -292,11 +327,13 @@ def validate(snapshot_bytes: bytes, ledger: object) -> dict[str, object]:
             ):
                 raise LedgerError("relabels: invalid label")
             _digest(relabel.get("body_sha256"), "relabel.body_sha256")
+            _digest(relabel.get("title_sha256"), "relabel.title_sha256")
             if _time(relabel.get("updated_at"), "relabel.updated_at") > relabelled:
                 raise LedgerError("relabel: source updated after label")
             _model_evidence(relabel, "relabel")
             if (
                 relabel["body_sha256"] != original["body_sha256"]
+                or relabel["title_sha256"] != original["title_sha256"]
                 or relabel["updated_at"] != original["updated_at"]
             ):
                 changed_sources += 1
