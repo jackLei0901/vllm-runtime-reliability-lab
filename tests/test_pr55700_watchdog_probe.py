@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 SCRIPT = (
@@ -212,6 +213,22 @@ class ScoreTests(unittest.TestCase):
     def test_identity_file_list_covers_pr_runtime_files(self) -> None:
         self.assertEqual(len(probe.IDENTITY_FILES), 13)
         self.assertTrue(all(p.startswith("vllm/") for p in probe.IDENTITY_FILES))
+
+
+class ServerConfigTests(unittest.TestCase):
+    def test_cpu_memory_reservation_is_fixed_for_startup(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            args = SimpleNamespace(
+                model="m", port=8055, tp=1, watchdog_timeout=15, check_interval=1
+            )
+            with mock.patch.object(probe.subprocess, "Popen") as popen:
+                server = probe.Server(args, Path(tmp), Path(tmp) / "control")
+            try:
+                command = popen.call_args.args[0]
+                index = command.index("--gpu-memory-utilization")
+                self.assertEqual(command[index + 1], "0.5")
+            finally:
+                server.log.close()
 
 
 class FailClosedTests(unittest.TestCase):

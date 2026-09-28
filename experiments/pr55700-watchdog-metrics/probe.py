@@ -286,6 +286,7 @@ class Server:
             "--distributed-executor-backend", "uni" if args.tp == 1 else "mp",
             "--max-model-len", "512",
             "--max-num-seqs", "4",
+            "--gpu-memory-utilization", "0.5",
             "--worker-cls", "hold_worker.HoldingCPUWorker",
             "--watchdog-config", json.dumps(watchdog),
         ]  # fmt: skip
