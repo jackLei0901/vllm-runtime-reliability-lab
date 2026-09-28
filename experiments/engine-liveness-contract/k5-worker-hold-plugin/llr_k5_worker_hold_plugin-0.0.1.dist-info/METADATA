@@ -1,0 +1,4 @@
+Metadata-Version: 2.1
+Name: llr-k5-worker-hold-plugin
+Version: 0.0.1
+Summary: Experiment-only bounded Worker.execute_model hold

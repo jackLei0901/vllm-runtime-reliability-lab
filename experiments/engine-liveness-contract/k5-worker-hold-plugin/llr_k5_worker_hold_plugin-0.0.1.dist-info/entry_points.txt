@@ -1,0 +1,2 @@
+[vllm.general_plugins]
+llr_k5_worker_hold = llr_k5_worker_hold:install
