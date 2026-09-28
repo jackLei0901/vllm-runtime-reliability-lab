@@ -55,6 +55,10 @@ class RuntimeModelIndexTests(unittest.TestCase):
                 fields = parse_status_header(directory / "README.md")
                 parse_model_cells(fields["model_cells"], valid_ids)
                 self.assertIn(fields["status"], STATUSES)
+                self.assertRegex(
+                    fields["last_scored"],
+                    r"\A(?:\d{4}-\d{2}-\d{2}|never|not-indexed)\Z",
+                )
 
     def test_archived_stubs_do_not_claim_a_score_or_model_cell(self) -> None:
         for name in ARCHIVED_STUBS:
@@ -68,18 +72,20 @@ class RuntimeModelIndexTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown"):
             parse_model_cells("[M7]", {"M1", "M2"})
 
-    def test_bilingual_index_links_resolve(self) -> None:
-        for index in (
+    def test_model_and_index_links_resolve(self) -> None:
+        documents = (
             ROOT / "docs" / "INDEX.md",
             ROOT / "docs" / "INDEX.zh-CN.md",
-        ):
-            with self.subTest(index=index.name):
-                text = index.read_text(encoding="utf-8")
+            *sorted((ROOT / "docs" / "model").glob("*.md")),
+        )
+        for document in documents:
+            with self.subTest(document=document.name):
+                text = document.read_text(encoding="utf-8")
                 for target in re.findall(r"\[[^]]+\]\(([^)]+)\)", text):
                     if "://" in target or target.startswith("#"):
                         continue
                     self.assertTrue(
-                        (index.parent / target.split("#", 1)[0]).exists(), target
+                        (document.parent / target.split("#", 1)[0]).exists(), target
                     )
 
 
