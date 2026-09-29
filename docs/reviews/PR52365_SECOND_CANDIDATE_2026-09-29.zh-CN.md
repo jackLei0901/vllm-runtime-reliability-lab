@@ -23,19 +23,21 @@
 
 补丁覆盖四处 `get_output()`：[V1 生成](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/worker/gpu_model_runner.py#L331-L338)、[V1 pooling](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/worker/gpu_model_runner.py#L451-L460)、[V2 生成](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/worker/gpu/async_utils.py#L169-L174)和[V2 pooling](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/worker/gpu/async_utils.py#L248-L255)。`UniProcExecutor` 通过 [`AsyncOutputFuture.result()`](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/executor/uniproc_executor.py#L32-L46) 调用 `get_output()`；异常到达 [EngineCore 的结果等待](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/engine/core.py#L642-L650)。`MultiprocExecutor` 的 worker [把 `get_output()` 异常转换为 FAILURE 回复](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/executor/multiproc_executor.py#L985-L997)，接收方[再抛出 `RuntimeError`](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/executor/multiproc_executor.py#L426-L441)。EngineCore 的外层处理器[把未捕获异常作为致命错误](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/engine/core.py#L1431-L1438)。以上只是代码路径，未在服务中实测；前端状态和重启策略仍未评分。
 
-设计差别已经明确：#52365 拟设置**终止性的事件局部**截止时间；#55700 的[自述目标](https://github.com/vllm-project/vllm/pull/55700)是漏喂心跳时作**诊断性栈转储**，其 PR 描述没有声称会终止进程。两者的契约互不替代。余下的决定是事件轮询成本能否接受，或是否存在无需轮询而又能给出终止上界的机制。现有四个假事件测试只证明 helper 行为，不能回答性能或恢复问题。只有作者或 reviewer 需要这项比较，或源码支持的反例控制能改变设计选择时，才考虑开卡。
+设计差别已经明确：#52365 拟设置**终止性的事件局部**截止时间；#55700 的[自述目标](https://github.com/vllm-project/vllm/pull/55700)是漏喂心跳时作**诊断性栈转储**，其 PR 描述没有声称会终止进程。两者的契约互不替代。余下的决定是事件轮询成本能否接受，或是否存在无需轮询而又能给出终止上界的机制。现有四个假事件测试只证明 helper 行为，不能回答性能或恢复问题。本次源码 review 不触发硬件预约。
 
 ## 默认开启的问题及证据边界
 
 在 PR 的精确基线运行 `git grep VLLM_ENGINE_ITERATION_TIMEOUT_S 157bcb7c489689dd34cf28d9c9970a465d326a03 -- vllm`，结果只有 `envs.py` 中的声明、环境变量表和变量名列表，没有运行时读取点。这不只是 Lab 旧版 `c8602c79` 清单的结论。补丁让输出路径读取该变量，[默认值为 60 秒](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/envs.py#L802-L803)。V1 的复制流[先等待主计算流，再记录完成事件](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/worker/gpu_model_runner.py#L310-L329)；[V2 也是如此](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/worker/gpu/async_utils.py#L137-L168)。因此，事件就绪可能包含尚未完成的前向计算，而非仅等待复制。60 秒从 `get_output()` 进入拟议等待时起算，**不是**从步骤开始起算：若此时剩余 GPU 工作超过 60 秒，即使最终能完成，也可能报错。这是源码支持的可能性，不是已观察到的合法负载或已证实的回归。PR 的四个假事件测试没有这一慢但可完成的负控。60–300 秒的负控还能检验多进程超时顺序变化；未匹配真实负载和配置前，不应声称其有代表性。在已核查的 PR 讨论里，尚无人解决默认开启策略；njhill 留下的异议针对轮询。
 
+一种建设性的策略选择是让超时默认值为 `0`（显式启用），或新增一个单独命名的 opt-in 设置。helper 的[非正数分支使用原生 `event.synchronize()`](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/v1/worker/gpu/event_utils.py#L20-L26)，所以这样可在**默认情况下**同时避免轮询和新的致命上界。但这既不能解决显式开启后轮询是否可接受，也不能保护未开启设置的运营者免受原有 [#52247 卡死](https://github.com/vllm-project/vllm/issues/52247)。这是交给作者和维护者权衡的策略，不是已证实的修复。
+
 另有一个**不放进拟议上游评论**的运维依赖：EngineCore 的致命异常路径本身不能证明 supervisor 会重启。Lab 的 [#52178 故障恢复表](../../experiments/fault-recovery/README.md)观察的是基线下 **SIGKILL** EngineCore 后顶层退出码为 0，而不是本 PR 抛异常的退出路径。此处异常的退出码和重启行为仍未实测。不要借他人的 PR 推广 #52178。
 
 ## 决策分支与时间
 
-- 若维护者回答超时范围问题，仅在两小时源码预算内，提供能影响其选择的源码图部分及默认开启的负控问题。不自动发帖或开卡。
+- 从 **2026-10-06** 起，即使维护者尚未回答范围问题，也可向作者简短提出 opt-in 默认值这一设计选择。先核对最新 head 和讨论；不自动发帖、开卡或 @ 任何人。若维护者随后回答，只提供与其回答有关的源码事实。
 - 若作者或 reviewer 明确需要行为测量，先另行冻结测试：含慢但会完成的负控、卡住的事件组，以及硬件/时间上限和装置失败时的 `unscored` 结论。不能把假事件测试当成服务实测。
-- 若到 **2026-10-26 至 2026-11-01 的复盘**仍无实质答复，则以 `not_observed` 关闭外部采用情况；若 PR 更早合入或关闭，则提前结束此候选。仅有源码观察而未改变外部决策，仍属普通 Q5 review。
+- 若到 **2026-10-26 至 2026-11-01 的复盘**仍无实质答复，则以 `not_observed` 关闭外部采用情况；若 PR 更早合入或关闭，则提前结束此候选。opt-in 问题属普通 Q5 review，**不算**十一月目标所需的 Lab 实证材料。
 
 约在 10 月 1 日的 #52178 跟进已涉及 njhill。#52365 不安排在同一周，也不 @ 任何人。考虑发帖前须刷新讨论和 PR head。
 
@@ -49,4 +51,4 @@
 | [#54919](https://github.com/vllm-project/vllm/issues/54919) | 长 prefill 期间的数分钟 decode 饥饿，后续分析指向重复的阻塞 D2H 同步及大量步骤，而非实测一次输出复制事件等待超过 60 秒。 |
 | [#40707](https://github.com/vllm-project/vllm/issues/40707) | 调度器修复后，双视频请求在 130.7 秒完成；这是整次请求时长，没有单次事件等待数据。 |
 
-检索结论：**尚无可信的真实慢步骤组**。不能把注入延迟当成生产发生率证据，也不应仅凭这些报告租 GPU。下一份最低成本证据应来自自然变慢但最终成功的运行：按步骤记录 `get_output()` 进入时间、事件就绪时间、步骤身份及请求完成情况；原始时间戳私存，只公开汇总。只有实测单次等待超过 60 秒，才进入默认开启误报的验证。
+检索结论：**没有找到可纳入的真实慢步骤组；本次公开报告检索到此结束**。公开报告很少有单次事件时间；继续寻找会成为缺少消费者决策的装置工作。不能把注入延迟当成生产发生率证据，也不应仅凭这些报告租 GPU。只有运营者已有自然变慢但最终成功的追踪，或作者／reviewer 明确要求，才重启测量。单次追踪须有 `get_output()` 进入、事件就绪、步骤身份和请求完成情况；只有实测等待超过 60 秒，才进入误报验证。
