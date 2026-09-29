@@ -20,7 +20,7 @@
 
 本轮启动失败**不能归因**。没有在同一安装环境中运行去掉 worker 替换和 watchdog 设置的普通 `vllm serve` 对照组，因此无法区分 `--worker-cls`、watchdog 配置、PR 改动与固定版本 CPU 后端各自的影响。A4 所写的“CPU 装置不兼容”只应理解为停止该装置的名称，而非预热异常的已证实原因。
 
-原计划的 TP=1 EngineCore 单元还存在独立的设计缺陷。冻结的 runner 虽请求 `--distributed-executor-backend uni`，[该版本 CPU 平台会在 `VLLM_ENABLE_V1_MULTIPROCESSING` 取默认值 `1` 时将 `uni` 改为 `mp`](https://github.com/vllm-project/vllm/blob/b274bf04dd4c6d54807a136babce5b5d17dd74be/vllm/platforms/cpu.py#L297-L305)。因此，原装置会挂起独立 worker，而不是 EngineCore 内的 UniProc worker。[EngineCore watchdog 在 `EngineCoreProc` 中启动](https://github.com/vllm-project/vllm/blob/b274bf04dd4c6d54807a136babce5b5d17dd74be/vllm/v1/engine/core.py#L997-L1107)；简单关闭 V1 多进程也不能保留同一可评分的 EngineCore 进程配置。冻结 runner 中的 `uniproc` 说明以此处修正为准。这是基于源码的装置局限，**不是**观测到的超时或 PR 指标结论。
+原计划的 TP=1 EngineCore 单元还存在独立的设计缺陷。冻结的 runner 虽请求 `--distributed-executor-backend uni`，[该版本 CPU 平台会在 `VLLM_ENABLE_V1_MULTIPROCESSING` 取默认值 `1` 时将 `uni` 改为 `mp`](https://github.com/vllm-project/vllm/blob/b274bf04dd4c6d54807a136babce5b5d17dd74be/vllm/platforms/cpu.py#L316-L324)。因此，原装置会挂起独立 worker，而不是 EngineCore 内的 UniProc worker。[EngineCore watchdog 在 `EngineCoreProc` 中启动](https://github.com/vllm-project/vllm/blob/b274bf04dd4c6d54807a136babce5b5d17dd74be/vllm/v1/engine/core.py#L1203-L1205)；简单关闭 V1 多进程也不能保留同一可评分的 EngineCore 进程配置。冻结 runner 中的 `uniproc` 说明以此处修正为准。这是基于源码的装置局限，**不是**观测到的超时或 PR 指标结论。
 
 ## 处置
 

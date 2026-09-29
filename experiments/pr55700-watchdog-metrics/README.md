@@ -1,7 +1,7 @@
 ---
 model_cells: [M3, M4]
 status: paused
-upstream_exit: vLLM PR 55700 review; not posted
+upstream_exit: question posted 2026-09-29 on vLLM PR 55700; ordinary review, not a Lab delivery
 last_scored: never
 ---
 
@@ -16,6 +16,11 @@ which were committed before their corresponding attempts. The
 [CPU setup result](PR55700_CPU_SETUP_NO_GO_2026-09-28.md) records five
 identity-verified but unscored startup attempts. No hold was entered.
 Pin: PR head `b274bf04dd4c6d54807a136babce5b5d17dd74be`.
+
+The [source-based question](https://github.com/vllm-project/vllm/pull/55700#issuecomment-5887551476)
+was posted on 2026-09-29 as an ordinary review, not a Lab validation delivery.
+The [candidate disposition](../../docs/reviews/PR55700_CANDIDATE_DISPOSITION_2026-09-29.md)
+records the remaining decision paths.
 
 Post-hoc correction: the frozen TP=1 runner and table below call the CPU
 executor `uniproc`, but the pinned CPU platform overrides `uni` to `mp` under
