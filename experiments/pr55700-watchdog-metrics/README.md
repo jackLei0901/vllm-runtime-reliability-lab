@@ -17,6 +17,10 @@ which were committed before their corresponding attempts. The
 identity-verified but unscored startup attempts. No hold was entered.
 Pin: PR head `b274bf04dd4c6d54807a136babce5b5d17dd74be`.
 
+Post-hoc correction: the frozen TP=1 runner and table below call the CPU
+executor `uniproc`, but the pinned CPU platform overrides `uni` to `mp` under
+the default V1 multiprocessing setting. See the [NO-GO source review](PR55700_CPU_SETUP_NO_GO_2026-09-28.md).
+
 `probe.py` starts a real `vllm serve` on the CPU backend, launched by the same
 interpreter whose vLLM installation it verified. The only substitution is
 `--worker-cls hold_worker.HoldingCPUWorker`, which holds one `execute_model`
@@ -25,7 +29,7 @@ output transport and frontend Prometheus logger are unchanged PR code.
 
 | Run | Question scored | Hold |
 | --- | --- | --- |
-| `--tp 1` (uniproc) | EngineCore count during a continuing hold | rank 0, inside EngineCore |
+| `--tp 1` (requested `uni`; effective `mp` by default on CPU) | EngineCore count during a continuing hold; original cell cannot score as designed | rank 0, in a separate worker |
 | `--tp 2` (multiproc) | Worker count during a continuing hold | rank 0 (output rank) |
 | `--tp 2` (multiproc) | Secondary: does a non-output rank's count reach `/metrics` | rank 1 |
 

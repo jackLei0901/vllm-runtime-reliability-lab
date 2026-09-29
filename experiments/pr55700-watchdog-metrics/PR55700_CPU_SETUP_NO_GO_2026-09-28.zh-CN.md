@@ -16,6 +16,12 @@
 
 五份回执均通过身份核验，但都没有控制组结果、进入挂起标记或可评分的指标窗口。按 [A4](../../docs/reviews/PR55700_FIRST_CANDIDATE_ADDENDUM_A4_2026-09-28.zh-CN.md) 不运行 TP=2。因此，本轮**不能说明**持续挂起时 EngineCore/worker watchdog 计数是否增长，也不能说明非输出 rank 的指标是否导出。
 
+## 事后解释修正（源码复核，非评分运行）
+
+本轮启动失败**不能归因**。没有在同一安装环境中运行去掉 worker 替换和 watchdog 设置的普通 `vllm serve` 对照组，因此无法区分 `--worker-cls`、watchdog 配置、PR 改动与固定版本 CPU 后端各自的影响。A4 所写的“CPU 装置不兼容”只应理解为停止该装置的名称，而非预热异常的已证实原因。
+
+原计划的 TP=1 EngineCore 单元还存在独立的设计缺陷。冻结的 runner 虽请求 `--distributed-executor-backend uni`，[该版本 CPU 平台会在 `VLLM_ENABLE_V1_MULTIPROCESSING` 取默认值 `1` 时将 `uni` 改为 `mp`](https://github.com/vllm-project/vllm/blob/b274bf04dd4c6d54807a136babce5b5d17dd74be/vllm/platforms/cpu.py#L297-L305)。因此，原装置会挂起独立 worker，而不是 EngineCore 内的 UniProc worker。[EngineCore watchdog 在 `EngineCoreProc` 中启动](https://github.com/vllm-project/vllm/blob/b274bf04dd4c6d54807a136babce5b5d17dd74be/vllm/v1/engine/core.py#L997-L1107)；简单关闭 V1 多进程也不能保留同一可评分的 EngineCore 进程配置。冻结 runner 中的 `uniproc` 说明以此处修正为准。这是基于源码的装置局限，**不是**观测到的超时或 PR 指标结论。
+
 ## 处置
 
-按 A4 的上限停止本候选的 CPU 装置工作；目前没有可用于 #55700 的验证评论。重启该问题须另有充分理由，例如已确认可工作的 CPU 服务路径或新的 GPU 原生协议；本轮启动失败本身不授权继续试错。私有归档保留原始日志、五份回执、各版探针副本及安装日志，SHA-256 为 `f7fc4c9f2dceb4d3612f2db42cab410e254d03321ae37b27a36297aa223b783b`。原始日志和主机路径不公开。
+按 A4 的上限停止本候选的 CPU 装置工作；目前没有可用于 #55700 的验证评论。若将来重新设计装置，需要新协议来区分启动失败原因，并证实存在能评分 EngineCore 问题的运行路径；本轮失败不授权继续运行。仅凭源码提出的问题属于普通 PR review，而非 Lab 验证交付。私有归档保留原始日志、五份回执、各版探针副本及安装日志，SHA-256 为 `f7fc4c9f2dceb4d3612f2db42cab410e254d03321ae37b27a36297aa223b783b`。原始日志和主机路径不公开。
