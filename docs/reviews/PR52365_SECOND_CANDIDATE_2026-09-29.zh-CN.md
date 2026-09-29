@@ -55,6 +55,8 @@
 
 ## E1 修订：Lab 负责人要求的有界实测
 
+状态：尚未运行即由[实测补充 A1](PR52365_SECOND_CANDIDATE_ADDENDUM_A1_2026-09-29.zh-CN.md)取代。下文仅保留日期明确的设计历史；E1 的 1 秒单元不属于 A1 的开卡或评分。
+
 2026-09-29，Lab 负责人希望在提出 review 问题前先有真实验证。本修订**增加单独评分的可选路径**，不重启公开报告检索，也不改变默认 60 秒的证据等级。`VLLM_ENGINE_ITERATION_TIMEOUT_S` [按整数解析](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/envs.py#L802-L803)，因此 1 秒是最小的正数测试值。
 
 1. 在一张 CUDA 卡上，以有限的有效 GPU 运算和真实 `torch.cuda.Event` 测试**未修改的 PR helper**。`timeout=0` 应等待并完成；对已校准、超过 1 秒才就绪的事件，`timeout=1` 应报超时，随后设备工作仍须完成且设备未重置。此项只评分 CUDA helper 行为；PR 现有假事件测试没有覆盖它。

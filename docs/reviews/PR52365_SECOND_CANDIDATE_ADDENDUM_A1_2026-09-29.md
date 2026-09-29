@@ -1,0 +1,34 @@
+# Second external candidate vLLM #52365: measurement addendum A1
+
+Status: draft, 2026-09-29; **must be committed before any GPU is booked**; not run. [中文](PR52365_SECOND_CANDIDATE_ADDENDUM_A1_2026-09-29.zh-CN.md) is authoritative; this is a translation. It supplements the [selection record](PR52365_SECOND_CANDIDATE_2026-09-29.md) without changing its findings. Pins: base `157bcb7c489689dd34cf28d9c9970a465d326a03`, PR head `d996d76ec68e9f6a348b7b085ae1da61cb6095be`. It replaces the record's "measure only if an author or reviewer needs it" limit, because a comment based only on source inference is an ordinary Q5 review, while a reproducible A/B may be incremental Lab value.
+
+## Claim under test
+
+With the PR's default settings, can a request that completes on the base and on the PR with the bound disabled fail specifically at the new 60 s event wait? Whole-request time is only a screen. The decisive witness is a **completed individual event wait of at least 65 s** in the disabled arm, paired with a timed-out wait in the default arm. EngineCore health and process exit are reported separately, not inferred from the request result. Scope: one GPU, single-process (`uni`) executor, async scheduling on, V1 model runner explicitly selected.
+
+## Apparatus facts (source, checked)
+
+- At both pins, the V1 generation path returns the async output the PR waits on only when `use_async_scheduling` is true; with async scheduling off, the bound does not apply to that path. The runner therefore passes `--async-scheduling` explicitly instead of relying on automatic selection.
+- The CUDA platform does not rewrite the `uni` executor, which is the default for world size 1; the runner still passes `--distributed-executor-backend uni` explicitly.
+- The copy event is recorded after the copy stream waits on the compute stream, so forward work still pending when the wait begins counts toward the 60 s.
+- Each request generates one token. `--max-num-batched-tokens` equals `--max-model-len`, `--max-num-seqs 1`, and prefix caching is off; these settings permit an unchunked prefill but do not by themselves prove the executed step count. Prompts are token-id lists with a different id per request. The requested prompt length plus its output token must fit `--max-model-len`.
+- The selected public model revision is a commit SHA. `VLLM_USE_V2_MODEL_RUNNER=0` is set in all three arms, so this is an explicit V1 configuration, not a claim about the default runner.
+
+## Stages and rules
+
+1. **Stage 1 (base only):** measure whole-request time over a fixed, strictly increasing prompt-length ladder. The first successful length at >= 70 s is a *screen*, not the chosen long request. Measure **exactly one more preregistered ladder step**, then stop; that next step becomes the long request only if it succeeds and also takes >= 70 s. The short control is the longest successful length at <= 50 s. This extra step provides timing margin but still does **not** prove a 60 s event wait. If the first >= 70 s step is the ladder's last step, the next step fails, or no valid short control exists, record `no_candidate`; **do not run stage 2 or retry with another configuration**.
+2. **Stage 2 (A/B):** three freshly started servers (base, PR default, PR with `VLLM_ENGINE_ITERATION_TIMEOUT_S=0`), each sent the short request and then the long one.
+   - A `sitecustomize` import hook wraps the **unchanged** `wait_for_gpu_event` binding before V1 imports it. It records only each call's duration, returned/timeout/error status and a bounded caller class (`v1`/`v2`/`other`) into a private JSONL file; the runner attributes records to sequential short and long requests. The hook's SHA-256 and each private trace digest are retained. Missing or malformed records, or a non-V1 caller in a scored arm, are apparatus failure.
+   - `supported`: all three short requests succeed within 50 s and both PR short requests have a valid, non-timeout event-wait record; the base long request succeeds with whole-request time >= 70 s; the PR-disabled long request succeeds with an individual returned event wait >= 65 s; the PR-default long request fails with a timed-out event-wait record and the corresponding timeout text in its long-request log window.
+   - `not_reproduced`: the same controls and >= 65 s disabled-arm wait hold, but the PR-default long request succeeds. This does **not** refute the deadline: the actual wait may differ between fresh runs.
+   - `unscored`: unverified identity (including an existing `sitecustomize`), missing trace or unexpected runner path, any unhealthy server, a failed control, no measured >= 65 s completing wait in the disabled arm, or a PR-default failure without a matched timeout record and log line.
+
+## Refutation and limits
+
+- `not_reproduced` is an honest negative cell, not a general refutation of the timeout code or of default-on risk.
+- Stage-1 `no_candidate` only means the fixed whole-request screen found no successful request above 70 s. It does not bound individual event waits in other workloads. Do not look for more extreme configurations in this campaign.
+- The result says nothing about production frequency, ordering against the 300 s RPC budget in the multiprocess executor, behaviour with async scheduling off, or process exit and restart policy. The model must natively support the tested context length (no overrides to raise the limit), and the reason the configuration is realistic must be recorded.
+
+## Identity, budget and publication
+
+Each checkout is installed separately; the PR changes only Python files, so both use a `VLLM_USE_PRECOMPILED=1` editable install. The interpreter that starts each server is the one verified: the checkout is at its pin, `git status` succeeds with no tracked changes, and the three PR-changed runtime files match the source (`event_utils.py` is absent from both at the base). Before adding this experiment's directory to `PYTHONPATH`, run each interpreter's `find_spec('sitecustomize')` from a neutral directory with that directory removed from `PYTHONPATH`; an existing hook stops the run rather than being hidden or layered. Any failure writes an `unscored` receipt and starts nothing. Every run uses a new, empty work directory. Budget: one GPU session, at most 3 hours including installation. Server logs and per-call traces stay private; only settings, aggregate wait durations/counts, booleans and outcomes are published. Process health/exit and fatal logs are separate observations. Any upstream comment waits until after Oct 6 (clear of the #52178 follow-up week), uses no @-mentions, and is worded or approved by the user. Only a reproducible `supported` result can be considered a Lab delivery. A valid `not_reproduced` is retained as a legitimate negative finding at the October review, not a failed session.

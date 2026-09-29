@@ -55,6 +55,8 @@ Search outcome: **no admissible real slow-step arm found; this public-report sea
 
 ## E1 amendment: bounded empirical check requested by the Lab owner
 
+Status: superseded before any run by [measurement addendum A1](PR52365_SECOND_CANDIDATE_ADDENDUM_A1_2026-09-29.md). E1 remains below as dated design history; its 1 s cells are not part of A1 booking or scoring.
+
 On 2026-09-29 the Lab owner preferred a real check before any review question. This **adds an optional, separately scored validation path**; it does not reopen the public-report search or change the default-60 claim. `VLLM_ENGINE_ITERATION_TIMEOUT_S` is [parsed as an integer](https://github.com/vllm-project/vllm/blob/d996d76ec68e9f6a348b7b085ae1da61cb6095be/vllm/envs.py#L802-L803), so 1 s is the smallest positive test setting.
 
 1. On one CUDA GPU, run the **unchanged PR helper** with a real `torch.cuda.Event` behind finite useful GPU work. At `timeout=0` it must wait and complete; at `timeout=1` a calibrated event that becomes ready after 1 s must time out, and the device work must subsequently finish without a reset. This scores CUDA-helper behavior only; the PR's existing fake-event tests do not cover it.
