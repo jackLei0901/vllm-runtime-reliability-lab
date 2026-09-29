@@ -24,3 +24,9 @@
 3. 只有同一 fixture 可在两个源码版本上运行，且评分规则没有案例特判，才继续；随后实现与测试最多**再用四小时**。若必须用 GPU、XPU、下载模型或大规模重建环境，就停止并重新征求决定；本文不授权硬件。
 
 只有身份有效、基线／补丁的致命路径形成对照、正常关停和正常完成的致命 teardown 两个负控均成立，才评为 `supported`；有效且相反的进程结果评为 `refuted`；身份、进入路径／teardown 见证缺失、装置超时或两个版本不可比则为 `unscored`。首次评分运行前须冻结精确 fixture 和阈值。仅经用户审核后才考虑交付最小可运行复现；本次预检不自动发帖、@ 维护者、开 PR 或计入 Lab 交付。按 R2 分开记录装置耗时。
+
+## CPU 预检检查点（无 vLLM 运行结果）
+
+当前页面显示的 `41dddf7` 中，改动的判断位于 [`EngineCoreProc.run_engine_core`](https://github.com/vllm-project/vllm/commit/41dddf7)：致命 `Exception` 进入限时 daemon-thread teardown；`SystemExit` 沿旧的直接路径。它的父提交是 `810bc3250c945829c64a745b4f695ddfd8f9a598`。[#58279](https://github.com/vllm-project/vllm/pull/58279) 修改 RPC／receiver 失败处理及关停，但其页面可见的测试计划未提供这个致命 `run_engine_core` 基线／补丁加 `SystemExit` 的对照。运行前仍须刷新两个线程，因为 head 可能变化。
+
+[拟议的标准库 runner](../../experiments/pr54553-fatal-shutdown/README.md)从两个 checkout 导入真实外层方法，仅用受控故障／teardown 对象替换新建的 EngineCore；子进程原始 stderr 留在私有目录。六项本地评分测试通过；它们验证的是装置，**不是 vLLM**。当前 Windows Lab 环境为 Python 3.14，未安装 vLLM、Torch、pyzmq 或 msgspec，WSL 也无法访问，因此两版源码均未运行子进程。剩余执行条件是一个兼容的 Linux CPU 环境和两份干净、固定提交的 checkout；不为此租 GPU／XPU。
