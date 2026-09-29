@@ -1,7 +1,7 @@
 ---
 model_cells: [M5]
-status: active
-upstream_exit: vLLM PR 52365 review; not posted
+status: closed
+upstream_exit: no Lab artifact delivered; optional source-backed Q5 review remains separate and requires user approval
 last_scored: never
 ---
 
@@ -10,6 +10,10 @@ last_scored: never
 Draft runner for the [selection record](../../docs/reviews/PR52365_SECOND_CANDIDATE_2026-09-29.zh-CN.md)
 and [addendum A1](../../docs/reviews/PR52365_SECOND_CANDIDATE_ADDENDUM_A1_2026-09-29.zh-CN.md),
 which must be committed before any GPU is booked. Nothing here has been run.
+The [close-out](../../docs/reviews/PR52365_SECOND_CANDIDATE_CLOSEOUT_2026-09-29.md)
+records the candidate decision. The [pre-GPU configuration review](PRE_GPU_REVIEW_2026-09-29.md) records why
+the proposed 24 GiB model/length cell was **not booked**. The commands below
+are retained as an unused protocol, not as a run result.
 
 The question: with PR head `d996d76` and default settings, does a request
 that completes on the base `157bcb7c` and on the PR with the timeout disabled
