@@ -23,7 +23,7 @@ from the same FP8 values; a test passes only when the frozen prediction holds.
 Run on an H800/H100 (SM90) in the vLLM environment under test:
 
 ```bash
-pytest -q -rA experiments/kernel-operand-contracts/test_blockwise_scale_layout_sm90.py --junitxml=b1.xml
+pytest -q -rA -o junit_family=xunit1 experiments/kernel-operand-contracts/test_blockwise_scale_layout_sm90.py --junitxml=b1.xml
 ```
 
 Record with the result: the vLLM commit actually installed (preferably current
