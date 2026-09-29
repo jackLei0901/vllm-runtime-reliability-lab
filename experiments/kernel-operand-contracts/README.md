@@ -1,7 +1,7 @@
 ---
 model_cells: []
 status: active
-upstream_exit: B1 comment posted on vLLM issue 55534 (2026-09-29); B2/B0 not run
+upstream_exit: B1 comment posted on vLLM issue 55534 (2026-09-29); B2/B0 observed, not yet posted
 last_scored: 2026-09-29
 ---
 
@@ -13,14 +13,14 @@ Kernel-correctness track, outside the M1–M6 runtime model. Source inventory:
 | Row | File | Status |
 | --- | --- | --- |
 | B1: blockwise scale layout | `test_blockwise_scale_layout_sm90.py` (frozen at Lab `8ab51bb`) | Observed in one preregistered H800 run ([result](B1_H800_RESULT_2026-09-29.md)). Reported on #55534 in [issuecomment-5893471238](https://github.com/vllm-project/vllm/issues/55534#issuecomment-5893471238). **Do not rerun its eight-case matrix in the B2/B0 booking.** |
-| B2: blockwise operand dtype (new question) and B0: padded views (known #55534 class, Q6 regression vector) | `test_blockwise_dtype_and_stride_sm90.py` | Not run. Protocol: [B2_B0_H800_PROTOCOL_2026-09-29](B2_B0_H800_PROTOCOL_2026-09-29.md) |
+| B2: blockwise operand dtype (new question) and B0: padded views (known #55534 class, Q6 regression vector) | `test_blockwise_dtype_and_stride_sm90.py` | One H800 run, 16/16 as predicted ([protocol](B2_B0_H800_PROTOCOL_2026-09-29.md), [result](B2_B0_H800_RESULT_2026-09-29.md), [中文](B2_B0_H800_RESULT_2026-09-29.zh-CN.md)). Not yet posted upstream. |
 
 Supporting scripts: `check_anchors.py` verifies every cited source line against
 the pinned vLLM blobs, and with `--local` gates a checkout's source identity;
 `select_rerun.py` selects the only cases the protocol's single rerun may
 execute. All three are stdlib-only apart from the test itself.
 
-## This booking: B2/B0 only
+## Reproduction: B2/B0 only
 
 Follow the protocol exactly. In short, on an SM90 host inside the vLLM
 environment under test:

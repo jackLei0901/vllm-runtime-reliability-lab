@@ -5,8 +5,9 @@ Status: revised 2026-09-29. Kernel-correctness track, not the Lab runtime model.
 **Evidence levels.**
 
 - **B1 (blockwise scale layout) is observed**: one preregistered H800 run, predictions committed first in Lab `8ab51bb`, all eight cases as predicted ([result](../../experiments/kernel-operand-contracts/B1_H800_RESULT_2026-09-29.md)). It is latent in vLLM's current callers, and was reported on #55534 in [issuecomment-5893471238](https://github.com/vllm-project/vllm/issues/55534#issuecomment-5893471238).
-- **Every other row is source reading only.** B2 and all MoE rows (M3–M11) are untested hypotheses; "gap candidate" means a question for a negative-control test, not an observed defect.
-- **B0** is the already-reported #55534 class on the blockwise path. Testing it completes existing regression coverage (the Q6 vector); it is not a new finding.
+- **B2 is observed** in one preregistered H800 run: unsupported operand dtypes produced incorrect blockwise output without an error; the standard branch rejected e5m2 ([result](../../experiments/kernel-operand-contracts/B2_B0_H800_RESULT_2026-09-29.md)). Whether to reject these inputs remains an API-contract question.
+- **B0** is the already-reported #55534 class on the blockwise path. The same run supplies padded-view regression coverage (the Q6 vector); it is not a new finding.
+- **MoE rows M3–M11 remain source reading only.** "Gap candidate" there means a question for a negative-control test, not an observed defect.
 
 **Pin and anchors.** vLLM `main` at `91d7324cb19d301c72d849e457221ee8dd645024`. Anchors are checked mechanically: [`check_anchors.py`](../../experiments/kernel-operand-contracts/check_anchors.py) fetches the 19 cited files at the pin, verifies their git blob ids (appendix), and asserts the expected text on each cited line. On 2026-09-29 it reported 19 blobs, 106 anchors, 0 failures. Ranges below are checked at their key lines, not every line. The B1 run's three source files (entry, helper, SM90 blockwise dispatcher) have the same blobs at `main` `741edeebeec3cedbe938d831b6d87641ed6191ef`. Paths are under `csrc/libtorch_stable/quantization/w8a8/cutlass/` unless stated.
 
@@ -40,7 +41,7 @@ Entry: `scaled_mm_entry.cu` L197–270, then `c3x/scaled_mm_helper.hpp` `dispatc
 | --- | --- | --- | --- | --- |
 | B0 | Operand leading strides | **ignored**: A, B and C strides are rebuilt packed from the shape (`make_cute_packed_stride`, L155–162) | packed operands only | known #55534 class on this path; #56248 targets it. Q6 regression vector, not a new finding |
 | B1 | Scale memory layout: the config requires A's scales MN-major (column-major `[M, K/128]`) and B's scales K-major (L58–64, roles swapped with `swap_ab`) | **not checked**: layouts are derived from shape alone (`tile_atom_to_shape_SFA/SFB`, L164–169); the helper checks scale dims and shape only (helper L40–51) | tests build the required layout by hand (`test_cutlass_scaled_mm.py` L103–106; `test_block_fp8.py` L200–202) | **observed** in one preregistered H800 run: wrong-layout scales gave `rel_diff` 0.90–1.12 with no error, required layouts 0.0014 |
-| B2 | Operand dtypes on the blockwise branch | **no `a`/`b` dtype check found**: the helper's dtype checks are in the standard branch only (L26–29); the blockwise branch checks scale dims, shapes and bias (L39–56); the SM90 blockwise file checks only the output dtype (L12–17); the dispatcher casts both operand pointers to its e4m3 element type (L171–172) | FP8 e4m3 only | untested hypothesis. **Prediction**: e5m2 or int8 operands are accepted and read as e4m3, giving wrong output without an error. Whether other dtypes are an unsupported input the caller must avoid or one the op should reject depends on the intended API contract, which is not established here |
+| B2 | Operand dtypes on the blockwise branch | **no `a`/`b` dtype check found**: the helper's dtype checks are in the standard branch only (L26–29); the blockwise branch checks scale dims, shapes and bias (L39–56); the SM90 blockwise file checks only the output dtype (L12–17); the dispatcher casts both operand pointers to its e4m3 element type (L171–172) | FP8 e4m3 only | observed in one H800 run: e5m2 or int8 operands yielded wrong output without an error ([result](../../experiments/kernel-operand-contracts/B2_B0_H800_RESULT_2026-09-29.md)). Whether the op should reject them remains an API-contract question |
 
 Where the B1 convention lives: `per_token_group_quant_fp8` defaults to `column_major_scales=False` (`vllm/model_executor/layers/quantization/utils/fp8_utils.py` L556); the CUTLASS, FlashInfer and DeepGEMM linear kernels each pass `column_major_scales=True` (`vllm/model_executor/kernels/linear/scaled_mm/cutlass.py` L285, `flashinfer.py` L282, `deep_gemm.py` L43), and the PyTorch kernel passes it only on CUDA-like platforms (`pytorch.py` L288). The CUTLASS blockwise kernel passes `Bs.T` as a transposed view (`cutlass.py` L321–327). Each caller supplies the layout; the op does not enforce it.
 
@@ -69,7 +70,7 @@ Schema: `cutlass_scaled_mm` and `cutlass_moe_mm` declare their output mutable (`
 ## Testing
 
 - B1: done (see result above).
-- B2 and B0: one bounded H800 session under [the B2/B0 protocol](../../experiments/kernel-operand-contracts/B2_B0_H800_PROTOCOL_2026-09-29.md), committed before the run.
+- B2 and B0: one bounded H800 session completed under [the frozen protocol](../../experiments/kernel-operand-contracts/B2_B0_H800_PROTOCOL_2026-09-29.md); see the [result](../../experiments/kernel-operand-contracts/B2_B0_H800_RESULT_2026-09-29.md).
 - M3–M11: not booked. Revisit only if a maintainer engages with the operand-layout decision.
 - Upstream use: re-pin to current `main`, duplicate-check each confirmed row, and report blockwise findings on #55534 as short comments; nothing goes into the #55537 diff without maintainer agreement.
 
