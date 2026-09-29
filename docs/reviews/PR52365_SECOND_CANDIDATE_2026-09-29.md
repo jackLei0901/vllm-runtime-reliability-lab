@@ -38,3 +38,15 @@ There is a separate operational dependency, kept **off** the proposed upstream c
 - If there is no substantive response by the **2026-10-26 to 2026-11-01 review**, close uptake as `not_observed`; a merge or closure before then ends this candidate earlier. A source-only observation is ordinary Q5 review unless it changes an external decision.
 
 The planned #52178 follow-up around October 1 already addresses njhill. Keep #52365 separate from that week and do not @-mention anyone. Recheck thread activity and the current head before considering any comment.
+
+## Organic slow-step search (2026-09-29)
+
+Admission requires a **successful, unmodified serving workload** with one measured `get_output()` event wait still pending after 60 s. TTFT, a whole prefill phase, startup, queueing, compilation, or an indefinite fault do not satisfy it. Public reports checked so far give leads, not an admitted workload:
+
+| Report | Why it does not establish this wait |
+| --- | --- |
+| [#51454](https://github.com/vllm-project/vllm/issues/51454) | A 1M-token first question took about 66 s, but the report uses an 8,192-token batch cap. TTFT spans many prefill steps; it does not measure one event wait. Its B200/8-GPU configuration also cannot be replayed on the Lab's 4090. |
+| [#54919](https://github.com/vllm-project/vllm/issues/54919) | Minutes of decode starvation during long prefill were later associated with repeated blocking D2H synchronizations and many steps, not a measured 60 s output-copy event wait. |
+| [#40707](https://github.com/vllm-project/vllm/issues/40707) | A two-video request completed in 130.7 s after a scheduler fix. That is whole-request latency, with no per-event wait measurement. |
+
+Search outcome: **no credible real slow-step arm yet**. Do not turn an injected delay into a claim about production prevalence or rent a GPU solely on these reports. The cheapest next evidence is a per-wait timing trace from a naturally slow, successful run, ideally from an affected operator or an existing performance trace: record `get_output()` entry, event-ready time, one-step identity, and whether the request completed, with private timestamps and publishable aggregates. Only a measured wait above 60 s qualifies for the default-on false-positive test.
