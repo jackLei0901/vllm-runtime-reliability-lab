@@ -9,17 +9,24 @@ import unittest
 from pathlib import Path
 
 PROBE = Path(__file__).resolve().parents[1] / "experiments/pr59179-readiness/probe.py"
-SPEC = importlib.util.spec_from_file_location("pr59179_probe", PROBE)
-assert SPEC is not None and SPEC.loader is not None
-probe = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(probe)
 
 
+@unittest.skipIf(
+    sys.version_info < (3, 11),
+    "the pinned PR #59179 receipt probe uses Python 3.11 APIs",
+)
 class ReceiptTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        spec = importlib.util.spec_from_file_location("pr59179_probe", PROBE)
+        assert spec is not None and spec.loader is not None
+        cls.probe = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(cls.probe)
+
     def test_writes_one_normalized_json_line(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             receipt = Path(directory) / "result.json"
-            probe.write_receipt(receipt, {"result": "example", "count": 2})
+            self.probe.write_receipt(receipt, {"result": "example", "count": 2})
             self.assertEqual(
                 receipt.read_text(encoding="utf-8"),
                 '{"count": 2, "result": "example"}\n',
@@ -31,9 +38,9 @@ class ReceiptTest(unittest.TestCase):
     def test_refuses_to_overwrite(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             receipt = Path(directory) / "result.json"
-            probe.write_receipt(receipt, {"result": "first"})
+            self.probe.write_receipt(receipt, {"result": "first"})
             with self.assertRaises(FileExistsError):
-                probe.write_receipt(receipt, {"result": "second"})
+                self.probe.write_receipt(receipt, {"result": "second"})
             self.assertEqual(json.loads(receipt.read_text())["result"], "first")
 
     def test_existing_receipt_stops_before_source_import(self) -> None:
