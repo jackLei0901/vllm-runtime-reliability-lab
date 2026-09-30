@@ -41,6 +41,23 @@ trace, witness = modules["trace_tools"], modules["witness_review"]
 
 
 class TestSM90PerfTools(unittest.TestCase):
+    def test_manifest_uses_exact_lf_bytes_and_refuses_overwrite(self):
+        freezer = modules["freeze_packet"]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "manifest.json"
+            record = {"files_sha256": {"a": "digest"}, "status": "test"}
+            freezer.write_manifest(path, record)
+            self.assertEqual(path.read_bytes(), freezer.manifest_bytes(record))
+            self.assertNotIn(b"\r\n", path.read_bytes())
+            freezer.check_manifest(path, record)
+            with self.assertRaises(FileExistsError):
+                freezer.write_manifest(path, record)
+            with path.open("wb") as file:
+                file.write(freezer.manifest_bytes(record).replace(b"\n", b"\r\n"))
+            self.assertEqual(json.loads(path.read_bytes()), record)
+            with self.assertRaisesRegex(ValueError, "UTF-8/LF"):
+                freezer.check_manifest(path, record)
+
     def test_installation_preflight_refuses_invalid_freeze_before_loading_torch(self):
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory) / "new"
@@ -464,13 +481,17 @@ class TestSM90PerfTools(unittest.TestCase):
                 "wheel_index_path": str(index),
                 "wheel_index_sha256": runtime.sha(index),
             }
-            with patch.object(
-                modules["build_perf"],
-                "git",
-                side_effect=[
-                    collector.PARENT,
-                    modules["build_perf"].ROOT + "scaled_mm_entry.cu",
-                ],
+            with (
+                patch.object(
+                    modules["build_perf"],
+                    "git",
+                    side_effect=[
+                        collector.PARENT,
+                        modules["build_perf"].ROOT + "scaled_mm_entry.cu",
+                    ],
+                ),
+                # Python 3.10 has no file_digest; provenance must not depend on it.
+                patch.object(collector.hashlib, "file_digest", None, create=True),
             ):
                 self.assertEqual(
                     collector.verify_provenance(provenance, installed, Path(directory)),

@@ -115,7 +115,10 @@ def verify_provenance(provenance, installed, src):
         for relative, expected in installed["extensions_sha256"].items():
             member = "vllm/" + relative
             with archive.open(member) as stream:
-                if hashlib.file_digest(stream, "sha256").hexdigest() != expected:
+                digest = hashlib.sha256()
+                for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                    digest.update(chunk)
+                if digest.hexdigest() != expected:
                     raise ValueError("installed extension differs from retained wheel")
     return kind
 

@@ -25,6 +25,21 @@ def entries():
     return {p.relative_to(ROOT).as_posix(): runtime.sha(p) for p in sorted(paths)}
 
 
+def manifest_bytes(record):
+    return (json.dumps(record, indent=2, sort_keys=True) + "\n").encode("utf-8")
+
+
+def write_manifest(path, record):
+    # Binary writes avoid Windows translating LF to CRLF before Git normalizes it.
+    with path.open("xb") as file:
+        file.write(manifest_bytes(record))
+
+
+def check_manifest(path, record):
+    if path.read_bytes() != manifest_bytes(record):
+        raise ValueError("freeze bytes differ; canonical UTF-8/LF required")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
@@ -39,12 +54,10 @@ def main():
         "files_sha256": entries(),
     }
     if args.check:
-        if json.loads(path.read_text()) != record:
-            raise ValueError("freeze bytes differ")
+        check_manifest(path, record)
         print("MANIFEST_MATCHES")
     elif args.write:
-        with path.open("x", encoding="utf-8") as file:
-            file.write(json.dumps(record, indent=2, sort_keys=True) + "\n")
+        write_manifest(path, record)
         print("MANIFEST_WRITTEN_NOT_YET_PUBLIC")
     else:
         print(

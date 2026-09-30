@@ -139,3 +139,5 @@ python "$PACKET/serving_preflight.py" \
 结束时按本轮用户授权下载/核验私有证据并关机，不将主机关闭自动等同于平台停止计费；由用户在控制台确认。
 
 本地冻结材料复核：49 项性能工具测试、6 项历史 R2 回归、4 项索引测试全部通过（共 59 项），ruff check/format check 通过；不是完整仓库 CI 结论。候选 patch 在固定源码 HEAD 上 `git apply --check` 通过，没有应用到历史工作树。已下载父 wheel 的 SHA-256 再次匹配，重复下载不是 P 的步骤。`serving_preflight.py` 新增成功、错误 Torch、依赖冲突、空安装记录与无有效公开冻结的 CPU 测试；mock 通过仍不证明远端安装成功。
+
+冻结前工具修订（无 GPU 数据）：`6cf971c` 的 Python 3.10 CI 暴露 wheel 校验依赖 3.11 才有的 `hashlib.file_digest`，现改为分块 SHA-256，校验内容不变。另发现 Windows 文本写入使本地 manifest 为 CRLF，而提交为 LF；现以独占二进制写入生成 UTF-8/LF，并以精确字节检查。旧提交保留，修订后的 manifest 必须重新提交、推送并核对；实验 pin、模型、候选 patch、阈值与预算均不变。此修订不是 GPU 结果，也不追认旧冻结通过。
