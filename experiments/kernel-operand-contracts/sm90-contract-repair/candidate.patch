@@ -1,0 +1,23 @@
+--- a/csrc/libtorch_stable/quantization/w8a8/cutlass/c3x/scaled_mm_blockwise_sm90_fp8.cu
++++ b/csrc/libtorch_stable/quantization/w8a8/cutlass/c3x/scaled_mm_blockwise_sm90_fp8.cu
+@@ -9,6 +9,20 @@
+     torch::stable::Tensor& out, torch::stable::Tensor const& a,
+     torch::stable::Tensor const& b, torch::stable::Tensor const& a_scales,
+     torch::stable::Tensor const& b_scales) {
++  STD_TORCH_CHECK(
++      a.scalar_type() == torch::headeronly::ScalarType::Float8_e4m3fn,
++                  "SM90 blockwise scaled_mm requires A dtype float8_e4m3fn");
++  STD_TORCH_CHECK(
++      b.scalar_type() == torch::headeronly::ScalarType::Float8_e4m3fn,
++                  "SM90 blockwise scaled_mm requires B dtype float8_e4m3fn");
++  STD_TORCH_CHECK(
++      (a_scales.size(0) <= 1 || a_scales.stride(0) == 1) &&
++          (a_scales.size(1) <= 1 || a_scales.stride(1) == a_scales.size(0)),
++      "SM90 blockwise scaled_mm requires packed column-major A scales");
++  STD_TORCH_CHECK(
++      (b_scales.size(0) <= 1 || b_scales.stride(0) == 1) &&
++          (b_scales.size(1) <= 1 || b_scales.stride(1) == b_scales.size(0)),
++      "SM90 blockwise scaled_mm requires packed K-major B scales");
+   if (out.scalar_type() == torch::headeronly::ScalarType::BFloat16) {
+     cutlass_gemm_blockwise_sm90_fp8_dispatch<cutlass::bfloat16_t>(
+         out, a, b, a_scales, b_scales);

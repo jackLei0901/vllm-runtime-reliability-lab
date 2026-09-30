@@ -20,6 +20,12 @@ the pinned vLLM blobs, and with `--local` gates a checkout's source identity;
 `select_rerun.py` selects the only cases the protocol's single rerun may
 execute. All three are stdlib-only apart from the test itself.
 
+Local repair execution packet v1 (local freeze; public push required;
+no compilation/GPU result):
+[SM90 build/test packet](sm90-contract-repair/README.md),
+[中文](sm90-contract-repair/README.zh-CN.md). This does not alter historical
+results or authorize an upstream post or GPU booking.
+
 ## Reproduction: B2/B0 only
 
 Follow the protocol exactly. In short, on an SM90 host inside the vLLM

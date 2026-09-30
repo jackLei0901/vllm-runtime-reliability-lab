@@ -1,0 +1,45 @@
+{
+  "version": "1.0.0",
+  "decision_date": "2026-09-30",
+  "execution_route": "single H800 session; 120 minutes from billing enablement; no route switching",
+  "publication": "Local commit only until the same commit is pushed and confirmed; do not book before public freeze.",
+  "source_pin": "7b054aca96cea8be1369d651c3434ad140580b92",
+  "source_parent": "4f1451679088e5832bce0965a254295c854aaa09",
+  "cutlass_tag": "v4.7.1",
+  "cases_per_arm": 30,
+  "base_planned_skips": 3,
+  "stage_caps_seconds": [
+    1200,
+    2100,
+    2100,
+    420,
+    420,
+    960
+  ],
+  "cpu_checks": {
+    "total": 25,
+    "passed": 23,
+    "skipped": 2,
+    "skips": "Actual torch tensor and pytest ID re-collection require dependency-enabled preflight; skips are not passes."
+  },
+  "validation": "ruff check/format, patch applicability and clean pinned base plan passed; no compilation/GPU results",
+  "sha256": {
+    "docs/kernel/SM90_BLOCK_FP8_PROJECT_REQUIREMENTS.md": "02c76014dc739b9a759c3413621e732b53aeb6459c83348bea006c3fcc58e183",
+    "docs/kernel/SM90_BLOCK_FP8_PROJECT_REQUIREMENTS.zh-CN.md": "c0f5aa1379bafd84ba8d503b7007e562b8b06c5913ce80be4d066f2b4b608463",
+    "experiments/kernel-operand-contracts/pr55537-base-7b054aca.patch": "1f3f7c463813ef9857c32db6df03b8c179acecbaabde3bc6ebe7bafd72074887",
+    "experiments/kernel-operand-contracts/README.md": "888a6f89c12dc2c9e4c3e95ae2fee4d1ac5b432dc1ac228146c0e0c66c740905",
+    "experiments/kernel-operand-contracts/sm90-contract-repair/binding.cpp": "78062277e9ae75ef8a393d84edd1b1f723168e8a778bc979874bbf0fc2c8a5d6",
+    "experiments/kernel-operand-contracts/sm90-contract-repair/build_minimal.py": "1d2abe541331ca830bc5e048318b20a7ac0cc49b193edb32ad1541df4bab8ced",
+    "experiments/kernel-operand-contracts/sm90-contract-repair/candidate.patch": "e19a78330ed90d1dbd75d712b7d5c4cfe9a8ca2696e7ad6d32fba064b396b73e",
+    "experiments/kernel-operand-contracts/sm90-contract-repair/pytest.ini": "8250d20f42b419af40706490ead78aabab9feba93eab09a3f626e3de5256e1f4",
+    "experiments/kernel-operand-contracts/sm90-contract-repair/README.md": "db65216622c1e2246915c01d7cc552208cb82f6de69ea1476b06e5f98e33e792",
+    "experiments/kernel-operand-contracts/sm90-contract-repair/README.zh-CN.md": "737a6f5e4a8466beea22b76e476e052f0b046bec510121424b1af73b6c65122c",
+    "experiments/kernel-operand-contracts/sm90-contract-repair/run_isolated.py": "72e577e8069487a3fcaf98b13e3b799a5285ed38adaa089247569ce846d718e9",
+    "experiments/kernel-operand-contracts/sm90-contract-repair/SESSION_PROTOCOL.md": "b080118c71a36d4750f90c99a4d1f8cf13e9e0a691cbcdfbd6a3ad98e37c9e08",
+    "experiments/kernel-operand-contracts/sm90-contract-repair/SESSION_PROTOCOL.zh-CN.md": "06ed06208c9b72fb281d105c8f8af5b0359a3d35aac7fbb6870b872d76586794",
+    "experiments/kernel-operand-contracts/sm90-contract-repair/test_repair_sm90.py": "3a3d23355696244a56f4287a98bcabf5275e31b9ff11a72b3b9a78417edd3d40",
+    "tests/test_sm90_contract_build_plan.py": "08dab58c8722b7038c45adf619e445312156ac64492738dabce66dc37645cd5f",
+    "tests/test_sm90_contract_isolation.py": "e287e64832102b7e0a2c2f4a34ebf6e48b33b7e5ef12851f8d9dcbeb0d02e00d"
+  },
+  "manifest_exclusion": "This file excludes its own digest; the Git commit binds its bytes and all listed files."
+}
