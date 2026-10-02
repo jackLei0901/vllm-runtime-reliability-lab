@@ -1,0 +1,526 @@
+{
+  "verdict": "CONFIRMED",
+  "contexts": [
+    {
+      "case": "quant",
+      "shape_mode": "symbolic",
+      "cross_arm_bitwise_equal": true,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "case": "quant",
+      "shape_mode": "batch1",
+      "cross_arm_bitwise_equal": true,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "case": "norm",
+      "shape_mode": "symbolic",
+      "cross_arm_bitwise_equal": true,
+      "verdict": "CONFIRMED"
+    },
+    {
+      "case": "norm",
+      "shape_mode": "batch1",
+      "cross_arm_bitwise_equal": true,
+      "verdict": "CONFIRMED"
+    }
+  ],
+  "results": [
+    {
+      "arm": "max",
+      "case": "quant",
+      "shape_mode": "symbolic",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 8,
+          "us_samples": [
+            2.401913033015486,
+            2.587666882843268,
+            2.5876882213120016
+          ],
+          "output_hash": "24e5471a98c3ef1d2cd2e3ef0a09f9c0c7d78983c03c493e1f950ab023c5ee24",
+          "scale_hash": "07ef461aec3052de8d60c699ccec929426bc2deaea8a091461c23ec3ea426a05",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        },
+        {
+          "batch": 32,
+          "us_samples": [
+            2.6436094282452105,
+            2.644117435904493,
+            2.642993523228553
+          ],
+          "output_hash": "eae8c28fc4c6775b4d777f02de2bdbd420dc82844a76ff8f5465640ab02cdb1c",
+          "scale_hash": "df66183ac291580cd343bffba101faaf737365b01e2743612e74eda0278dfe49",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        },
+        {
+          "batch": 128,
+          "us_samples": [
+            3.8509194727067824,
+            3.8498270896173294,
+            3.850248273929216
+          ],
+          "output_hash": "18d91e1eb70d0a6f1cad2c1e3b470aee3b46757e44891dcb384ca3482e924d8b",
+          "scale_hash": "2328f468207bd7e20252ca9f187bba0b9bc34565159f7a911d729f2e9b826ae5",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        }
+      ],
+      "max_with_index_count": 1
+    },
+    {
+      "arm": "amax",
+      "case": "quant",
+      "shape_mode": "symbolic",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 8,
+          "us_samples": [
+            1.9675395685991794,
+            2.1550980722828275,
+            2.152135039304758
+          ],
+          "output_hash": "24e5471a98c3ef1d2cd2e3ef0a09f9c0c7d78983c03c493e1f950ab023c5ee24",
+          "scale_hash": "07ef461aec3052de8d60c699ccec929426bc2deaea8a091461c23ec3ea426a05",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        },
+        {
+          "batch": 32,
+          "us_samples": [
+            2.2142753198549348,
+            2.2137443589143433,
+            2.2141530391104354
+          ],
+          "output_hash": "eae8c28fc4c6775b4d777f02de2bdbd420dc82844a76ff8f5465640ab02cdb1c",
+          "scale_hash": "df66183ac291580cd343bffba101faaf737365b01e2743612e74eda0278dfe49",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        },
+        {
+          "batch": 128,
+          "us_samples": [
+            2.90257778822207,
+            2.8995127165356367,
+            2.900851311558537
+          ],
+          "output_hash": "18d91e1eb70d0a6f1cad2c1e3b470aee3b46757e44891dcb384ca3482e924d8b",
+          "scale_hash": "2328f468207bd7e20252ca9f187bba0b9bc34565159f7a911d729f2e9b826ae5",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        }
+      ],
+      "max_with_index_count": 0
+    },
+    {
+      "arm": "max",
+      "case": "quant",
+      "shape_mode": "symbolic",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 8,
+          "us_samples": [
+            2.4095424645238643,
+            2.600859234362473,
+            2.5989809738738194
+          ],
+          "output_hash": "24e5471a98c3ef1d2cd2e3ef0a09f9c0c7d78983c03c493e1f950ab023c5ee24",
+          "scale_hash": "07ef461aec3052de8d60c699ccec929426bc2deaea8a091461c23ec3ea426a05",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        },
+        {
+          "batch": 32,
+          "us_samples": [
+            2.6451380319998297,
+            2.645151992638906,
+            2.6442292769243765
+          ],
+          "output_hash": "eae8c28fc4c6775b4d777f02de2bdbd420dc82844a76ff8f5465640ab02cdb1c",
+          "scale_hash": "df66183ac291580cd343bffba101faaf737365b01e2743612e74eda0278dfe49",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        },
+        {
+          "batch": 128,
+          "us_samples": [
+            3.837016782452983,
+            3.8350289722658553,
+            3.83793184611575
+          ],
+          "output_hash": "18d91e1eb70d0a6f1cad2c1e3b470aee3b46757e44891dcb384ca3482e924d8b",
+          "scale_hash": "2328f468207bd7e20252ca9f187bba0b9bc34565159f7a911d729f2e9b826ae5",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        }
+      ],
+      "max_with_index_count": 1
+    },
+    {
+      "arm": "max",
+      "case": "quant",
+      "shape_mode": "batch1",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 1,
+          "us_samples": [
+            2.188359303552596,
+            2.3785372633905806,
+            2.3772058773600113
+          ],
+          "output_hash": "ebd35f928f5cfdeb2d2f660bd61460f093655e936446e846b63f87c138fde458",
+          "scale_hash": "4b5b4825ea116741ba74926eaa159c78f69dac351ab96df5499da4f4fb3242a2",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        }
+      ],
+      "max_with_index_count": 1
+    },
+    {
+      "arm": "amax",
+      "case": "quant",
+      "shape_mode": "batch1",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 1,
+          "us_samples": [
+            1.8390606295677925,
+            2.031436411302481,
+            2.0280918988193117
+          ],
+          "output_hash": "ebd35f928f5cfdeb2d2f660bd61460f093655e936446e846b63f87c138fde458",
+          "scale_hash": "4b5b4825ea116741ba74926eaa159c78f69dac351ab96df5499da4f4fb3242a2",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        }
+      ],
+      "max_with_index_count": 0
+    },
+    {
+      "arm": "max",
+      "case": "quant",
+      "shape_mode": "batch1",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 1,
+          "us_samples": [
+            2.185322642326355,
+            2.376716904541152,
+            2.379462302056818
+          ],
+          "output_hash": "ebd35f928f5cfdeb2d2f660bd61460f093655e936446e846b63f87c138fde458",
+          "scale_hash": "4b5b4825ea116741ba74926eaa159c78f69dac351ab96df5499da4f4fb3242a2",
+          "compiled_eager_exact": true,
+          "compiled_eager_difference": null
+        }
+      ],
+      "max_with_index_count": 1
+    },
+    {
+      "arm": "max",
+      "case": "norm",
+      "shape_mode": "symbolic",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 8,
+          "us_samples": [
+            2.695175757010778,
+            2.880300671462245,
+            2.8793230652809143
+          ],
+          "output_hash": "24e5471a98c3ef1d2cd2e3ef0a09f9c0c7d78983c03c493e1f950ab023c5ee24",
+          "scale_hash": "c3813eef580454308c15b00d0a7684b03ec7d1b7cdef36412880483eecc08b43",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 862 / 32768 (2.6%)\nGreatest absolute difference: 32.0 at index (0, 455)\nGreatest relative difference: 0.125 at index (0, 245)"
+        },
+        {
+          "batch": 32,
+          "us_samples": [
+            2.933636506398519,
+            2.929636728568155,
+            2.9303330840873083
+          ],
+          "output_hash": "41f031270c05f89e8952e77ad3f3c1bf78a59af3b2857d09e03023e165abf86d",
+          "scale_hash": "7561650bd1bc75579b893b4f6d20a33739a3d80bdc976f1a6cf782e0fc30513c",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 2147 / 131072 (1.6%)\nGreatest absolute difference: 32.0 at index (0, 152)\nGreatest relative difference: 0.125 at index (4, 71)"
+        },
+        {
+          "batch": 128,
+          "us_samples": [
+            4.189746165988454,
+            4.190384773981004,
+            4.188263262471845
+          ],
+          "output_hash": "3ec71078f0c42d038cac59feb500bd722c5b0ce0269ed54599ae24881a11e104",
+          "scale_hash": "1c67b11603e9c567967185a17149fd927361af04197d22c120612e59c71bfc79",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 9202 / 524288 (1.8%)\nGreatest absolute difference: 32.0 at index (0, 894)\nGreatest relative difference: 0.125 at index (9, 186)"
+        }
+      ],
+      "max_with_index_count": 1
+    },
+    {
+      "arm": "amax",
+      "case": "norm",
+      "shape_mode": "symbolic",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 8,
+          "us_samples": [
+            2.253013335022272,
+            2.437599962704802,
+            2.435992187319827
+          ],
+          "output_hash": "24e5471a98c3ef1d2cd2e3ef0a09f9c0c7d78983c03c493e1f950ab023c5ee24",
+          "scale_hash": "c3813eef580454308c15b00d0a7684b03ec7d1b7cdef36412880483eecc08b43",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 862 / 32768 (2.6%)\nGreatest absolute difference: 32.0 at index (0, 455)\nGreatest relative difference: 0.125 at index (0, 245)"
+        },
+        {
+          "batch": 32,
+          "us_samples": [
+            2.493049472065295,
+            2.4941446532643967,
+            2.4940779605231724
+          ],
+          "output_hash": "41f031270c05f89e8952e77ad3f3c1bf78a59af3b2857d09e03023e165abf86d",
+          "scale_hash": "7561650bd1bc75579b893b4f6d20a33739a3d80bdc976f1a6cf782e0fc30513c",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 2147 / 131072 (1.6%)\nGreatest absolute difference: 32.0 at index (0, 152)\nGreatest relative difference: 0.125 at index (4, 71)"
+        },
+        {
+          "batch": 128,
+          "us_samples": [
+            3.2007215848935195,
+            3.199603622413474,
+            3.1977474149260274
+          ],
+          "output_hash": "3ec71078f0c42d038cac59feb500bd722c5b0ce0269ed54599ae24881a11e104",
+          "scale_hash": "1c67b11603e9c567967185a17149fd927361af04197d22c120612e59c71bfc79",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 9202 / 524288 (1.8%)\nGreatest absolute difference: 32.0 at index (0, 894)\nGreatest relative difference: 0.125 at index (9, 186)"
+        }
+      ],
+      "max_with_index_count": 0
+    },
+    {
+      "arm": "max",
+      "case": "norm",
+      "shape_mode": "symbolic",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 8,
+          "us_samples": [
+            2.6957124937325716,
+            2.8799889195296497,
+            2.882793497184977
+          ],
+          "output_hash": "24e5471a98c3ef1d2cd2e3ef0a09f9c0c7d78983c03c493e1f950ab023c5ee24",
+          "scale_hash": "c3813eef580454308c15b00d0a7684b03ec7d1b7cdef36412880483eecc08b43",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 862 / 32768 (2.6%)\nGreatest absolute difference: 32.0 at index (0, 455)\nGreatest relative difference: 0.125 at index (0, 245)"
+        },
+        {
+          "batch": 32,
+          "us_samples": [
+            2.932887657047951,
+            2.9317746406000094,
+            2.9331199869965063
+          ],
+          "output_hash": "41f031270c05f89e8952e77ad3f3c1bf78a59af3b2857d09e03023e165abf86d",
+          "scale_hash": "7561650bd1bc75579b893b4f6d20a33739a3d80bdc976f1a6cf782e0fc30513c",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 2147 / 131072 (1.6%)\nGreatest absolute difference: 32.0 at index (0, 152)\nGreatest relative difference: 0.125 at index (4, 71)"
+        },
+        {
+          "batch": 128,
+          "us_samples": [
+            4.188643604614059,
+            4.188134943146304,
+            4.188209488278343
+          ],
+          "output_hash": "3ec71078f0c42d038cac59feb500bd722c5b0ce0269ed54599ae24881a11e104",
+          "scale_hash": "1c67b11603e9c567967185a17149fd927361af04197d22c120612e59c71bfc79",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 9202 / 524288 (1.8%)\nGreatest absolute difference: 32.0 at index (0, 894)\nGreatest relative difference: 0.125 at index (9, 186)"
+        }
+      ],
+      "max_with_index_count": 1
+    },
+    {
+      "arm": "max",
+      "case": "norm",
+      "shape_mode": "batch1",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 1,
+          "us_samples": [
+            2.4987610238553817,
+            2.6827371157940076,
+            2.6816778088775446
+          ],
+          "output_hash": "ebd35f928f5cfdeb2d2f660bd61460f093655e936446e846b63f87c138fde458",
+          "scale_hash": "d7ed065bc14702d06444b28bba1a6373c60875433b50f722406e9c4b3d84cde6",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 65 / 4096 (1.6%)\nGreatest absolute difference: 32.0 at index (0, 455)\nGreatest relative difference: 0.125 at index (0, 245)"
+        }
+      ],
+      "max_with_index_count": 1
+    },
+    {
+      "arm": "amax",
+      "case": "norm",
+      "shape_mode": "batch1",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 1,
+          "us_samples": [
+            2.158193741941286,
+            2.3469441923601875,
+            2.3477177925777157
+          ],
+          "output_hash": "ebd35f928f5cfdeb2d2f660bd61460f093655e936446e846b63f87c138fde458",
+          "scale_hash": "d7ed065bc14702d06444b28bba1a6373c60875433b50f722406e9c4b3d84cde6",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 65 / 4096 (1.6%)\nGreatest absolute difference: 32.0 at index (0, 455)\nGreatest relative difference: 0.125 at index (0, 245)"
+        }
+      ],
+      "max_with_index_count": 0
+    },
+    {
+      "arm": "max",
+      "case": "norm",
+      "shape_mode": "batch1",
+      "hidden": 4096,
+      "gpu": "NVIDIA H800 PCIe",
+      "capability": [
+        9,
+        0
+      ],
+      "torch": "2.13.0+cu130",
+      "vllm": "0.1.dev1090+g378504a54",
+      "source_hash": "fb25517957ede0e639418e192b6d3f71ef285f8290adbabd726d1152c7d5fe4a",
+      "rows": [
+        {
+          "batch": 1,
+          "us_samples": [
+            2.499844237129287,
+            2.6827382761360017,
+            2.683736517757713
+          ],
+          "output_hash": "ebd35f928f5cfdeb2d2f660bd61460f093655e936446e846b63f87c138fde458",
+          "scale_hash": "d7ed065bc14702d06444b28bba1a6373c60875433b50f722406e9c4b3d84cde6",
+          "compiled_eager_exact": false,
+          "compiled_eager_difference": "Tensor-likes are not equal!\n\nMismatched elements: 65 / 4096 (1.6%)\nGreatest absolute difference: 32.0 at index (0, 455)\nGreatest relative difference: 0.125 at index (0, 245)"
+        }
+      ],
+      "max_with_index_count": 1
+    }
+  ],
+  "scope": "codegen probe for this GPU/build only; not model TPOT evidence",
+  "absence_policy": "ABSENT on SM89 does not exclude a Hopper-specific result",
+  "timing_policy": "operator timing is diagnostic only"
+}
