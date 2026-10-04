@@ -1,6 +1,6 @@
 # Pre GPU Decision for a Native CUDA Kernel Project
 
-Status: 2026-10-03, America/Los_Angeles, v0.3 ready for user review and public freeze. The [Chinese version](NATIVE_KERNEL_PROFILE_DECISION_2026-10-03.zh-CN.md) is authoritative. The user authorized one discovery session, not implementation or a general policy amendment. This file is not frozen until committed and pushed.
+Status: 2026-10-03, America/Los_Angeles, v0.4 successor for user review and public freeze. The [Chinese version](NATIVE_KERNEL_PROFILE_DECISION_2026-10-03.zh-CN.md) is authoritative. The earlier freeze `c4fc7fca2fced24de6ef8e548d4f2cb04f4f6171` is preserved; its admission failed before any model startup or collection. The user requested repairs for a later run, not GPU activation now. This successor is not frozen until committed and pushed.
 
 Current decision: installation and no-GPU checks passed. **Publish the freeze before booking**, then repeat host, disk, memory, GPU identity and idle checks. GPU runtime and serving remain untested. Incremental building is not a discovery prerequisite.
 
@@ -103,10 +103,28 @@ Protect planned #52178 and PyTorch #197232 follow-ups, #55537 update/review, the
 
 ## 9 Remaining Actions Before Freeze
 
-1. User reviews the two decision files, collector and CPU tests; commits these explicit paths and pushes. Record the full commit SHA and compare the public files with the local bytes once, before collection.
+1. User reviews the two decision files, collector, preflight/admission tools and CPU tests; commits these explicit paths and pushes. Before booking, run `preflight.py prepare` to compare all six public files and persist a private receipt. Successful per-file comparisons survive a later download failure; retries belong to unpaid preparation. Use a new receipt for a changed freeze, not an edited old one.
 2. Reconnect to the prepared environment. Installation is complete; do not reinstall or download another model. Recheck disk headroom before booking: last preparation receipts report only about 3.1 GiB system and 2.2 GiB data space. If caches and reports cannot fit, resolve that before starting the paid run; do not delete models, environments or historical evidence without permission.
-3. After GPU activation, start the 60-minute clock immediately. Within five minutes record H800/SM90 identity, driver, cgroup resources, free disk and idle GPU. Bind the admission receipt to the verified installation, model, interpreter and collector digest; preparation's receipt is not an admission receipt.
+3. After GPU activation, start the 60-minute clock immediately. Within five minutes record H800/SM90 identity, driver, cgroup resources, free disk and idle GPU. `admit.py` reads the real wheel-comparison schema (`wheel_members_checked=5305`, `mismatch_count=0`, `mismatches=[]`) and binds admission to the public receipt, interpreter and boot ID. It checks the public receipt offline without network fallback; preparation's receipt alone is not admission. No fixed historical monotonic timestamp or reset clock is allowed.
 4. Use the reviewed collector without backend changes or trial source builds. Startup has a 20-minute cap; collection stops at minute 55 and must not begin with less than ten minutes left. Reserve the final five minutes for stopping the server/profiler, sealing and transferring the small receipts. Retain reports remotely and verify their hashes; export and interpretation are offline. If a deadline or witness fails, preserve insufficient_evidence and do not automatically retry.
 5. Shutdown after sealing; independently confirm the provider billing state. Source distribution, step sufficiency and candidate admission are reviewed from the sealed trace, not from a successful HTTP run alone.
 
 Preparation added the [independent collector](../../experiments/native-kernel-discovery/collect.py) and CPU tests, without modifying prior frozen tools or unrelated working-tree edits. Linux syntax/help and CPU import checks passed; Linux/Nsight collection is untested. Commit and push remain user-operated. A collected report is review_pending, not evidence that a candidate exists.
+
+## 10 Admission Repair and Unpaid Rehearsal
+
+The earlier attempt passed public-file comparison but a private operational script treated an empty mismatch list as unequal to integer zero. After correction it needlessly fetched the public files again and encountered HTTP 503. Admission exceeded five minutes; no model or profiler started and the host was shut down. This is an apparatus failure, not a kernel result. Failed receipts remain private and unchanged. The old private `admit_and_run.py` is retired; do not invoke it.
+
+The successor keeps model, workload, candidate criteria and the 60-minute cap unchanged. Only admission and freeze binding change. Before booking, prepare the public receipt on any network-capable CPU host and copy the complete six-file packet plus receipt to the prepared Linux host. First run the offline check and admission dry-run there; both must pass without a GPU, network, model startup or compilation. If that host is unavailable, record the Linux rehearsal as pending; do not call local mocked tests a real host pass.
+
+```bash
+# All paths below are operator-selected private paths; FREEZE is the successor SHA.
+"$PY" "$P/experiments/native-kernel-discovery/preflight.py" prepare --root "$P" --freeze "$FREEZE" --receipt "$PUBLIC"
+# On the prepared host, with networking unavailable:
+"$PY" "$P/experiments/native-kernel-discovery/preflight.py" check --root "$P" --freeze "$FREEZE" --receipt "$PUBLIC"
+"$PY" "$P/experiments/native-kernel-discovery/admit.py" --packet-root "$P" --freeze "$FREEZE" --public-receipt "$PUBLIC" --preparation "$PREP" --identity "$IDENTITY" --work "$DRY_WORK" --dry-run
+# After activation, record START immediately from this host's time.monotonic().
+"$PY" "$P/experiments/native-kernel-discovery/admit.py" --packet-root "$P" --freeze "$FREEZE" --public-receipt "$PUBLIC" --preparation "$PREP" --identity "$IDENTITY" --work "$WORK" --session-start-monotonic "$START"
+```
+
+Use a new work directory for each attempt. The dry-run does not initialize CUDA or produce an admission receipt. The paid admission probes capability in a short-lived child, rechecks idle GPU afterward, then launches the collector. Collector timeout stops its separate server process group. Neither local tests nor the dry-run establish serving compatibility, adequate compile-cache disk usage, or trace sufficiency; those remain runtime risks. Missing evidence is insufficient_evidence, with no automatic replacement run.

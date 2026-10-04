@@ -14,6 +14,8 @@ import time
 import urllib.request
 from pathlib import Path
 
+from preflight import check_public
+
 PIN = "b0e21b308352587a6fd02f72722a2e815bfd62f0"
 REVISION = "220b46e3b2180893580a4454f21f22d3ebb187d3"
 LOADS = (1, 32)
@@ -141,7 +143,16 @@ def main():
     parser.add_argument("--model-dir", type=Path, required=True)
     parser.add_argument("--preflight", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--freeze", required=True)
+    parser.add_argument("--public-receipt", type=Path, required=True)
+    parser.add_argument("--packet-root", type=Path, required=True)
     args = parser.parse_args()
+    public = check_public(args.packet_root, args.freeze, args.public_receipt)
+    if (
+        sha(__file__)
+        != public["files"]["experiments/native-kernel-discovery/collect.py"]
+    ):
+        raise ValueError("executed collector differs from public freeze")
     # Receipt is a prerequisite, not generated or self-approved by this collector.
     receipt = json.loads(args.preflight.read_text())
     required = (
@@ -158,17 +169,24 @@ def main():
         or any(receipt.get(key) is not True for key in required)
     ):
         raise ValueError("complete reviewed preflight receipt required")
+    if receipt.get("freeze") != args.freeze or receipt.get(
+        "public_receipt_sha256"
+    ) != sha(args.public_receipt):
+        raise ValueError("admission/public freeze binding differs")
+    boot = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+    if receipt.get("boot_id") != boot:
+        raise ValueError("admission belongs to another host boot")
     if Path(receipt["python"]).resolve() != Path(args.python).resolve() or (
         Path(receipt["model_dir"]).resolve() != args.model_dir.resolve()
     ):
         raise ValueError("preflight interpreter/model differs")
     env = launch_env(os.environ)
-    args.out.mkdir(parents=True, exist_ok=False)
     start = receipt.get("session_started_monotonic")
-    if not isinstance(start, (int, float)) or not 0 <= time.monotonic() - start <= 300:
+    if type(start) not in (int, float) or not 0 <= time.monotonic() - start <= 300:
         raise ValueError(
             "fresh same-host session start required; includes GPU preflight"
         )
+    args.out.mkdir(parents=True, exist_ok=False)
     # These stages consume the one session budget; reserve five minutes for cleanup.
     deadline = start + 55 * 60
     result = {
@@ -177,6 +195,8 @@ def main():
         "revision": REVISION,
         "collector_sha256": sha(__file__),
         "preflight_sha256": sha(args.preflight),
+        "freeze": args.freeze,
+        "public_receipt_sha256": sha(args.public_receipt),
         "windows": [],
         "started_utc_ns": time.time_ns(),
     }

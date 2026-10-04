@@ -1,6 +1,6 @@
 # 原生 CUDA kernel 项目开卡前决策
 
-状态：2026-10-03，美西时间，v0.3 待用户核查和公开冻结；中文为权威版本，[English](NATIVE_KERNEL_PROFILE_DECISION_2026-10-03.md) 为译文。用户已批准单次发现会话，不是实现立项或一般规则修订。提交并推送前尚未冻结。
+状态：2026-10-03，美西时间，v0.4 后继版本待用户核查和公开冻结；中文为权威版本，[English](NATIVE_KERNEL_PROFILE_DECISION_2026-10-03.md) 为译文。旧冻结 `c4fc7fca2fced24de6ef8e548d4f2cb04f4f6171` 保留，其准入在模型启动或采集之前失败。用户要求修复供下次运行，不是现在开卡。后继版本提交并推送前尚未冻结。
 
 当前决定：安装及无卡检查已通过。**先公开冻结，再开卡**，随后重新核查主机、磁盘、内存、GPU 身份及空闲状态。GPU runtime 和 serving 尚未验证。增量构建不是发现会话的前置条件。
 
@@ -103,10 +103,28 @@ GitHub main 查询返回 `b0e21b308352587a6fd02f72722a2e815bfd62f0`，[提交](h
 
 ## 9 冻结前剩余动作
 
-1. 用户核查两份决策文件、collector 和 CPU 测试，按明确路径提交并推送。记录完整 commit SHA，采集前一次性核对公开文件与本地字节。
+1. 用户核查两份决策文件、collector、preflight/admission 工具和 CPU 测试，按明确路径提交并推送。开卡前运行 `preflight.py prepare` 核对六份公开文件并持久保存私有 receipt；已通过的单文件核对不会因后续下载失败而丢失，重试放在不计 GPU 费用的准备阶段。冻结改变时使用新 receipt，不编辑旧 receipt。
 2. 重新连接已准备环境。安装完成，不重装、不下载第二个模型。开卡前重新检查磁盘：最近准备 receipt 仅报告系统约 3.1 GiB、数据约 2.2 GiB 空闲。若缓存及报告放不下，先解决再开始计费；未获授权不删除模型、环境或历史证据。
-3. GPU 启用后立即开始 60 分钟计时，前五分钟记录 H800/SM90 身份、driver、cgroup 资源、磁盘及 GPU 空闲。准入 receipt 绑定核验过的安装、模型、解释器和 collector 摘要；准备 receipt 不是准入 receipt。
+3. GPU 启用后立即开始 60 分钟计时，前五分钟记录 H800/SM90 身份、driver、cgroup 资源、磁盘及 GPU 空闲。`admit.py` 读取真实 wheel 比较格式（`wheel_members_checked=5305`、`mismatch_count=0`、`mismatches=[]`），将准入绑定到公开 receipt、解释器和 boot ID；离线核对公开 receipt，没有联网回退。准备 receipt 本身不是准入，不使用固定历史单调时间戳或重置计时。
 4. 使用核查过的 collector，不改变 backend、不试建源码。启动上限 20 分钟，分钟 55 停止采集，剩余不足十分钟不开始 profile。最后五分钟用于停止 server/profiler、封存和传回小 receipt；报告保留远端并核验摘要，export 和解读离线进行。超时或见证失败保留 insufficient_evidence，不自动重试。
 5. 封存后关机，独立确认供应商计费状态。来源分布、步骤充分性和候选准入从封存 trace 核查，不能凭 HTTP 请求成功宣称通过。
 
 准备新增 [独立 collector](../../experiments/native-kernel-discovery/collect.py) 和 CPU 测试，没有改旧冻结工具或无关工作树。Linux syntax/help 和 CPU 导入检查通过；Linux/Nsight 采集尚未测试。提交和推送仍由用户操作。报告采到后仅为 review_pending，不证明存在候选。
+
+## 10 准入修复和无计费演练
+
+旧尝试通过公开文件核对，但私有操作脚本把空的 mismatch 列表与整数零比较，误判失败。纠正后无谓地再次获取公开文件，遇到 HTTP 503。准入超过五分钟，未启动模型或 profiler，随后关机。这是 apparatus 失败，不是 kernel 结果；失败 receipt 私下保留且不改写。旧私有 `admit_and_run.py` 废弃，不再调用。
+
+后继版本保持模型、负载、候选标准和 60 分钟上限不变，只修改准入及冻结绑定。开卡前在任一可联网 CPU 主机准备公开 receipt，将完整六文件 packet 和 receipt 复制到已准备 Linux 主机；先在该主机通过离线核对和准入 dry-run，不需要 GPU、网络、模型启动或编译。若该主机不可用，Linux 演练记为 pending，不能把本机 mock 测试当作真实主机通过。
+
+```bash
+# 以下路径由操作者选择，均为私有路径；FREEZE 为后继提交 SHA。
+"$PY" "$P/experiments/native-kernel-discovery/preflight.py" prepare --root "$P" --freeze "$FREEZE" --receipt "$PUBLIC"
+# 已准备主机上，网络不可用时：
+"$PY" "$P/experiments/native-kernel-discovery/preflight.py" check --root "$P" --freeze "$FREEZE" --receipt "$PUBLIC"
+"$PY" "$P/experiments/native-kernel-discovery/admit.py" --packet-root "$P" --freeze "$FREEZE" --public-receipt "$PUBLIC" --preparation "$PREP" --identity "$IDENTITY" --work "$DRY_WORK" --dry-run
+# 启用 GPU 后立即用该主机 time.monotonic() 记录 START。
+"$PY" "$P/experiments/native-kernel-discovery/admit.py" --packet-root "$P" --freeze "$FREEZE" --public-receipt "$PUBLIC" --preparation "$PREP" --identity "$IDENTITY" --work "$WORK" --session-start-monotonic "$START"
+```
+
+每次尝试使用新工作目录。Dry-run 不初始化 CUDA，不生成准入 receipt。计费准入在短命子进程中核查 capability，退出后重查 GPU 空闲，再启动 collector；collector 超时后清理独立 server 进程组。本机测试与 dry-run 不证明 serving 兼容、compile-cache 磁盘足够或 trace 充分，这些仍是运行风险。缺失证据为 insufficient_evidence，不自动补跑。
